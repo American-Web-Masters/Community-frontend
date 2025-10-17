@@ -71,29 +71,45 @@ function Signup() {
 
   return (
     <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center">Test Signup API</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center text-primary">Test Signup API</h2>
       
       {/* Quick fill buttons */}
       <div className="mb-4 space-x-2">
         <button
           type="button"
           onClick={() => fillDummyData('phone')}
-          className="px-3 py-1 bg-blue-500 text-white rounded text-sm"
+          className="px-3 py-1 bg-primary text-white rounded text-sm hover:bg-primary-600"
         >
           Fill Phone Data
         </button>
         <button
           type="button"
           onClick={() => fillDummyData('email')}
-          className="px-3 py-1 bg-green-500 text-white rounded text-sm"
+          className="px-3 py-1 bg-accent text-black rounded text-sm hover:bg-accent-600"
         >
           Fill Email Data
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setFormData({
+              firstname: '',
+              lastname: '',
+              phone: '',
+              email: '',
+              username: '',
+              password: ''
+            });
+          }}
+          className="btn-gradient text-sm"
+        >
+          Clear Form
         </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">First Name *</label>
+          <label className="block text-sm font-medium mb-1 text-primary">First Name *</label>
           <input
             type="text"
             name="firstname"
@@ -167,7 +183,7 @@ function Signup() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          className="w-full btn-primary disabled:opacity-50"
         >
           {loading ? 'Signing up...' : 'Test Signup'}
         </button>
