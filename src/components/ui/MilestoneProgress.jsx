@@ -12,17 +12,18 @@ const milestones = [
 
 const MilestoneProgress = ({ currentMilestone, completedMilestones = [] }) => {
   return (
-    <div className="flex flex-col space-y-4 mr-8">
+    <div className="flex flex-col space-y-6 w-60">
       {milestones.map((milestone, index) => {
         const isActive = milestone.id === currentMilestone;
         const isCompleted = completedMilestones.includes(milestone.id);
         const Icon = milestone.icon;
+        const stepNumber = index + 1;
         
         return (
-          <div key={milestone.id} className="flex items-center relative">
+          <div key={milestone.id} className="flex items-center relative min-h-16">
             {/* Connecting line */}
             {index < milestones.length - 1 && (
-              <div className="absolute top-8 left-6 w-0.5 h-8 bg-white/20"></div>
+              <div className="absolute top-14 left-6 w-0.5 h-9 bg-primary-500/30"></div>
             )}
             
             {/* Milestone circle */}
@@ -30,31 +31,33 @@ const MilestoneProgress = ({ currentMilestone, completedMilestones = [] }) => {
               className={`
                 relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-500
                 ${isCompleted 
-                  ? 'bg-primary text-white shadow-lg shadow-primary/30' 
+                  ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30' 
                   : isActive 
-                    ? 'bg-white/20 text-white border-2 border-primary shadow-lg' 
-                    : 'bg-white/10 text-white/60 border border-white/20'
+                    ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30' 
+                    : 'bg-primary-500/20 text-white/60 border border-primary-500/30'
                 }
               `}
             >
               {isCompleted ? (
-                <FaCheck className="w-5 h-5 animate-pulse" />
+                <FaCheck className="w-5 h-5 animate-checkmark" />
               ) : (
                 <Icon className="w-5 h-5" />
               )}
-              
-              {/* Active pulse animation */}
-              {isActive && !isCompleted && (
-                <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping"></div>
-              )}
             </div>
             
-            {/* Label */}
-            <div className={`
-              ml-4 text-sm font-medium transition-colors duration-300
-              ${isActive ? 'text-white' : isCompleted ? 'text-white/90' : 'text-white/60'}
-            `}>
-              {milestone.label}
+            {/* Step info */}
+            <div className="ml-4 flex flex-col">
+              <div className={`
+                text-xs text-secondary font-medium uppercase tracking-wider transition-colors duration-300
+                
+              `}>
+                Step {stepNumber}
+              </div>
+              <div className={`
+                text-sm transition-colors duration-300
+              `}>
+                {milestone.label}
+              </div>
             </div>
           </div>
         );

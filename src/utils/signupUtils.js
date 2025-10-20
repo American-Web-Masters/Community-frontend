@@ -84,8 +84,11 @@ export const signupUtils = {
   },
 
   isValidPhone: (phone) => {
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    return phoneRegex.test(phone.replace(/\s+/g, ''));
+    // Remove all non-digit characters except +
+    const cleaned = phone.replace(/[^\d+]/g, '');
+    // Check for valid international format: + followed by 1-15 digits
+    const phoneRegex = /^\+?[1-9]\d{7,14}$/;
+    return phoneRegex.test(cleaned);
   },
 
   isValidPassword: (password) => {

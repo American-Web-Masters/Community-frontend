@@ -33,7 +33,6 @@ const Input = forwardRef(({
           onChange={onChange}
           required={required}
           className={`
-            w-full 
             ${Icon ? 'pl-12' : 'pl-4'} 
             pr-4 py-4 
             bg-white/80 
@@ -43,13 +42,14 @@ const Input = forwardRef(({
             text-gray-800 
             placeholder-gray-400
             focus:outline-none 
-            focus:ring-2 
-            focus:ring-primary/50 
-            focus:border-primary/50
+            focus:ring-1 
+            focus:ring-primary-500 
+            focus:border-primary-500
             transition-all duration-200
             shadow-sm
             ${error ? 'border-red-400 focus:ring-red-500/50' : ''}
-            ${className}
+            w-full
+            ${className} !important
           `}
           {...props}
         />
