@@ -103,7 +103,7 @@ const ContactMilestone = ({ onNext, onDataChange, onPrev }) => {
       }
 
       // Call Phase 1 API
-      const response = await apiClient.post('/api/v1/users/register/phase1', payload);
+      const response = await apiClient.post('/users/register/phase1', payload);
 
       if (response.data.status === 'success') {
         // Save userId and registration phase to localStorage

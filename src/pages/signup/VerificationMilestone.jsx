@@ -102,7 +102,7 @@ const VerificationMilestone = ({ onNext, onDataChange, onPrev }) => {
     setError('');
 
     try {
-      const response = await apiClient.post('/api/v1/users/register/phase2/verify-otp', {
+      const response = await apiClient.post('/users/register/phase2/verify-otp', {
         userId,
         otp: otpValue
       });
@@ -136,7 +136,7 @@ const VerificationMilestone = ({ onNext, onDataChange, onPrev }) => {
     setError('');
 
     try {
-      const response = await apiClient.post('/api/v1/users/register/resend-otp', {
+      const response = await apiClient.post('/users/register/resend-otp', {
         userId
       });
 
