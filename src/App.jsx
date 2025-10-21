@@ -1,8 +1,11 @@
-import Signup from './pages/signup/signup.jsx';
+import { BrowserRouter as Router } from "react-router-dom";
+import Routes from "./routes/Routes"
 
 function App() {
   return (
-    <Signup />
+    <Router>
+      <Routes/>
+    </Router>
   )
 }
 
