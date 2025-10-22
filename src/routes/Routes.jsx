@@ -3,6 +3,7 @@ import SignUp from "../pages/signup/signup"
 import LandingPage from "../pages/landing_page/LandingPage"
 import Home from "../pages/home/Home"
 import ProtectedRoute from "../components/ProtectedRoute"
+import Login from "../pages/login/Login";
 
 const Routes = () =>{
     return(
@@ -27,12 +28,12 @@ const Routes = () =>{
                 </ProtectedRoute>
             }
             />
-            {/* <Route
+            <Route
             path="/login"
             element={
                 <Login/>
             }
-            /> */}
+            />
         </AppRoutes>
     )
 }
