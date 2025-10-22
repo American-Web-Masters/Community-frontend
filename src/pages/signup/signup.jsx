@@ -4,6 +4,8 @@ import NameMilestone from './NameMilestone';
 import ContactMilestone from './ContactMilestone';
 import VerificationMilestone from './VerificationMilestone';
 import UsernameMilestone from './UsernameMilestone';
+import PasswordMilestone from './PasswordMilestone';
+import ReviewMilestone from './ReviewMilestone';
 import { signupUtils, MILESTONES } from '../../utils/signupUtils';
 
 function Signup() {
@@ -79,9 +81,9 @@ function Signup() {
       case MILESTONES.USERNAME:
         return <UsernameMilestone {...milestoneProps} />;
       case MILESTONES.PASSWORD:
-        return <div className="text-white text-center">Password milestone - Coming soon</div>;
+        return <PasswordMilestone {...milestoneProps} />;
       case MILESTONES.REVIEW:
-        return <div className="text-white text-center">Review milestone - Coming soon</div>;
+        return <ReviewMilestone {...milestoneProps} />;
       default:
         return <NameMilestone {...milestoneProps} />;
     }

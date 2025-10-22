@@ -28,13 +28,26 @@ const LandingPage = () => {
                 </div>
 
 				{/* Button */}
-				<Link to="/signup">
-				<button
-					className="sm:mt-4 px-6 py-2 sm:px-8 sm:py-3 rounded-full bg-[#D3AF37] hover:bg-yellow-500 text-white font-semibold  sm:text-lg shadow-lg transition-colors duration-200 cursor-pointer"
-				>
-					Join The Community
-				</button>
-				</Link>
+				<div className="flex flex-col items-center space-y-4">
+					<Link to="/signup">
+						<button
+							className="sm:mt-4 px-6 py-2 sm:px-8 sm:py-3 rounded-full bg-[#D3AF37] hover:bg-yellow-500 text-white font-semibold  sm:text-lg shadow-lg transition-colors duration-200 cursor-pointer"
+						>
+							Join The Community
+						</button>
+					</Link>
+					
+					{/* Login Link */}
+					<p className="text-[#2d1a05] text-sm">
+						Already have an account?{' '}
+						<Link 
+							to="/login" 
+							className="text-[#D3AF37] hover:text-yellow-500 font-semibold transition-colors duration-200 underline"
+						>
+							Login here
+						</Link>
+					</p>
+				</div>
 			</div>
 		</div>
 	);
