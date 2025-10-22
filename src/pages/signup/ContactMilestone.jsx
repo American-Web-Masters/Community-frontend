@@ -112,6 +112,10 @@ const ContactMilestone = ({ onNext, onDataChange, onPrev }) => {
           registrationPhase: 1,
           contactMethod: response.data.data.contactMethod
         });
+        
+        // Also store userId separately for easy access during final registration
+        localStorage.setItem('registrationUserId', response.data.data.userId);
+        
         onDataChange && onDataChange(updatedData);
 
         // Move to verification milestone
