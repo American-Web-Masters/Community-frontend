@@ -2,6 +2,7 @@ import { Route, Routes as AppRoutes } from "react-router-dom";
 import SignUp from "../pages/signup/signup"
 import LandingPage from "../pages/landing_page/LandingPage"
 import Login from "../pages/login/Login";
+import Survey from "../pages/Splash Pages/Survey";
 
 const Routes = () =>{
     return(
@@ -22,6 +23,12 @@ const Routes = () =>{
             path="/login"
             element={
                 <Login/>
+            }
+            />
+            <Route
+            path="/survey"
+            element={
+                <Survey/>
             }
             />
         </AppRoutes>
