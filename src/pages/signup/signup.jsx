@@ -3,6 +3,7 @@ import MilestoneProgress from '../../components/ui/MilestoneProgress';
 import NameMilestone from './NameMilestone';
 import ContactMilestone from './ContactMilestone';
 import VerificationMilestone from './VerificationMilestone';
+import UsernameMilestone from './UsernameMilestone';
 import { signupUtils, MILESTONES } from '../../utils/signupUtils';
 
 function Signup() {
@@ -76,7 +77,7 @@ function Signup() {
       case MILESTONES.VERIFICATION:
         return <VerificationMilestone {...milestoneProps} />;
       case MILESTONES.USERNAME:
-        return <div className="text-white text-center">Username milestone - Coming soon</div>;
+        return <UsernameMilestone {...milestoneProps} />;
       case MILESTONES.PASSWORD:
         return <div className="text-white text-center">Password milestone - Coming soon</div>;
       case MILESTONES.REVIEW:
