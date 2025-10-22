@@ -1,12 +1,18 @@
 
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import Input from '../../components/ui/Input';
 import { FaUser, FaLock, FaChevronLeft, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { FaApple } from 'react-icons/fa';
 import { apiClient } from '../../api';
+import { setUser } from '../../store/userSlice';
 
 const Login = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -33,27 +39,46 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
+    
     setLoading(true);
     setErrors({});
+    
     try {
       const payload = {
         username: formData.username,
         password: formData.password
       };
-      const response = await apiClient.post('/api/v1/users/login', payload);
+
+      console.log('Attempting login with:', { username: payload.username });
+
+      const response = await apiClient.post('/users/login', payload);
+      
       if (response.data.status === 'success') {
-        localStorage.setItem('token', response.data.data.token);
-        window.location.href = '/'; // Redirect to home or dashboard
+        const { user } = response.data.data;
+        
+        console.log('Login successful!');
+        console.log('User data received:', user);
+        console.log('User ID:', user._id);
+        
+        // Save user data to Redux store and localStorage
+        dispatch(setUser(user));
+        
+        console.log('User data saved to Redux and localStorage');
+        
+        // Navigate to home page
+        navigate('/');
+        
+      } else {
+        throw new Error(response.data?.message || 'Login failed');
       }
     } catch (err) {
+      console.error('Login error:', err);
       const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';
       setErrors({ submit: errorMessage });
     } finally {
       setLoading(false);
     }
-  };
-
-  const isFormValid = formData.username.trim() && formData.password.trim();
+  };  const isFormValid = formData.username.trim() && formData.password.trim();
 
   return (
     <div className="min-h-screen relative ">
@@ -162,6 +187,20 @@ const Login = () => {
                     >
                       {loading ? 'Logging In...' : 'Login'}
                     </button>
+                  </div>
+                  
+                  {/* Sign Up Link */}
+                  <div className="text-center mt-4">
+                    <p className="text-gray-600 text-sm">
+                      Don't have an account?{' '}
+                      <button
+                        type="button"
+                        onClick={() => navigate('/signup')}
+                        className="text-primary-500 hover:text-primary-600 font-semibold transition-colors duration-200"
+                      >
+                        Sign up
+                      </button>
+                    </p>
                   </div>
                 </form>
               </div>

@@ -4,33 +4,33 @@ import { createSlice } from '@reduxjs/toolkit';
 const loadUserFromStorage = () => {
   try {
     const userData = localStorage.getItem('authenticatedUser');
-    const authToken = localStorage.getItem('authToken');
     
-    if (userData && authToken) {
+    if (userData) {
+      const user = JSON.parse(userData);
+      console.log('Loaded user from storage:', user);
+      
       return {
-        user: JSON.parse(userData),
-        isLoggedIn: true,
-        token: authToken
+        user: user,
+        isLoggedIn: true
       };
     }
   } catch (error) {
     console.error('Error loading user from localStorage:', error);
     // Clear corrupted data
     localStorage.removeItem('authenticatedUser');
-    localStorage.removeItem('authToken');
   }
   
+  console.log('No authenticated user found in storage');
   return {
     user: null,
-    isLoggedIn: false,
-    token: null
+    isLoggedIn: false
   };
 };
 
-const saveUserToStorage = (user, token) => {
+const saveUserToStorage = (user) => {
   try {
     localStorage.setItem('authenticatedUser', JSON.stringify(user));
-    localStorage.setItem('authToken', token);
+    console.log('User saved to localStorage');
   } catch (error) {
     console.error('Error saving user to localStorage:', error);
   }
@@ -39,7 +39,7 @@ const saveUserToStorage = (user, token) => {
 const clearUserFromStorage = () => {
   try {
     localStorage.removeItem('authenticatedUser');
-    localStorage.removeItem('authToken');
+    console.log('User data cleared from localStorage');
   } catch (error) {
     console.error('Error clearing user from localStorage:', error);
   }
@@ -51,19 +51,17 @@ const userSlice = createSlice({
   initialState: loadUserFromStorage(),
   reducers: {
     setUser: (state, action) => {
-      const { user, token } = action.payload;
+      const user = action.payload;
       state.user = user;
-      state.token = token;
       state.isLoggedIn = true;
       
       // Save to localStorage for persistence
-      saveUserToStorage(user, token);
+      saveUserToStorage(user);
       
       console.log('User authenticated and saved:', user);
     },
     clearUser: (state) => {
       state.user = null;
-      state.token = null;
       state.isLoggedIn = false;
       
       // Clear from localStorage
@@ -74,7 +72,7 @@ const userSlice = createSlice({
     updateUser: (state, action) => {
       if (state.user) {
         state.user = { ...state.user, ...action.payload };
-        saveUserToStorage(state.user, state.token);
+        saveUserToStorage(state.user);
         console.log('User data updated:', state.user);
       }
     }
@@ -87,7 +85,7 @@ export const { setUser, clearUser, updateUser } = userSlice.actions;
 // Selectors
 export const selectUser = (state) => state.user.user;
 export const selectIsLoggedIn = (state) => state.user.isLoggedIn;
-export const selectAuthToken = (state) => state.user.token;
+export const selectUserId = (state) => state.user.user?._id;
 
 // Export reducer
 export default userSlice.reducer;
