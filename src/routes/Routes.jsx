@@ -46,13 +46,17 @@ const Routes = () =>{
             <Route
             path="/survey"
             element={
-                <Survey/>
+                <ProtectedRoute>
+                    <Survey/>
+                </ProtectedRoute>
             }
             />
             <Route
             path="/tour"
             element={
-                <Tour/>
+                <ProtectedRoute>
+                    <Tour/>
+                </ProtectedRoute>
             }
             />
         </AppRoutes>

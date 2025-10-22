@@ -72,12 +72,13 @@ const Survey = () => {
         howDidYouHear: selectedOption === 'other' ? otherText.trim() : selectedOption
       };
 
-      const response = await apiClient.post('/api/v1/users/survey', payload);
+      const response = await apiClient.post('/users/survey', payload);
       
       if (response.data.status === 'success') {
         // Redirect to next page or show success message
         console.log('Survey response saved successfully');
         // You can add navigation logic here
+        navigate("/tour")
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to save response. Please try again.';

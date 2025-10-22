@@ -13,12 +13,12 @@ const Tour = () => {
 
   const handleSkip = () => {
     // Navigate to the main application or dashboard
-    navigate('/dashboard'); // Adjust this route as needed
+    navigate('/'); // Adjust this route as needed
   };
 
   const handleClose = () => {
     // Close the modal or navigate away
-    navigate('/dashboard'); // Adjust this route as needed
+    navigate('/'); // Adjust this route as needed
   };
 
   return (

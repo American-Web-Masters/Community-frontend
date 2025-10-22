@@ -86,7 +86,7 @@ const ReviewMilestone = ({ onNext, onDataChange, onPrev }) => {
         console.log('User data saved to Redux and localStorage');
         
         // Navigate to home page
-        navigate('/');
+        navigate('/survey');
         
       } else {
         throw new Error(response.data?.message || 'Registration failed');
