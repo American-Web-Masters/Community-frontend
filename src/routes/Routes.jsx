@@ -3,6 +3,7 @@ import SignUp from "../pages/signup/signup"
 import LandingPage from "../pages/landing_page/LandingPage"
 import Login from "../pages/login/Login";
 import Survey from "../pages/Splash Pages/Survey";
+import Tour from "../pages/Splash Pages/Tour";
 
 const Routes = () =>{
     return(
@@ -29,6 +30,12 @@ const Routes = () =>{
             path="/survey"
             element={
                 <Survey/>
+            }
+            />
+            <Route
+            path="/tour"
+            element={
+                <Tour/>
             }
             />
         </AppRoutes>
