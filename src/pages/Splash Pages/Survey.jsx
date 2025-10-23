@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { FaHashtag, FaUsers, FaMicrophone, FaCalendarAlt, FaEllipsisH, FaTimes } from 'react-icons/fa';
 import { apiClient } from '../../api';
+import { selectUserId } from '../../store/userSlice';
 
 const Survey = () => {
+  const navigate = useNavigate();
+  const userId = useSelector(selectUserId);
+  
   const [selectedOption, setSelectedOption] = useState('');
   const [otherText, setOtherText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -61,7 +67,6 @@ const Survey = () => {
     setError('');
 
     try {
-      const userId = localStorage.getItem('userId');
       if (!userId) {
         setError('User ID not found. Please log in again.');
         return;
@@ -69,16 +74,14 @@ const Survey = () => {
 
       const payload = {
         userId: userId,
-        howDidYouHear: selectedOption === 'other' ? otherText.trim() : selectedOption
+        surveyData: selectedOption === 'other' ? otherText.trim() : selectedOption
       };
 
       const response = await apiClient.post('/users/survey', payload);
       
       if (response.data.status === 'success') {
-        // Redirect to next page or show success message
-        console.log('Survey response saved successfully');
-        // You can add navigation logic here
-        navigate("/tour")
+        // Navigate to tour page
+        navigate('/tour');
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to save response. Please try again.';

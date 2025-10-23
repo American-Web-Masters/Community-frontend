@@ -71,10 +71,6 @@ const ReviewMilestone = ({ onNext, onDataChange, onPrev }) => {
       if (response.data && response.data.status === 'success') {
         const userData = response.data.data.user;
         
-        console.log('Registration API Response:', response.data);
-        console.log('User data received:', userData);
-        console.log('User ID:', userData._id);
-        
         // Save user data to Redux store (cookies are automatically handled)
         dispatch(setUser(userData));
         
@@ -82,11 +78,6 @@ const ReviewMilestone = ({ onNext, onDataChange, onPrev }) => {
         signupUtils.resetSignup();
         localStorage.removeItem('registrationUserId');
         
-        console.log('Registration completed successfully!');
-        console.log('User data saved to Redux and localStorage');
-        
-        // Navigate to home page
-        navigate('/survey');
         
       } else {
         throw new Error(response.data?.message || 'Registration failed');
