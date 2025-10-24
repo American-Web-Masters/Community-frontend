@@ -145,7 +145,7 @@ const ReviewMilestone = ({ onNext, onDataChange, onPrev }) => {
             className={`
               w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 relative
               ${isFormValid
-                ? 'bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                ? 'bg-primary-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
                 : 'bg-gray-400 cursor-not-allowed opacity-60'
               }
             `}
