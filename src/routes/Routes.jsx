@@ -18,6 +18,15 @@ const Routes = () =>{
                     <LandingPage/>
                 </PublicRoute>
             }
+            
+            />
+                        <Route
+            path="/survey"
+            element={
+                <ProtectedRoute>
+                    <Survey/>
+                </ProtectedRoute>
+            }
             />
             <Route
             path="/signup"
@@ -40,14 +49,6 @@ const Routes = () =>{
             element={
                 <ProtectedRoute>
                     <Home/>
-                </ProtectedRoute>
-            }
-            />
-            <Route
-            path="/survey"
-            element={
-                <ProtectedRoute>
-                    <Survey/>
                 </ProtectedRoute>
             }
             />
