@@ -90,7 +90,7 @@ function Signup() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="max-h-screen relative overflow-hidden">
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
