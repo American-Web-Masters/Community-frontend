@@ -10,7 +10,7 @@ const ContactMilestone = ({ onNext, onDataChange, onPrev }) => {
   const [formData, setFormData] = useState({
     phone: '',
     email: '',
-    contactMethod: 'phone' // 'phone' or 'email'
+    contactMethod: 'email' // 'phone' or 'email'
   });
 
   const [errors, setErrors] = useState({});
@@ -22,7 +22,7 @@ const ContactMilestone = ({ onNext, onDataChange, onPrev }) => {
     setFormData({
       phone: savedData.phone || '',
       email: savedData.email || '',
-      contactMethod: savedData.contactMethod || 'phone'
+      contactMethod: savedData.contactMethod || 'email'
     });
   }, []);
 
