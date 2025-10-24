@@ -1,13 +1,16 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { selectIsLoggedIn } from '../store/userSlice';
 
 const PublicRoute = ({ children }) => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
+  const location = useLocation();
 
   if (isLoggedIn) {
-    // Redirect to home if already authenticated
+    if (location.pathname === '/signup') {
+      return <Navigate to="/survey" replace />;
+    }
     return <Navigate to="/" replace />;
   }
 
