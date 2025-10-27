@@ -1,6 +1,13 @@
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { selectUser, selectIsLoggedIn, clearUser } from '../../store/userSlice';
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
+import { FaRegUser } from "react-icons/fa";
+import {
+  PiHandsPrayingThin,
+  PiUsersThree,
+  PiCross,
+  PiChatCircleDots,
+} from "react-icons/pi";
 
 const Home = () => {
   const user = useSelector(selectUser);
@@ -15,7 +22,9 @@ const Home = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Access Denied</h1>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">
+            Access Denied
+          </h1>
           <p className="text-gray-600">Please log in to access this page.</p>
         </div>
       </div>
@@ -23,161 +32,53 @@ const Home = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-accent-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8 bg-white rounded-lg shadow-md p-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">
-              Welcome to AO1 Community! 🎉
-            </h1>
-            <p className="text-gray-600 mt-2">
-              You have successfully joined our community
-            </p>
-          </div>
-          <button
+    <div className="min-h-screen light-background">
+      {/* <button
             onClick={handleLogout}
-            className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200"
+            className="px-6 py-2 h-10 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 "
           >
             Logout
-          </button>
-        </div>
+          </button> */}
 
-        {/* User Info Card */}
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-2xl mx-auto">
-          <div className="text-center mb-6">
-            <div className="w-20 h-20 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-white text-2xl font-bold">
-                {user.firstname?.charAt(0)}{user.lastname?.charAt(0)}
-              </span>
-            </div>
-            <h2 className="text-2xl font-semibold text-gray-800">
-              {user.firstname} {user.lastname}
-            </h2>
-            <p className="text-gray-600">@{user.username}</p>
+      <div className="btn-blue-gradient w-[350px] md:min-w-[450px] h-14 rounded-full flex items-center justify-center ml-6 fixed bottom-5 left-[48%] transform -translate-x-1/2 overflow-hidden">
+        <button className="flex flex-col items-center justify-center flex-1 h-full text-white hover:bg-white/10 transition-colors duration-200">
+          <PiHandsPrayingThin className="w-5 h-5 md:w-7 md:h-7 mb-1" />
+          <span className="text-xs">Prayer Wall</span>
+        </button>
+        <button className="flex flex-col items-center justify-center flex-1 h-full text-white hover:bg-white/10 transition-colors duration-200">
+          <PiUsersThree className="w-5 h-5 md:w-7 md:h-7 mb-1" />
+          <span className="text-xs">Communities</span>
+        </button>
+        <button className="flex flex-col items-center justify-center flex-1 h-full text-white hover:bg-white/10 transition-colors duration-200 relative">
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-1">
+            <PiCross className="w-5 h-5 md:w-8 md:h-8 mb-1 text-transparent stroke-primary-500 fill-primary-600 stroke-[2]" />
           </div>
-
-          {/* User Details */}
-          <div className="space-y-4">
-            <div className="border-b pb-4">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Profile Information
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
-                    First Name
-                  </label>
-                  <p className="text-gray-800 font-medium">{user.firstname}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
-                    Last Name
-                  </label>
-                  <p className="text-gray-800 font-medium">{user.lastname}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
-                    Email
-                  </label>
-                  <p className="text-gray-800 font-medium">{user.email}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
-                    Username
-                  </label>
-                  <p className="text-gray-800 font-medium">@{user.username}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
-                    User ID
-                  </label>
-                  <p className="text-gray-800 font-medium font-mono text-sm">{user._id}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
-                    Member Since
-                  </label>
-                  <p className="text-gray-800 font-medium">
-                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Account Status */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Account Status
-              </h3>
-              
-              <div className="flex flex-wrap gap-2">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  user.isVerified 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {user.isVerified ? '✓ Verified' : '⏳ Pending Verification'}
-                </span>
-                
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  user.otpVerified 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {user.otpVerified ? '✓ OTP Verified' : '✗ OTP Not Verified'}
-                </span>
-                
-                <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                  Phase {user.registrationPhase || 'Complete'}
-                </span>
-              </div>
-            </div>
-
-            {/* Debug Info */}
-            <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">
-                Debug Information (Development)
-              </h3>
-              <pre className="text-xs text-gray-600 overflow-auto">
-                {JSON.stringify(user, null, 2)}
-              </pre>
-            </div>
-          </div>
-        </div>
-
-        {/* Community Features (Placeholder) */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow-md p-6 text-center">
-            <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <span className="text-primary-600 text-xl">👥</span>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Community</h3>
-            <p className="text-gray-600 text-sm">Connect with fellow believers</p>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-md p-6 text-center">
-            <div className="w-12 h-12 bg-accent-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <span className="text-accent-600 text-xl">📚</span>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Resources</h3>
-            <p className="text-gray-600 text-sm">Access spiritual content</p>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-md p-6 text-center">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <span className="text-green-600 text-xl">🙏</span>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Prayer</h3>
-            <p className="text-gray-600 text-sm">Join prayer requests</p>
-          </div>
-        </div>
+        </button>
+        <button className="flex flex-col items-center justify-center flex-1 h-full text-white hover:bg-white/10 transition-colors duration-200">
+          <PiChatCircleDots className="w-5 h-5 md:w-7 md:h-7 mb-1" />
+          <span className="text-xs">Messages</span>
+        </button>
+        <button className="flex flex-col items-center justify-center flex-1 h-full text-white hover:bg-white/10 transition-colors duration-200">
+          <svg
+            width="25"
+            height="25"
+            viewBox="0 0 50 50"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M24.9974 20.8334C29.5998 20.8334 33.3307 17.1024 33.3307 12.5C33.3307 7.89765 29.5998 4.16669 24.9974 4.16669C20.395 4.16669 16.6641 7.89765 16.6641 12.5C16.6641 17.1024 20.395 20.8334 24.9974 20.8334Z"
+              stroke="white"
+              stroke-width="3.5"
+            />
+            <path
+              d="M41.6654 36.4584C41.6654 41.6355 41.6654 45.8334 24.9987 45.8334C8.33203 45.8334 8.33203 41.6355 8.33203 36.4584C8.33203 31.2813 15.7945 27.0834 24.9987 27.0834C34.2029 27.0834 41.6654 31.2813 41.6654 36.4584Z"
+              stroke="white"
+              stroke-width="3.5"
+            />
+          </svg>
+          <span className="text-xs">Profile</span>
+        </button>
       </div>
     </div>
   );
