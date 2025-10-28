@@ -1,3 +1,5 @@
+import React from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   PiHandsPrayingThin,
   PiUsersThree,
@@ -5,11 +7,32 @@ import {
   PiChatCircleDots,
 } from "react-icons/pi";
 
-const BottomNavBar = ({ activeTab, onTabChange }) => {
+const BottomNavBar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const getActiveTab = () => {
+    switch (location.pathname) {
+      case '/':
+        return 'prayer-wall';
+      case '/communities':
+        return 'communities';
+      case '/create':
+        return 'create';
+      case '/messages':
+        return 'messages';
+      case '/profile':
+        return 'profile';
+      default:
+        return 'prayer-wall';
+    }
+  };
+
+  const activeTab = getActiveTab();
   return (
     <div className="btn-blue-gradient w-[350px] md:min-w-[450px] h-14 rounded-full flex items-center justify-center ml-6 fixed bottom-5 left-[45%] md:left-[48%] transform -translate-x-1/2 overflow-hidden">
       <button 
-        onClick={() => onTabChange('prayer-wall')}
+        onClick={() => navigate('/')}
         className={`flex flex-col items-center justify-center flex-1 h-full text-white transition-colors duration-200 ${
           activeTab === 'prayer-wall' ? 'bg-white/20' : 'hover:bg-white/10'
         }`}
@@ -18,7 +41,7 @@ const BottomNavBar = ({ activeTab, onTabChange }) => {
         <span className="text-xs">Prayer Wall</span>
       </button>
       <button 
-        onClick={() => onTabChange('communities')}
+        onClick={() => navigate('/communities')}
         className={`flex flex-col items-center justify-center flex-1 h-full text-white transition-colors duration-200 ${
           activeTab === 'communities' ? 'bg-white/20' : 'hover:bg-white/10'
         }`}
@@ -27,7 +50,7 @@ const BottomNavBar = ({ activeTab, onTabChange }) => {
         <span className="text-xs">Communities</span>
       </button>
       <button 
-        onClick={() => onTabChange('create')}
+        onClick={() => navigate('/create')}
         className={`flex flex-col items-center justify-center flex-1 h-full text-white transition-colors duration-200 relative ${
           activeTab === 'create' ? 'bg-white/20' : 'hover:bg-white/10'
         }`}
@@ -37,7 +60,7 @@ const BottomNavBar = ({ activeTab, onTabChange }) => {
         </div>
       </button>
       <button 
-        onClick={() => onTabChange('messages')}
+        onClick={() => navigate('/messages')}
         className={`flex flex-col items-center justify-center flex-1 h-full text-white transition-colors duration-200 ${
           activeTab === 'messages' ? 'bg-white/20' : 'hover:bg-white/10'
         }`}
@@ -46,7 +69,7 @@ const BottomNavBar = ({ activeTab, onTabChange }) => {
         <span className="text-xs">Messages</span>
       </button>
       <button 
-        onClick={() => onTabChange('profile')}
+        onClick={() => navigate('/profile')}
         className={`flex flex-col items-center justify-center flex-1 h-full text-white transition-colors duration-200 ${
           activeTab === 'profile' ? 'bg-white/20' : 'hover:bg-white/10'
         }`}
