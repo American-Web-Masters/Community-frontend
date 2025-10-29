@@ -5,7 +5,9 @@ import {
 } from "react-icons/io5";
 import {
   PiHandsPrayingThin,
+  PiBookBookmarkLight,
 } from "react-icons/pi";
+import { BsSend } from "react-icons/bs";
 
 const PrayerCard = ({
   user,
@@ -120,11 +122,11 @@ const PrayerCard = ({
       </div>
 
       {/* Prayer Text */}
-      <div className="mb-4">
-        <p className="text-gray-800 leading-relaxed text-sm line-clamp-2 overflow-hidden">
+      <div className="mb-4 relative">
+        <p className="text-gray-800 leading-relaxed text-sm line-clamp-2 overflow-hidden pr-20">
           {prayerText}
         </p>
-        <button className="text-blue-600 text-sm font-medium mt-1 hover:underline">
+        <button className="absolute bottom-0 right-0 text-[#03045E] text-sm font-medium hover:underline bg-gradient-to-l from-blue-100 to-transparent pl-4">
           Read more
         </button>
       </div>
@@ -140,10 +142,10 @@ const PrayerCard = ({
           </button>
 
           <button
-            onClick={onComment}
+            onClick={onBookmark}
             className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors duration-200"
           >
-            <IoChatbubbleOutline className="w-5 h-5" />
+            <PiBookBookmarkLight className="w-5 h-5" />
           </button>
 
           <button
@@ -153,11 +155,19 @@ const PrayerCard = ({
             <IoBookmarkOutline className="w-5 h-5" />
           </button>
 
+
+          <button
+            onClick={onComment}
+            className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors duration-200"
+          >
+            <IoChatbubbleOutline className="w-5 h-5" />
+          </button>
+
           <button
             onClick={onShare}
             className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors duration-200"
           >
-            <IoShareOutline className="w-5 h-5" />
+            <BsSend className="w-5 h-5" />
           </button>
         </div>
       </div>

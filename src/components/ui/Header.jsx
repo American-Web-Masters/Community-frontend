@@ -1,6 +1,6 @@
 import React from "react";
 import { IoNotificationsOutline, IoSearchOutline } from "react-icons/io5";
-import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
+import { CiFilter } from "react-icons/ci";
 
 const Header = ({ 
   showNotification = true, 
@@ -11,7 +11,7 @@ const Header = ({
   onSearchClick 
 }) => {
   return (
-    <div className="w-[98vw] bg-white/35 backdrop-blur-sm px-4 py-4 rounded-full shadow-sm relative top-2 mx-2">
+    <div className="w-[98vw] bg-white/35 backdrop-blur-sm px-2 py-2 rounded-full shadow-sm relative top-2 mx-2">
       <div className="flex items-center justify-between max-w-full">
         {/* Left side - Notification */}
         <div className="flex-1">
@@ -27,12 +27,18 @@ const Header = ({
         
         {/* Right side - Filter and Search */}
         <div className="flex items-center space-x-3">
+
+          <button  className="px-4 py-2 md:px-6 text-xs cursor-pointer btn-blue-gradient rounded-full shadow-sm hover:shadow-md transition-shadow duration-200">
+            Donate Now
+          </button>
+
+
           {showFilter && (
             <button
               onClick={onFilterClick}
               className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow duration-200"
             >
-              <HiOutlineAdjustmentsHorizontal className="w-5 h-5 text-gray-600" />
+              <CiFilter className="w-5 h-5 text-gray-600" />
             </button>
           )}
           
