@@ -138,7 +138,7 @@ const Login = () => {
                       <div className="w-full border-t border-gray-300"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-4 text-gray-500">or Continue with</span>
+                      <span className="relative z-50 px-4 bg-white/30 text-gray-500">or Continue with</span>
                     </div>
                   </div>
                   {/* OAuth Options */}

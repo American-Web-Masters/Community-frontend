@@ -87,8 +87,8 @@ const Home = () => {
         onNotificationClick={() => console.log("Notification clicked")}
         onFilterClick={() => console.log("Filter clicked")}
         onSearchClick={() => console.log("Search clicked")}
+        onLogoutClick={handleLogout}
       />
-
       {/* Statistics */}
       <div className="px-6 py-4 mt-5">
         <div className="flex justify-between">
