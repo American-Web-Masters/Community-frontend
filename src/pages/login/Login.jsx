@@ -132,13 +132,12 @@ const Login = () => {
                       {showPassword ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
                     </button>
                   </div>
-                  {/* Or Continue With */}
-                  <div className="relative my-2">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="relative z-50 px-4 bg-white/30 text-gray-500">or Continue with</span>
+                  {/* Or Continue With (line breaks left and right so the line "disappears" where text is) */}
+                  <div className="my-2">
+                    <div className="flex items-center">
+                      <div className="flex-1 border-t border-gray-300" />
+                      <div className="mx-4 text-sm text-gray-500 whitespace-nowrap">or Continue with</div>
+                      <div className="flex-1 border-t border-gray-300" />
                     </div>
                   </div>
                   {/* OAuth Options */}
