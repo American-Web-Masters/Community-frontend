@@ -8,6 +8,7 @@ import {
   PiBookBookmarkLight,
 } from "react-icons/pi";
 import { BsSend } from "react-icons/bs";
+import { useState } from "react";
 
 const PrayerCard = ({
   user,
@@ -15,37 +16,102 @@ const PrayerCard = ({
   urgency,
   prayerText,
   status,
+  communities = ["Church Group", "Prayer Group", "Youth Group"],
+  mood = "😊",
+  timeline = [
+    { user: "Micheal R.", action: "Read", time: "3h ago" },
+    { user: "John Ray", action: "Read", time: "3h ago" }
+  ],
+  comments = [
+    { 
+      user: "Michael Chen", 
+      text: "Praying for your grandmother and your whole family. May God grant her healing and peace.", 
+      time: "2 hours ago",
+      reactions: { "🙏": 5, "♥️": 3 }
+    }
+  ],
+  isExpanded = false,
+  onToggleExpand,
   onPray,
   onBookmark,
   onComment,
   onShare,
   onMore,
 }) => {
-  const getUrgencyMeter = (urgency) => {
-    let percentage = 0;
-    let color = "";
+  const [showComments, setShowComments] = useState(false);
+  const [commentReactions, setCommentReactions] = useState({});
+  
+  const handleToggleExpand = () => {
+    console.log("PrayerCard toggle clicked for user:", user?.name);
+    onToggleExpand();
+  };
 
+  const handleEmojiReaction = (commentIndex, emoji) => {
+    setCommentReactions(prev => {
+      const key = `${commentIndex}-${emoji}`;
+      const newReactions = { ...prev };
+      
+      if (newReactions[key]) {
+        newReactions[key] += 1;
+      } else {
+        newReactions[key] = 1;
+      }
+      
+      return newReactions;
+    });
+  };
+
+  const getEmojiCount = (commentIndex, emoji) => {
+    const key = `${commentIndex}-${emoji}`;
+    const baseCount = comments[commentIndex]?.reactions?.[emoji] || 0;
+    const additionalCount = commentReactions[key] || 0;
+    return baseCount + additionalCount;
+  };
+  const getUrgencyMeter = (urgency) => {
     switch (urgency?.toLowerCase()) {
       case "low":
-        percentage = 33.33;
-        color = "bg-green-500";
-        break;
+        return {
+          bars: [
+            { height: 'h-4', color: 'bg-green-300' },
+            // { height: 'h-4', color: 'bg-gray-200' },
+            { height: 'h-6', color: 'bg-green-400' },
+            { height: 'h-8', color: 'bg-green-500' },
+            { height: 'h-10', color: 'bg-green-600' }
+          ]
+        };
       case "normal":
       case "medium":
-        percentage = 66.66;
-        color = "bg-yellow-500";
-        break;
+        return {
+          bars: [
+            { height: 'h-4', color: 'bg-yellow-200' },
+            // { height: 'h-4', color: 'bg-yellow-400' },
+            { height: 'h-6', color: 'bg-yellow-300' },
+            { height: 'h-8', color: 'bg-yellow-400' },
+            { height: 'h-10', color: 'bg-yellow-500' }
+          ]
+        };
       case "urgent":
       case "high":
-        percentage = 100;
-        color = "bg-red-500";
-        break;
+        return {
+          bars: [
+            { height: 'h-4', color: 'bg-red-500' },
+            // { height: 'h-4', color: 'bg-red-400' },
+            { height: 'h-6', color: 'bg-red-500' },
+            { height: 'h-8', color: 'bg-red-600' },
+            { height: 'h-10', color: 'bg-red-700' }
+          ]
+        };
       default:
-        percentage = 33.33;
-        color = "bg-green-500";
+        return {
+          bars: [
+            { height: 'h-6', color: 'bg-green-500' },
+            // { height: 'h-4', color: 'bg-gray-200' },
+            { height: 'h-8', color: 'bg-gray-200' },
+            { height: 'h-10', color: 'bg-gray-200' },
+            { height: 'h-12', color: 'bg-gray-200' }
+          ]
+        };
     }
-
-    return { percentage, color };
   };
 
   const getStatusColor = (status) => {
@@ -76,15 +142,20 @@ const PrayerCard = ({
               <h3 className="font-medium text-gray-900">
                 {user?.name || "Anonymous"}
               </h3>
-              <div className="w-12 h-1 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className={`h-full ${urgencyMeter.color} transition-all duration-300`}
-                  style={{ width: `${urgencyMeter.percentage}%` }}
-                ></div>
-              </div>
-              <span className="text-sm text-gray-600 font-medium">
-                {urgency}
-              </span>
+              
+              {/* Community Pills - Show only in collapsed view */}
+              {!isExpanded && (
+                <div className="flex items-center space-x-1">
+                  <span className="bg-blue-400 text-white px-2 py-1 rounded-full text-xs">
+                    {communities[0]}
+                  </span>
+                  {communities.length > 1 && (
+                    <span className="bg-gray-400 text-white px-2 py-1 rounded-full text-xs">
+                      +{communities.length - 1} more
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
             <p className="text-sm text-gray-500">{timeAgo}</p>
           </div>
@@ -123,12 +194,172 @@ const PrayerCard = ({
 
       {/* Prayer Text */}
       <div className="mb-4 relative">
-        <p className="text-gray-800 leading-relaxed text-sm line-clamp-2 overflow-hidden pr-20">
-          {prayerText}
-        </p>
-        <button className="absolute bottom-0 right-0 text-[#03045E] text-sm font-medium hover:underline bg-gradient-to-l from-blue-100 to-transparent pl-4">
-          Read more
-        </button>
+        {isExpanded ? (
+          <div>
+            {/* Community Pills - Show all in expanded view */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {communities.map((community, index) => (
+                <span 
+                  key={index}
+                  className="bg-blue-400 text-white px-3 py-1 rounded-full text-sm"
+                >
+                  {community}
+                </span>
+              ))}
+            </div>
+            
+            <p className="text-gray-800 leading-relaxed text-sm mb-4">
+              {prayerText}
+            </p>
+            
+            {/* Mood and Urgency Meter in expanded view */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600 font-medium">Mood:</span>
+                <span className="text-lg">{mood}</span>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-gray-600 font-medium">{urgency}</span>
+                <div className="flex items-end space-x-1 h-7">
+                  {urgencyMeter.bars.map((bar, index) => (
+                    <div
+                      key={index}
+                      className={`w-3 ${bar.height} ${bar.color} rounded-sm`}
+                    ></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Timeline Section */}
+            <div className="bg-blue-50 rounded-lg p-3 mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-medium text-gray-800">Recent Updates</h4>
+                <button className="text-xs text-blue-600 hover:underline">
+                  View full timeline →
+                </button>
+              </div>
+              <div className="space-y-1">
+                {timeline.map((update, index) => (
+                  <div key={index} className="text-xs text-gray-600">
+                    Read By {update.user} · {update.time}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Comments Section Toggle */}
+            <div className="mb-4">
+              <button 
+                onClick={() => setShowComments(!showComments)}
+                className="text-sm font-medium text-gray-800 hover:text-blue-600 transition-colors duration-200"
+              >
+                Comments {showComments ? '▲' : '▼'}
+              </button>
+            </div>
+            
+            {/* Comments Section */}
+            {showComments && (
+              <div className="mb-4">
+                {comments.slice(0, 2).map((comment, index) => (
+                  <div key={index} className="bg-blue-50 rounded-lg p-3 mb-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <span className="font-medium text-sm text-gray-800">{comment.user}</span>
+                      <span className="text-xs text-gray-500">{comment.time}</span>
+                    </div>
+                    <p className="text-sm text-gray-700 mb-3">{comment.text}</p>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-1">
+                        <button 
+                          onClick={() => handleEmojiReaction(index, "🙏")}
+                          className="text-lg hover:scale-110 transition-transform"
+                        >
+                          🙏
+                        </button>
+                        <span className="text-xs text-gray-500">{getEmojiCount(index, "🙏")}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <button 
+                          onClick={() => handleEmojiReaction(index, "♥️")}
+                          className="text-lg hover:scale-110 transition-transform"
+                        >
+                          ♥️
+                        </button>
+                        <span className="text-xs text-gray-500">{getEmojiCount(index, "♥️")}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <button 
+                          onClick={() => handleEmojiReaction(index, "😇")}
+                          className="text-lg hover:scale-110 transition-transform"
+                        >
+                          😇
+                        </button>
+                        <span className="text-xs text-gray-500">{getEmojiCount(index, "😇")}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <button 
+                          onClick={() => handleEmojiReaction(index, "😢")}
+                          className="text-lg hover:scale-110 transition-transform"
+                        >
+                          😢
+                        </button>
+                        <span className="text-xs text-gray-500">{getEmojiCount(index, "😢")}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <button 
+                          onClick={() => handleEmojiReaction(index, "🎉")}
+                          className="text-lg hover:scale-110 transition-transform"
+                        >
+                          🎉
+                        </button>
+                        <span className="text-xs text-gray-500">{getEmojiCount(index, "🎉")}</span>
+                      </div>
+                      <button className="text-xs text-blue-600 hover:underline ml-auto">Reply</button>
+                    </div>
+                  </div>
+                ))}
+                
+                {comments.length > 2 && (
+                  <button className="text-sm text-blue-600 hover:underline mb-3">
+                    View {comments.length - 2} more comments
+                  </button>
+                )}
+                
+                {/* Add comment input */}
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    placeholder="Add a prayer or encouragement..."
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors">
+                    Post
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <button 
+              onClick={handleToggleExpand}
+              className="text-[#03045E] text-sm font-medium hover:underline"
+            >
+              Show less
+            </button>
+          </div>
+        ) : (
+          <div>
+            <p className="text-gray-800 leading-relaxed text-sm line-clamp-2 overflow-hidden pr-20">
+              {prayerText}
+            </p>
+            <button 
+              onClick={handleToggleExpand}
+              className="absolute bottom-0 right-0 text-[#03045E] text-sm font-medium hover:underline bg-gradient-to-l from-blue-100 to-transparent pl-4"
+            >
+              Read more
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Action Buttons */}
@@ -154,7 +385,6 @@ const PrayerCard = ({
           >
             <IoBookmarkOutline className="w-5 h-5" />
           </button>
-
 
           <button
             onClick={onComment}
