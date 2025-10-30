@@ -131,6 +131,17 @@ body {
   --gradient-primary-hover: linear-gradient(135deg, #0066AA 0%, #A68B2C 100%);
 }
 
+@layer utilities {
+  .light-background {
+    background: linear-gradient(252.01deg, #A6D3FF -14.46%, #D3E9FF 41.17%, #A6D3FF 96.79%, #FFFFFF 119.04%);
+  }
+
+  .btn-blue-gradient {
+      background: linear-gradient(263.13deg, #007FD4 0.7%, #03045E 98.01%);
+      color: white;
+  }
+}
+
 /* Custom animations */
 @keyframes slideInRight {
   from {

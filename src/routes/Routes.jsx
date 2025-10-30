@@ -2,6 +2,10 @@ import { Route, Routes as AppRoutes } from "react-router-dom";
 import SignUp from "../pages/signup/signup"
 import LandingPage from "../pages/landing_page/LandingPage"
 import Home from "../pages/home/Home"
+import Communities from "../pages/communities/Communities"
+import Create from "../pages/create/Create"
+import Messages from "../pages/messages/Messages"
+import Profile from "../pages/profile/Profile"
 import ProtectedRoute from "../components/ProtectedRoute"
 import PublicRoute from "../components/PublicRoute"
 import Login from "../pages/login/Login";
@@ -57,6 +61,38 @@ const Routes = () =>{
             element={
                 <ProtectedRoute>
                     <Tour/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/communities"
+            element={
+                <ProtectedRoute>
+                    <Communities/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/create"
+            element={
+                <ProtectedRoute>
+                    <Create/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/messages"
+            element={
+                <ProtectedRoute>
+                    <Messages/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/profile"
+            element={
+                <ProtectedRoute>
+                    <Profile/>
                 </ProtectedRoute>
             }
             />
