@@ -11,9 +11,26 @@ const Home = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("All");
+  const [expandedCards, setExpandedCards] = useState(new Set());
 
   const handleLogout = () => {
     dispatch(clearUser());
+  };
+
+  const handleToggleExpand = (cardId) => {
+    console.log("Toggling card with ID:", cardId);
+    setExpandedCards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(cardId)) {
+        newSet.delete(cardId);
+        console.log("Card collapsed:", cardId);
+      } else {
+        newSet.add(cardId);
+        console.log("Card expanded:", cardId);
+      }
+      console.log("Current expanded cards:", Array.from(newSet));
+      return newSet;
+    });
   };
 
   // Mock data for prayer cards - matches the image
@@ -24,44 +41,126 @@ const Home = () => {
       timeAgo: "2 min",
       urgency: "Urgent",
       prayerText:
-        "Please pray for my grandmother who is in the hospital. She has been struggling with her health lately, and the doctors are running several tests to figure out what's going on. It's been a difficult tim...",
+        "Please pray for my grandmother who is in the hospital. She has been struggling with her health and the doctors are running more tests. Our family is really worried and we could use all the prayers we can get during this difficult time. The doctors say the next 48 hours are critical.",
       status: null,
+      communities: ["Church Group", "Prayer Group", "Family Prayer"],
+      mood: "😢",
+      timeline: [
+        { user: "Micheal R.", action: "Read", time: "3h ago" },
+        { user: "John Ray", action: "Read", time: "3h ago" }
+      ],
+      comments: [
+        { 
+          user: "Michael Chen", 
+          text: "Praying for your grandmother and your whole family. May God grant her healing and peace.", 
+          time: "2 hours ago",
+          reactions: { "🙏": 5, "♥️": 3 }
+        },
+        { 
+          user: "Sarah Williams", 
+          text: "Sending love and prayers your way. God is faithful and will see you through this difficult time.", 
+          time: "1 hour ago",
+          reactions: { "🙏": 8, "♥️": 2, "😇": 1 }
+        },
+        { 
+          user: "Pastor John", 
+          text: "Our whole church is praying for your grandmother's healing. Trust in the Lord's plan.", 
+          time: "45 minutes ago",
+          reactions: { "🙏": 12, "♥️": 5, "🎉": 1 }
+        }
+      ]
     },
     {
       id: 2,
-      user: { name: "David Park" },
-      timeAgo: "2 min",
-      urgency: "Urgent",
+      user: { name: "Sarah Johnson" },
+      timeAgo: "5 min",
+      urgency: "Normal",
       prayerText:
-        "Please pray for my grandmother who is in the hospital. She has been struggling with her health lately, and the doctors are running several tests to figure out what's going on. It's been a difficult tim...",
+        "Please pray for my job interview tomorrow. I've been unemployed for 3 months and this opportunity means everything to my family. I'm nervous but trusting God's plan.",
       status: null,
+      communities: ["Youth Group", "Career Ministry"],
+      mood: "😰",
+      timeline: [
+        { user: "Pastor Mike", action: "Read", time: "1h ago" },
+        { user: "Lisa K.", action: "Read", time: "2h ago" }
+      ],
+      comments: [
+        { 
+          user: "Pastor Mike", 
+          text: "Praying for God's favor and peace over your interview. Trust in His timing!", 
+          time: "1 hour ago",
+          reactions: { "🙏": 8, "♥️": 5 }
+        }
+      ]
     },
     {
       id: 3,
-      user: { name: "David Park" },
-      timeAgo: "2 min",
+      user: { name: "Mark Thompson" },
+      timeAgo: "10 min",
       urgency: "Low",
       prayerText:
-        "Please pray for my grandmother who is in the hospital. She has been struggling with her health lately, and the doctors are running several tests to figure out what's going on. It's been a difficult tim...",
+        "Thank you all for your prayers! My son's surgery went well and he's recovering beautifully. God is good!",
       status: "Draft",
+      communities: ["Church Group"],
+      mood: "🙏",
+      timeline: [
+        { user: "Emma R.", action: "Read", time: "5m ago" },
+        { user: "David L.", action: "Read", time: "8m ago" }
+      ],
+      comments: [
+        { 
+          user: "Emma Rodriguez", 
+          text: "Praise God! So happy to hear the good news. Continued prayers for his recovery.", 
+          time: "30 minutes ago",
+          reactions: { "🙏": 12, "♥️": 8, "🎉": 6 }
+        }
+      ]
     },
     {
       id: 4,
-      user: { name: "David Park" },
-      timeAgo: "2 min",
+      user: { name: "Jennifer Adams" },
+      timeAgo: "15 min",
       urgency: "Normal",
       prayerText:
-        "Please pray for my grandmother who is in the hospital. She has been struggling with her health lately, and the doctors are running several tests to figure out what's going on. It's been a difficult tim...",
+        "Please pray for wisdom as my husband and I make some important financial decisions. We want to honor God with our choices.",
       status: "Draft",
+      communities: ["Marriage Ministry", "Financial Peace"],
+      mood: "🤔",
+      timeline: [
+        { user: "Pastor John", action: "Read", time: "10m ago" },
+        { user: "Mary S.", action: "Read", time: "12m ago" }
+      ],
+      comments: [
+        { 
+          user: "Financial Counselor Tom", 
+          text: "Praying for wisdom and discernment in your decisions. Happy to chat if you need guidance.", 
+          time: "45 minutes ago",
+          reactions: { "🙏": 4, "♥️": 2 }
+        }
+      ]
     },
     {
       id: 5,
-      user: { name: "David Park" },
-      timeAgo: "2 min",
+      user: { name: "Robert Kim" },
+      timeAgo: "20 min",
       urgency: "Urgent",
       prayerText:
-        "Please pray for my grandmother who is in the hospital. She has been struggling with her health lately, and the doctors are running several tests to figure out what's going on. It's been a difficult tim...",
+        "Emergency prayer request: My father was just rushed to the hospital with chest pains. Please pray for the doctors and for God's healing touch.",
       status: "Scheduled",
+      communities: ["Prayer Group", "Emergency Prayer Team"],
+      mood: "😰",
+      timeline: [
+        { user: "Prayer Team Lead", action: "Read", time: "2m ago" },
+        { user: "Dr. Williams", action: "Read", time: "5m ago" }
+      ],
+      comments: [
+        { 
+          user: "Prayer Team Lead", 
+          text: "Lifting your father up in prayer right now. The whole prayer team is mobilized.", 
+          time: "15 minutes ago",
+          reactions: { "🙏": 15, "♥️": 10 }
+        }
+      ]
     },
   ];
 
@@ -254,21 +353,28 @@ const Home = () => {
 
       {/* Prayer Cards Grid */}
       <div className="flex-1 px-6 pb-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-7xl mx-auto items-start">
           {prayerCards.map((prayer) => (
+            <div key={prayer.id} className="w-full">
             <PrayerCard
-              key={prayer.id}
               user={prayer.user}
               timeAgo={prayer.timeAgo}
               urgency={prayer.urgency}
               prayerText={prayer.prayerText}
               status={prayer.status}
+              communities={prayer.communities}
+              mood={prayer.mood}
+              timeline={prayer.timeline}
+              comments={prayer.comments}
+              isExpanded={expandedCards.has(prayer.id)}
+              onToggleExpand={() => handleToggleExpand(prayer.id)}
               onPray={() => console.log("Pray clicked", prayer.id)}
               onBookmark={() => console.log("Bookmark clicked", prayer.id)}
               onComment={() => console.log("Comment clicked", prayer.id)}
               onShare={() => console.log("Share clicked", prayer.id)}
               onMore={() => console.log("More clicked", prayer.id)}
             />
+            </div>
           ))}
         </div>
       </div>
