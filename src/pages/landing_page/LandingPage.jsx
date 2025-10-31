@@ -13,6 +13,15 @@ const LandingPage = () => {
 			{/* Overlay for soft color effect */}
 			<div className="absolute inset-0 bg-[#f7e6c4]/10 z-0" />
 
+			<div className=" absolute right-10 top-5 px-3 py-1 bg-yellow-500 rounded-full cursor-pointer">
+				<Link
+					to="/login"
+					className="text-white font-semibold transition-colors duration-200"
+				>
+					Login here
+				</Link>
+			</div>
+
 			{/* Main Content */}
 			<div className="relative z-10 flex flex-col items-center justify-center w-full h-full pt-24 pb-16 gap-y-12 md:gap-y-16 lg:gap-y-28 ">
 				<div className="flex flex-col items-center justify-center px-4">
@@ -36,17 +45,6 @@ const LandingPage = () => {
 							Join The Community
 						</button>
 					</Link>
-					
-					{/* Login Link */}
-					<p className="text-[#2d1a05] text-sm">
-						Already have an account?{' '}
-						<Link 
-							to="/login" 
-							className="text-[#D3AF37] hover:text-yellow-500 font-semibold transition-colors duration-200 underline"
-						>
-							Login here
-						</Link>
-					</p>
 				</div>
 			</div>
 		</div>
