@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import Header from "../../components/ui/Header";
 import PrayerCard from "./PrayerCard";
+import CreatePrayerModal from "../../components/ui/CreatePrayerModal";
+import { apiClient } from "../../api";
 
 const Home = () => {
   const user = useSelector(selectUser);
@@ -12,6 +14,10 @@ const Home = () => {
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("All");
   const [expandedCards, setExpandedCards] = useState(new Set());
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [prayers, setPrayers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const handleLogout = () => {
     dispatch(clearUser());
@@ -33,8 +39,64 @@ const Home = () => {
     });
   };
 
-  // Mock data for prayer cards - matches the image
-  const prayerCards = [
+  const handleCreatePrayer = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsCreateModalOpen(false);
+  };
+
+  const handlePrayerCreated = (newPrayer) => {
+    console.log('New prayer created:', newPrayer);
+    // Refresh prayers list after creating new prayer
+    fetchPrayers();
+  };
+
+  // Function to fetch prayers from API
+  const fetchPrayers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiClient.get('/prayers');
+      
+      if (response.data.success) {
+        setPrayers(response.data.data.prayers || []);
+      } else {
+        throw new Error('Failed to fetch prayers');
+      }
+    } catch (err) {
+      console.error('Error fetching prayers:', err);
+      setError('Failed to load prayers. Please try again.');
+      // Fallback to mock data if API fails
+      setPrayers(mockPrayerCards);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch prayers on component mount
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      fetchPrayers();
+    }
+  }, [isLoggedIn, user]);
+
+  // Helper function to calculate time ago
+  const getTimeAgo = (dateString) => {
+    const now = new Date();
+    const createdAt = new Date(dateString);
+    const diffInMinutes = Math.floor((now - createdAt) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} min`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
+    if (diffInMinutes < 10080) return `${Math.floor(diffInMinutes / 1440)}d`;
+    return `${Math.floor(diffInMinutes / 10080)}w`;
+  };
+
+  // Mock data for prayer cards - used as fallback
+  const mockPrayerCards = [
     {
       id: 1,
       user: { name: "David Park" },
@@ -286,7 +348,10 @@ const Home = () => {
           </div>
           </div>
           {/* Add Prayer Button */}
-          <button className="btn-blue-gradient text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200">
+          <button 
+            onClick={handleCreatePrayer}
+            className="btn-blue-gradient text-white w-10 h-10 rounded-full flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
             <span className="text-2xl">+</span>
           </button>
         </div>
@@ -353,33 +418,82 @@ const Home = () => {
 
       {/* Prayer Cards Grid */}
       <div className="flex-1 px-6 pb-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-7xl mx-auto items-start">
-          {prayerCards.map((prayer) => (
-            <div key={prayer.id} className="w-full">
-            <PrayerCard
-              user={prayer.user}
-              timeAgo={prayer.timeAgo}
-              urgency={prayer.urgency}
-              prayerText={prayer.prayerText}
-              status={prayer.status}
-              communities={prayer.communities}
-              mood={prayer.mood}
-              timeline={prayer.timeline}
-              comments={prayer.comments}
-              isExpanded={expandedCards.has(prayer.id)}
-              onToggleExpand={() => handleToggleExpand(prayer.id)}
-              onPray={() => console.log("Pray clicked", prayer.id)}
-              onBookmark={() => console.log("Bookmark clicked", prayer.id)}
-              onComment={() => console.log("Comment clicked", prayer.id)}
-              onShare={() => console.log("Share clicked", prayer.id)}
-              onMore={() => console.log("More clicked", prayer.id)}
-            />
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading prayers...</p>
             </div>
-          ))}
-        </div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">{error}</p>
+              <button 
+                onClick={fetchPrayers}
+                className="btn-blue-gradient text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        ) : prayers.length === 0 ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <p className="text-gray-600 mb-4">No prayers found</p>
+              <button 
+                onClick={handleCreatePrayer}
+                className="btn-blue-gradient text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+              >
+                Create First Prayer
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-7xl mx-auto items-start">
+            {prayers.map((prayer) => (
+              <div key={prayer._id} className="w-full">
+                <PrayerCard
+                  user={prayer.anonymous ? { name: "Anonymous" } : { name: "User" }}
+                  timeAgo={getTimeAgo(prayer.createdAt)}
+                  urgency={prayer.urgency}
+                  prayerText={prayer.content}
+                  status={null} // Keep hardcoded for now
+                  communities={["Prayer Community"]} // Keep hardcoded for now
+                  mood={prayer.moodEmoji}
+                  timeline={[
+                    { user: "Someone", action: "Read", time: "1h ago" },
+                    { user: "Another", action: "Read", time: "2h ago" }
+                  ]} // Keep hardcoded for now
+                  comments={prayer.comments.map(comment => ({
+                    user: "Community Member",
+                    text: comment.commentText,
+                    time: getTimeAgo(comment.createdAt),
+                    reactions: { "🙏": 5, "♥️": 3 } // Keep hardcoded for now
+                  }))}
+                  tags={prayer.tags}
+                  isExpanded={expandedCards.has(prayer._id)}
+                  onToggleExpand={() => handleToggleExpand(prayer._id)}
+                  onPray={() => console.log("Pray clicked", prayer._id)}
+                  onBookmark={() => console.log("Bookmark clicked", prayer._id)}
+                  onComment={() => console.log("Comment clicked", prayer._id)}
+                  onShare={() => console.log("Share clicked", prayer._id)}
+                  onMore={() => console.log("More clicked", prayer._id)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <BottomNavBar />
+
+      {/* Create Prayer Modal */}
+      <CreatePrayerModal 
+        isOpen={isCreateModalOpen}
+        onClose={handleCloseModal}
+        onSuccess={handlePrayerCreated}
+      />
     </div>
   );
 };

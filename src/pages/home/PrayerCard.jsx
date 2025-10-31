@@ -30,6 +30,7 @@ const PrayerCard = ({
       reactions: { "🙏": 5, "♥️": 3 }
     }
   ],
+  tags = [],
   isExpanded = false,
   onToggleExpand,
   onPray,
@@ -231,6 +232,23 @@ const PrayerCard = ({
                 </div>
               </div>
             </div>
+            
+            {/* Tags Section */}
+            {tags && tags.length > 0 && (
+              <div className="mb-4">
+                <span className="text-sm text-gray-600 font-medium mb-2 block">Tags:</span>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag, index) => (
+                    <span 
+                      key={index}
+                      className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             
             {/* Timeline Section */}
             <div className="bg-blue-50 rounded-lg p-3 mb-4">

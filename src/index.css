@@ -1,5 +1,31 @@
 @import "tailwindcss";
 
+
+
+html {
+  scrollbar-width: thin; /* for Firefox */
+  scrollbar-color: #A6D3FF #FFFFFF; /* thumb | track */
+}
+
+/* Chrome, Edge, Safari */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #A6D3FF;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #7bbcff; /* darker on hover */
+}
+
+
 /* Custom colors defined using CSS custom properties */
 :root {
   /* Primary color palette */
@@ -141,6 +167,28 @@ body {
       color: white;
   }
 }
+
+
+.light-background {
+  background: linear-gradient(252.01deg, #A6D3FF -14.46%, #D3E9FF 41.17%, #A6D3FF 96.79%, #FFFFFF 119.04%);
+  scrollbar-width: thin; /* for Firefox */
+  scrollbar-color: #A6D3FF #FFFFFF; /* thumb color | track color */
+}
+
+/* For Chrome, Edge, Safari */
+.light-background::-webkit-scrollbar {
+  width: 6px; /* reduce scrollbar width */
+}
+
+.light-background::-webkit-scrollbar-track {
+  background: #ffffff; /* scrollbar track color */
+}
+
+.light-background::-webkit-scrollbar-thumb {
+  background-color: #A6D3FF; /* scrollbar thumb color */
+  border-radius: 10px;
+}
+
 
 /* Custom animations */
 @keyframes slideInRight {
