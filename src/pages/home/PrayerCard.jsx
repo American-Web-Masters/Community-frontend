@@ -69,47 +69,53 @@ const PrayerCard = ({
     return baseCount + additionalCount;
   };
   const getUrgencyMeter = (urgency) => {
+    const baseHeights = ['h-3', 'h-4', 'h-5', 'h-6', 'h-7', 'h-8'];
+    
     switch (urgency?.toLowerCase()) {
       case "low":
         return {
           bars: [
-            { height: 'h-4', color: 'bg-green-300' },
-            // { height: 'h-4', color: 'bg-gray-200' },
-            { height: 'h-6', color: 'bg-green-400' },
-            { height: 'h-8', color: 'bg-green-500' },
-            { height: 'h-10', color: 'bg-green-600' }
+            { height: 'h-3', color: 'bg-yellow-400', filled: true },
+            { height: 'h-4', color: 'bg-yellow-500', filled: true },
+            { height: 'h-5', color: 'bg-gray-200', filled: false },
+            { height: 'h-6', color: 'bg-gray-200', filled: false },
+            { height: 'h-7', color: 'bg-gray-200', filled: false },
+            { height: 'h-8', color: 'bg-gray-200', filled: false }
           ]
         };
       case "normal":
       case "medium":
         return {
           bars: [
-            { height: 'h-4', color: 'bg-yellow-200' },
-            // { height: 'h-4', color: 'bg-yellow-400' },
-            { height: 'h-6', color: 'bg-yellow-300' },
-            { height: 'h-8', color: 'bg-yellow-400' },
-            { height: 'h-10', color: 'bg-yellow-500' }
+            { height: 'h-3', color: 'bg-green-400', filled: true },
+            { height: 'h-4', color: 'bg-green-500', filled: true },
+            { height: 'h-5', color: 'bg-green-500', filled: true },
+            { height: 'h-6', color: 'bg-green-600', filled: true },
+            { height: 'h-7', color: 'bg-gray-200', filled: false },
+            { height: 'h-8', color: 'bg-gray-200', filled: false }
           ]
         };
       case "urgent":
       case "high":
         return {
           bars: [
-            { height: 'h-4', color: 'bg-red-500' },
-            // { height: 'h-4', color: 'bg-red-400' },
-            { height: 'h-6', color: 'bg-red-500' },
-            { height: 'h-8', color: 'bg-red-600' },
-            { height: 'h-10', color: 'bg-red-700' }
+            { height: 'h-3', color: 'bg-red-400', filled: true },
+            { height: 'h-4', color: 'bg-red-500', filled: true },
+            { height: 'h-5', color: 'bg-red-500', filled: true },
+            { height: 'h-6', color: 'bg-red-600', filled: true },
+            { height: 'h-7', color: 'bg-red-600', filled: true },
+            { height: 'h-8', color: 'bg-red-700', filled: true }
           ]
         };
       default:
         return {
           bars: [
-            { height: 'h-6', color: 'bg-green-500' },
-            // { height: 'h-4', color: 'bg-gray-200' },
-            { height: 'h-8', color: 'bg-gray-200' },
-            { height: 'h-10', color: 'bg-gray-200' },
-            { height: 'h-12', color: 'bg-gray-200' }
+            { height: 'h-3', color: 'bg-gray-200', filled: false },
+            { height: 'h-4', color: 'bg-gray-200', filled: false },
+            { height: 'h-5', color: 'bg-gray-200', filled: false },
+            { height: 'h-6', color: 'bg-gray-200', filled: false },
+            { height: 'h-7', color: 'bg-gray-200', filled: false },
+            { height: 'h-8', color: 'bg-gray-200', filled: false }
           ]
         };
     }
@@ -131,7 +137,7 @@ const PrayerCard = ({
   const urgencyMeter = getUrgencyMeter(urgency);
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4 mb-4">
+    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4 mb-4 transition-all duration-300 ease-in-out">
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
@@ -194,9 +200,9 @@ const PrayerCard = ({
       </div>
 
       {/* Prayer Text */}
-      <div className="mb-4 relative">
+      <div className="mb-4 relative overflow-hidden transition-all duration-300 ease-in-out">
         {isExpanded ? (
-          <div>
+          <div className="animate-in slide-in-from-top duration-300">
             {/* Community Pills - Show all in expanded view */}
             <div className="flex flex-wrap gap-2 mb-3">
               {communities.map((community, index) => (
@@ -222,11 +228,11 @@ const PrayerCard = ({
               
               <div className="flex items-center space-x-3">
                 <span className="text-sm text-gray-600 font-medium">{urgency}</span>
-                <div className="flex items-end space-x-1 h-7">
+                <div className="flex items-end space-x-0.5 h-8">
                   {urgencyMeter.bars.map((bar, index) => (
                     <div
                       key={index}
-                      className={`w-3 ${bar.height} ${bar.color} rounded-sm`}
+                      className={`w-2 ${bar.height} ${bar.color} rounded-sm`}
                     ></div>
                   ))}
                 </div>
@@ -261,7 +267,7 @@ const PrayerCard = ({
               <div className="space-y-1">
                 {timeline.map((update, index) => (
                   <div key={index} className="text-xs text-gray-600">
-                    Read By {update.user} · {update.time}
+                    Liked By {update.user} · {update.time}
                   </div>
                 ))}
               </div>
@@ -333,7 +339,6 @@ const PrayerCard = ({
                         </button>
                         <span className="text-xs text-gray-500">{getEmojiCount(index, "🎉")}</span>
                       </div>
-                      <button className="text-xs text-blue-600 hover:underline ml-auto">Reply</button>
                     </div>
                   </div>
                 ))}
@@ -360,19 +365,19 @@ const PrayerCard = ({
             
             <button 
               onClick={handleToggleExpand}
-              className="text-[#03045E] text-sm font-medium hover:underline"
+              className="text-[#03045E] text-sm font-medium hover:underline transition-all duration-200 hover:text-blue-600"
             >
               Show less
             </button>
           </div>
         ) : (
-          <div>
-            <p className="text-gray-800 leading-relaxed text-sm line-clamp-2 overflow-hidden pr-20">
+          <div className="transition-all duration-300 ease-in-out">
+            <p className="text-gray-800 leading-relaxed text-sm line-clamp-2 overflow-hidden pr-20 transition-all duration-300 ease-in-out">
               {prayerText}
             </p>
             <button 
               onClick={handleToggleExpand}
-              className="absolute bottom-0 right-0 text-[#03045E] text-sm font-medium hover:underline bg-gradient-to-l from-blue-100 to-transparent pl-4"
+              className="absolute bottom-0 right-0 text-[#03045E] text-sm font-medium hover:underline bg-gradient-to-l from-blue-100 to-transparent pl-4 transition-all duration-200 hover:text-blue-600"
             >
               Read more
             </button>
