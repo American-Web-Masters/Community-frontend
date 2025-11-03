@@ -137,7 +137,8 @@ const PrayerCard = ({
   const urgencyMeter = getUrgencyMeter(urgency);
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4 mb-4 transition-all duration-300 ease-in-out">
+    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4 mb-4 transition-all duration-500 ease-in-out">
+      {/* Header */}
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
@@ -200,9 +201,9 @@ const PrayerCard = ({
       </div>
 
       {/* Prayer Text */}
-      <div className="mb-4 relative overflow-hidden transition-all duration-300 ease-in-out">
+      <div className="mb-4 relative overflow-hidden smooth-height">
         {isExpanded ? (
-          <div className="animate-in slide-in-from-top duration-300">
+          <div className="expand-animation transform transition-all duration-500 ease-out">
             {/* Community Pills - Show all in expanded view */}
             <div className="flex flex-wrap gap-2 mb-3">
               {communities.map((community, index) => (
@@ -285,7 +286,7 @@ const PrayerCard = ({
             
             {/* Comments Section */}
             {showComments && (
-              <div className="mb-4">
+              <div className="mb-4 animate-in fade-in duration-300 ease-in-out">
                 {comments.slice(0, 2).map((comment, index) => (
                   <div key={index} className="bg-blue-50 rounded-lg p-3 mb-3">
                     <div className="flex items-start justify-between mb-2">
@@ -365,19 +366,19 @@ const PrayerCard = ({
             
             <button 
               onClick={handleToggleExpand}
-              className="text-[#03045E] text-sm font-medium hover:underline transition-all duration-200 hover:text-blue-600"
+              className="text-[#03045E] text-sm font-medium hover:underline transition-all duration-300 hover:text-blue-600"
             >
               Show less
             </button>
           </div>
         ) : (
-          <div className="transition-all duration-300 ease-in-out">
-            <p className="text-gray-800 leading-relaxed text-sm line-clamp-2 overflow-hidden pr-20 transition-all duration-300 ease-in-out">
+          <div className="transition-all duration-300 ease-in-out transform smooth-height">
+            <p className="text-gray-800 leading-relaxed text-sm line-clamp-2 overflow-hidden pr-20 transition-all duration-500 ease-in-out">
               {prayerText}
             </p>
             <button 
               onClick={handleToggleExpand}
-              className="absolute bottom-0 right-0 text-[#03045E] text-sm font-medium hover:underline bg-gradient-to-l from-blue-100 to-transparent pl-4 transition-all duration-200 hover:text-blue-600"
+              className="absolute bottom-0 right-0 text-[#03045E] text-sm font-medium hover:underline bg-gradient-to-l from-blue-100 to-transparent pl-4 transition-all duration-300 hover:text-blue-600"
             >
               Read more
             </button>
