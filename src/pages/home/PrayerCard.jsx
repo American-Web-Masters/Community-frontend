@@ -68,6 +68,8 @@ const PrayerCard = ({
     const additionalCount = commentReactions[key] || 0;
     return baseCount + additionalCount;
   };
+
+
   const getUrgencyMeter = (urgency) => {
     const baseHeights = ['h-3', 'h-4', 'h-5', 'h-6', 'h-7', 'h-8'];
     
@@ -387,6 +389,7 @@ const PrayerCard = ({
       </div>
 
       {/* Action Buttons */}
+      {isExpanded && (
       <div className="flex items-center justify-between pt-3 border-t border-blue-200/50">
         <div className="flex items-center space-x-4">
           <button
@@ -425,6 +428,7 @@ const PrayerCard = ({
           </button>
         </div>
       </div>
+      )}
     </div>
   );
 };
