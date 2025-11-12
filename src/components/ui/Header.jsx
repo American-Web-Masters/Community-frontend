@@ -36,10 +36,6 @@ const Header = ({
             Logout
           </button>
 
-          <button  className="px-4 py-2 md:px-6 text-xs cursor-pointer btn-blue-gradient rounded-full shadow-sm hover:shadow-md transition-shadow duration-200">
-            Donate Now
-          </button>
-
 
           {showFilter && (
             <button
