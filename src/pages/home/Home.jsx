@@ -255,12 +255,6 @@ const Home = () => {
         <div className="flex justify-between">
         <div className="flex items-center space-x-6 md:space-x-12 text-sm">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            <span className="font-semibold text-xs md:text-sm text-gray-900">
-              247 praying together
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
             <svg
               width="22"
               height="22"
@@ -367,8 +361,19 @@ const Home = () => {
                   <path d="M41.6673 36.4583C41.6673 41.6354 41.6673 45.8333 25.0007 45.8333C8.33398 45.8333 8.33398 41.6354 8.33398 36.4583C8.33398 31.2812 15.7965 27.0833 25.0007 27.0833C34.2048 27.0833 41.6673 31.2812 41.6673 36.4583Z" stroke="#ffffff" stroke-width="3"/>
                 </svg>
               <div className="flex flex-col items-start">
+                <span className="text-xs md:text-sm">Prayer Wall</span>
+                <span className="text-xs opacity-70">Explore prayers</span>
+              </div>
+            </button>
+
+            <button className="bg-white/10 text-gray-700 px-3 md:px-6 h-full rounded-full text-sm font-medium flex items-center space-x-2 md:space-x-3 shadow-sm border border-[#03045E33] whitespace-nowrap">
+                <svg width="32" height="32" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M25.0013 20.8333C29.6037 20.8333 33.3346 17.1024 33.3346 12.5C33.3346 7.89762 29.6037 4.16666 25.0013 4.16666C20.3989 4.16666 16.668 7.89762 16.668 12.5C16.668 17.1024 20.3989 20.8333 25.0013 20.8333Z" stroke="#ffffff" stroke-width="3"/>
+                  <path d="M41.6673 36.4583C41.6673 41.6354 41.6673 45.8333 25.0007 45.8333C8.33398 45.8333 8.33398 41.6354 8.33398 36.4583C8.33398 31.2812 15.7965 27.0833 25.0007 27.0833C34.2048 27.0833 41.6673 31.2812 41.6673 36.4583Z" stroke="#ffffff" stroke-width="3"/>
+                </svg>
+              <div className="flex flex-col items-start">
                 <span className="text-xs md:text-sm">My Prayers</span>
-                <span className="text-xs opacity-70">Our Request</span>
+                <span className="text-xs opacity-70">Recent Activity</span>
               </div>
             </button>
 
