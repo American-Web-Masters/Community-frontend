@@ -11,6 +11,9 @@ import PublicRoute from "../components/PublicRoute"
 import Login from "../pages/login/Login";
 import Survey from "../pages/Splash Pages/Survey";
 import Tour from "../pages/Splash Pages/Tour";
+import MyPrayers from "../pages/my_prayers/MyPrayers";
+import UpdatePrayers from "../pages/update_prayers/UpdatePrayers";
+import AnsweredPrayers from "../pages/answered_prayer/AnsweredPrayers";
 
 const Routes = () =>{
     return(
@@ -93,6 +96,30 @@ const Routes = () =>{
             element={
                 <ProtectedRoute>
                     <Profile/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/my-prayers"
+            element={
+                <ProtectedRoute>
+                    <MyPrayers/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/updates"
+            element={
+                <ProtectedRoute>
+                    <UpdatePrayers/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/answered"
+            element={
+                <ProtectedRoute>
+                    <AnsweredPrayers/>
                 </ProtectedRoute>
             }
             />
