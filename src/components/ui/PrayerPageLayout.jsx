@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import BottomNavBar from "./BottomNavBar";
 import Header from "./Header";
 import PrayerCard from "../../pages/home/PrayerCard";
 import CreatePrayerModal from "./CreatePrayerModal";
+import { selectUser } from "../../store/userSlice";
 
 const PrayerPageLayout = ({ 
   pageType = "prayer-wall", // prayer-wall, my-prayers, updates, answered
@@ -18,6 +20,7 @@ const PrayerPageLayout = ({
   onCreatePrayer
 }) => {
   const navigate = useNavigate();
+  const currentUser = useSelector(selectUser);
   const [activeTab, setActiveTab] = useState(customTabs.length > 0 ? customTabs[0] : "All");
   const [expandedCards, setExpandedCards] = useState(new Set());
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -317,37 +320,75 @@ const PrayerPageLayout = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-7xl mx-auto items-start">
-            {prayers.map((prayer) => (
-              <div key={prayer._id || prayer.id} className="w-full">
-                <PrayerCard
-                  user={prayer.anonymous ? { name: "Anonymous" } : { name: "User" }}
-                  timeAgo={prayer.createdAt ? getTimeAgo(prayer.createdAt) : prayer.timeAgo}
-                  urgency={prayer.urgency}
-                  prayerText={prayer.content || prayer.prayerText}
-                  status={prayer.status}
-                  communities={prayer.communities || ["Prayer Community"]}
-                  mood={prayer.moodEmoji || prayer.mood}
-                  timeline={prayer.timeline || [
-                    { user: "Someone", action: "Read", time: "1h ago" },
-                    { user: "Another", action: "Read", time: "2h ago" }
-                  ]}
-                  comments={prayer.comments ? prayer.comments.map(comment => ({
-                    user: "Community Member",
-                    text: comment.commentText || comment.text,
-                    time: comment.createdAt ? getTimeAgo(comment.createdAt) : comment.time,
-                    reactions: comment.reactions || { "🙏": 5, "♥️": 3 }
-                  })) : []}
-                  tags={prayer.tags}
-                  isExpanded={expandedCards.has(prayer._id || prayer.id)}
-                  onToggleExpand={() => handleToggleExpand(prayer._id || prayer.id)}
-                  onPray={() => console.log("Pray clicked", prayer._id || prayer.id)}
-                  onBookmark={() => console.log("Bookmark clicked", prayer._id || prayer.id)}
-                  onComment={() => console.log("Comment clicked", prayer._id || prayer.id)}
-                  onShare={() => console.log("Share clicked", prayer._id || prayer.id)}
-                  onMore={() => console.log("More clicked", prayer._id || prayer.id)}
-                />
-              </div>
-            ))}
+            {prayers.map((prayer) => {
+              // Check if current user has prayed for this prayer
+              const userHasPrayed = prayer.isPrayed?.some(prayedUser => 
+                prayedUser._id === currentUser?._id || prayedUser === currentUser?._id
+              ) || false;
+
+              return (
+                <div key={prayer._id || prayer.id} className="w-full">
+                  <PrayerCard
+                    prayerId={prayer._id || prayer.id}
+                    user={prayer.anonymous ? { name: "Anonymous" } : { name: prayer.user?.firstname || prayer.user?.username || "User" }}
+                    timeAgo={prayer.createdAt ? getTimeAgo(prayer.createdAt) : prayer.timeAgo}
+                    urgency={prayer.urgency}
+                    prayerText={prayer.content || prayer.prayerText}
+                    status={prayer.status}
+                    communities={prayer.communities || ["Prayer Community"]}
+                    mood={prayer.moodEmoji || prayer.mood}
+                    timeline={prayer.timeline || [
+                      { user: "Someone", action: "Read", time: "1h ago" },
+                      { user: "Another", action: "Read", time: "2h ago" }
+                    ]}
+                    comments={prayer.comments ? prayer.comments.map(comment => {
+                      // Process comment reactions to create a reactions object and find user's reaction
+                      const reactionsCount = {};
+                      let userReaction = null;
+                      
+                      if (comment.reactions && Array.isArray(comment.reactions)) {
+                        comment.reactions.forEach(reaction => {
+                          // Count reactions by emoji
+                          reactionsCount[reaction.emoji] = (reactionsCount[reaction.emoji] || 0) + 1;
+                          
+                          // Check if current user has reacted
+                          if (reaction.user?._id === currentUser?._id || reaction.user === currentUser?._id) {
+                            userReaction = reaction.emoji;
+                          }
+                        });
+                      }
+
+                      return {
+                        _id: comment._id,
+                        user: comment.user?.firstname || comment.user?.username || "Community Member",
+                        text: comment.commentText || comment.text,
+                        time: comment.createdAt ? getTimeAgo(comment.createdAt) : comment.time,
+                        reactions: reactionsCount,
+                        userReaction: userReaction,
+                        userId: comment.user?._id
+                      };
+                    }) : []}
+                    tags={prayer.tags}
+                    isExpanded={expandedCards.has(prayer._id || prayer.id)}
+                    isPrayed={userHasPrayed}
+                    onToggleExpand={() => handleToggleExpand(prayer._id || prayer.id)}
+                    onPray={() => console.log("Pray clicked", prayer._id || prayer.id)}
+                    onBookmark={() => console.log("Bookmark clicked", prayer._id || prayer.id)}
+                    onComment={() => console.log("Comment clicked", prayer._id || prayer.id)}
+                    onShare={() => console.log("Share clicked", prayer._id || prayer.id)}
+                    onMore={() => console.log("More clicked", prayer._id || prayer.id)}
+                    onPrayedStateChange={(newState) => {
+                      // Update the prayer in the prayers array
+                      console.log("Prayer state changed:", prayer._id || prayer.id, newState);
+                    }}
+                    onCommentsUpdate={(updatedComments) => {
+                      // Update the prayer's comments in the prayers array
+                      console.log("Comments updated:", prayer._id || prayer.id, updatedComments);
+                    }}
+                  />
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

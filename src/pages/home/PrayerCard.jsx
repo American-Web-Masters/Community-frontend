@@ -2,6 +2,7 @@ import {
   IoBookmarkOutline,
   IoChatbubbleOutline,
   IoShareOutline,
+  IoClose,
 } from "react-icons/io5";
 import {
   PiHandsPrayingThin,
@@ -9,8 +10,18 @@ import {
 } from "react-icons/pi";
 import { BsSend } from "react-icons/bs";
 import { useState } from "react";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../store/userSlice";
+import { 
+  markAsPrayed, 
+  unmarkAsPrayed, 
+  addComment, 
+  addCommentReaction, 
+  removeCommentReaction 
+} from "../../api/prayer";
 
 const PrayerCard = ({
+  prayerId,
   user,
   timeAgo,
   urgency,
@@ -38,35 +49,145 @@ const PrayerCard = ({
   onComment,
   onShare,
   onMore,
+  isPrayed = false,
+  onPrayedStateChange,
+  onCommentsUpdate,
 }) => {
+  const currentUser = useSelector(selectUser);
   const [showComments, setShowComments] = useState(false);
   const [commentReactions, setCommentReactions] = useState({});
+  const [newComment, setNewComment] = useState("");
+  const [isPrayedState, setIsPrayedState] = useState(isPrayed);
+  const [commentsState, setCommentsState] = useState(comments);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [isSubmittingPrayer, setIsSubmittingPrayer] = useState(false);
+  const [error, setError] = useState(null);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
   
   const handleToggleExpand = () => {
     console.log("PrayerCard toggle clicked for user:", user?.name);
     onToggleExpand();
   };
 
-  const handleEmojiReaction = (commentIndex, emoji) => {
-    setCommentReactions(prev => {
-      const key = `${commentIndex}-${emoji}`;
-      const newReactions = { ...prev };
-      
-      if (newReactions[key]) {
-        newReactions[key] += 1;
+  // Handle praying for this prayer
+  const handlePrayClick = async () => {
+    if (!currentUser?._id || isSubmittingPrayer) return;
+
+    setIsSubmittingPrayer(true);
+    try {
+      if (isPrayedState) {
+        await unmarkAsPrayed(prayerId, currentUser._id);
+        setIsPrayedState(false);
+        if (onPrayedStateChange) onPrayedStateChange(false);
       } else {
-        newReactions[key] = 1;
+        await markAsPrayed(prayerId, currentUser._id);
+        setIsPrayedState(true);
+        if (onPrayedStateChange) onPrayedStateChange(true);
       }
+      if (onPray) onPray();
+    } catch (error) {
+      console.error("Error toggling prayer state:", error);
+      setError("Failed to update prayer status. Please try again.");
+      // Reset state on error
+      setIsPrayedState(isPrayed);
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsSubmittingPrayer(false);
+    }
+  };
+
+  // Handle adding a new comment
+  const handleAddComment = async () => {
+    if (!currentUser?._id || !newComment.trim() || isSubmittingComment) return;
+
+    setIsSubmittingComment(true);
+    try {
+      const response = await addComment(prayerId, currentUser._id, newComment.trim());
       
-      return newReactions;
-    });
+      // Add the new comment to the local state
+      const newCommentObj = {
+        _id: response.comment?._id || Date.now().toString(),
+        user: currentUser.username || "You",
+        text: newComment.trim(),
+        time: "Just now",
+        reactions: {},
+        userId: currentUser._id
+      };
+      
+      const updatedComments = [...commentsState, newCommentObj];
+      setCommentsState(updatedComments);
+      setNewComment("");
+      
+      if (onCommentsUpdate) onCommentsUpdate(updatedComments);
+      if (onComment) onComment();
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      setError("Failed to add comment. Please try again.");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  // Handle emoji reactions on comments
+  const handleEmojiReaction = async (commentIndex, emoji) => {
+    if (!currentUser?._id) return;
+
+    const comment = commentsState[commentIndex];
+    if (!comment?._id) return;
+
+    try {
+      // Check if user already has this reaction
+      const currentUserReaction = comment.userReaction;
+      
+      if (currentUserReaction === emoji) {
+        // Remove the reaction if clicking the same emoji
+        await removeCommentReaction(prayerId, comment._id, currentUser._id);
+        
+        // Update local state
+        const updatedComments = [...commentsState];
+        updatedComments[commentIndex] = {
+          ...comment,
+          userReaction: null,
+          reactions: {
+            ...comment.reactions,
+            [emoji]: Math.max(0, (comment.reactions[emoji] || 0) - 1)
+          }
+        };
+        setCommentsState(updatedComments);
+        if (onCommentsUpdate) onCommentsUpdate(updatedComments);
+      } else {
+        // Add new reaction (backend will handle removing old one if exists)
+        await addCommentReaction(prayerId, comment._id, currentUser._id, emoji);
+        
+        // Update local state
+        const updatedComments = [...commentsState];
+        const oldReaction = comment.userReaction;
+        
+        updatedComments[commentIndex] = {
+          ...comment,
+          userReaction: emoji,
+          reactions: {
+            ...comment.reactions,
+            // Remove old reaction count
+            ...(oldReaction && { [oldReaction]: Math.max(0, (comment.reactions[oldReaction] || 0) - 1) }),
+            // Add new reaction count
+            [emoji]: (comment.reactions[emoji] || 0) + 1
+          }
+        };
+        setCommentsState(updatedComments);
+        if (onCommentsUpdate) onCommentsUpdate(updatedComments);
+      }
+    } catch (error) {
+      console.error("Error handling emoji reaction:", error);
+      setError("Failed to update reaction. Please try again.");
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
   const getEmojiCount = (commentIndex, emoji) => {
-    const key = `${commentIndex}-${emoji}`;
-    const baseCount = comments[commentIndex]?.reactions?.[emoji] || 0;
-    const additionalCount = commentReactions[key] || 0;
-    return baseCount + additionalCount;
+    const comment = commentsState[commentIndex];
+    return comment?.reactions?.[emoji] || 0;
   };
 
 
@@ -138,8 +259,140 @@ const PrayerCard = ({
 
   const urgencyMeter = getUrgencyMeter(urgency);
 
+  // Comments Modal Component
+  const CommentsModal = () => {
+    if (!showCommentsModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+          {/* Modal Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">
+              All Comments ({commentsState.length})
+            </h3>
+            <button
+              onClick={() => setShowCommentsModal(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            >
+              <IoClose className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Modal Body - Scrollable Comments */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            {commentsState.map((comment, index) => (
+              <div key={comment._id || index} className="bg-blue-50 rounded-lg p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <span className="font-medium text-sm text-gray-800">{comment.user}</span>
+                  <span className="text-xs text-gray-500">{comment.time}</span>
+                </div>
+                <p className="text-sm text-gray-700 mb-3">{comment.text}</p>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-1">
+                    <button 
+                      onClick={() => handleEmojiReaction(index, "🙏")}
+                      className={`text-lg hover:scale-110 transition-transform ${
+                        comment.userReaction === "🙏" ? 'bg-blue-200 rounded-full p-1' : ''
+                      }`}
+                      disabled={!currentUser?._id}
+                    >
+                      🙏
+                    </button>
+                    <span className="text-xs text-gray-500">{getEmojiCount(index, "🙏")}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <button 
+                      onClick={() => handleEmojiReaction(index, "♥️")}
+                      className={`text-lg hover:scale-110 transition-transform ${
+                        comment.userReaction === "♥️" ? 'bg-blue-200 rounded-full p-1' : ''
+                      }`}
+                      disabled={!currentUser?._id}
+                    >
+                      ♥️
+                    </button>
+                    <span className="text-xs text-gray-500">{getEmojiCount(index, "♥️")}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <button 
+                      onClick={() => handleEmojiReaction(index, "😇")}
+                      className={`text-lg hover:scale-110 transition-transform ${
+                        comment.userReaction === "😇" ? 'bg-blue-200 rounded-full p-1' : ''
+                      }`}
+                      disabled={!currentUser?._id}
+                    >
+                      😇
+                    </button>
+                    <span className="text-xs text-gray-500">{getEmojiCount(index, "😇")}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <button 
+                      onClick={() => handleEmojiReaction(index, "😢")}
+                      className={`text-lg hover:scale-110 transition-transform ${
+                        comment.userReaction === "😢" ? 'bg-blue-200 rounded-full p-1' : ''
+                      }`}
+                      disabled={!currentUser?._id}
+                    >
+                      😢
+                    </button>
+                    <span className="text-xs text-gray-500">{getEmojiCount(index, "😢")}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <button 
+                      onClick={() => handleEmojiReaction(index, "🎉")}
+                      className={`text-lg hover:scale-110 transition-transform ${
+                        comment.userReaction === "🎉" ? 'bg-blue-200 rounded-full p-1' : ''
+                      }`}
+                      disabled={!currentUser?._id}
+                    >
+                      🎉
+                    </button>
+                    <span className="text-xs text-gray-500">{getEmojiCount(index, "🎉")}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Modal Footer - Add Comment */}
+          <div className="p-6 border-t border-gray-200">
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+                placeholder="Add a prayer or encouragement..."
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={!currentUser?._id || isSubmittingComment}
+              />
+              <button 
+                onClick={handleAddComment}
+                disabled={!currentUser?._id || !newComment.trim() || isSubmittingComment}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmittingComment ? "..." : "Post"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4 mb-4 transition-all duration-500 ease-in-out">
+    <>
+      {/* Comments Modal */}
+      <CommentsModal />
+      
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4 mb-4 transition-all duration-500 ease-in-out">
+        {/* Error Message */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+      
       {/* Header */}
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
@@ -276,21 +529,11 @@ const PrayerCard = ({
               </div>
             </div>
             
-            {/* Comments Section Toggle */}
-            <div className="mb-4">
-              <button 
-                onClick={() => setShowComments(!showComments)}
-                className="text-sm font-medium text-gray-800 hover:text-blue-600 transition-colors duration-200"
-              >
-                Comments {showComments ? '▲' : '▼'}
-              </button>
-            </div>
-            
             {/* Comments Section */}
             {showComments && (
               <div className="mb-4 animate-in fade-in duration-300 ease-in-out">
-                {comments.slice(0, 2).map((comment, index) => (
-                  <div key={index} className="bg-blue-50 rounded-lg p-3 mb-3">
+                {commentsState.slice(0, 2).map((comment, index) => (
+                  <div key={comment._id || index} className="bg-blue-50 rounded-lg p-3 mb-3">
                     <div className="flex items-start justify-between mb-2">
                       <span className="font-medium text-sm text-gray-800">{comment.user}</span>
                       <span className="text-xs text-gray-500">{comment.time}</span>
@@ -300,7 +543,10 @@ const PrayerCard = ({
                       <div className="flex items-center space-x-1">
                         <button 
                           onClick={() => handleEmojiReaction(index, "🙏")}
-                          className="text-lg hover:scale-110 transition-transform"
+                          className={`text-lg hover:scale-110 transition-transform ${
+                            comment.userReaction === "🙏" ? 'bg-blue-200 rounded-full p-1' : ''
+                          }`}
+                          disabled={!currentUser?._id}
                         >
                           🙏
                         </button>
@@ -309,7 +555,10 @@ const PrayerCard = ({
                       <div className="flex items-center space-x-1">
                         <button 
                           onClick={() => handleEmojiReaction(index, "♥️")}
-                          className="text-lg hover:scale-110 transition-transform"
+                          className={`text-lg hover:scale-110 transition-transform ${
+                            comment.userReaction === "♥️" ? 'bg-blue-200 rounded-full p-1' : ''
+                          }`}
+                          disabled={!currentUser?._id}
                         >
                           ♥️
                         </button>
@@ -318,7 +567,10 @@ const PrayerCard = ({
                       <div className="flex items-center space-x-1">
                         <button 
                           onClick={() => handleEmojiReaction(index, "😇")}
-                          className="text-lg hover:scale-110 transition-transform"
+                          className={`text-lg hover:scale-110 transition-transform ${
+                            comment.userReaction === "😇" ? 'bg-blue-200 rounded-full p-1' : ''
+                          }`}
+                          disabled={!currentUser?._id}
                         >
                           😇
                         </button>
@@ -327,7 +579,10 @@ const PrayerCard = ({
                       <div className="flex items-center space-x-1">
                         <button 
                           onClick={() => handleEmojiReaction(index, "😢")}
-                          className="text-lg hover:scale-110 transition-transform"
+                          className={`text-lg hover:scale-110 transition-transform ${
+                            comment.userReaction === "😢" ? 'bg-blue-200 rounded-full p-1' : ''
+                          }`}
+                          disabled={!currentUser?._id}
                         >
                           😢
                         </button>
@@ -336,7 +591,10 @@ const PrayerCard = ({
                       <div className="flex items-center space-x-1">
                         <button 
                           onClick={() => handleEmojiReaction(index, "🎉")}
-                          className="text-lg hover:scale-110 transition-transform"
+                          className={`text-lg hover:scale-110 transition-transform ${
+                            comment.userReaction === "🎉" ? 'bg-blue-200 rounded-full p-1' : ''
+                          }`}
+                          disabled={!currentUser?._id}
                         >
                           🎉
                         </button>
@@ -346,9 +604,12 @@ const PrayerCard = ({
                   </div>
                 ))}
                 
-                {comments.length > 2 && (
-                  <button className="text-sm text-blue-600 hover:underline mb-3">
-                    View {comments.length - 2} more comments
+                {commentsState.length > 2 && (
+                  <button 
+                    onClick={() => setShowCommentsModal(true)}
+                    className="text-sm text-blue-600 hover:underline mb-3"
+                  >
+                    View {commentsState.length - 2} more comments
                   </button>
                 )}
                 
@@ -356,11 +617,19 @@ const PrayerCard = ({
                 <div className="flex items-center space-x-2">
                   <input
                     type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
                     placeholder="Add a prayer or encouragement..."
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={!currentUser?._id || isSubmittingComment}
                   />
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors">
-                    Post
+                  <button 
+                    onClick={handleAddComment}
+                    disabled={!currentUser?._id || !newComment.trim() || isSubmittingComment}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmittingComment ? "..." : "Post"}
                   </button>
                 </div>
               </div>
@@ -393,10 +662,16 @@ const PrayerCard = ({
       <div className="flex items-center justify-between pt-3 border-t border-blue-200/50">
         <div className="flex items-center space-x-4">
           <button
-            onClick={onPray}
-            className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors duration-200"
+            onClick={handlePrayClick}
+            disabled={!currentUser?._id || isSubmittingPrayer}
+            className={`flex items-center space-x-1 transition-colors duration-200 ${
+              isPrayedState 
+                ? 'text-blue-600 bg-blue-50 px-2 py-1 rounded-full' 
+                : 'text-gray-600 hover:text-blue-600'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <PiHandsPrayingThin className="w-5 h-5" />
+            {isPrayedState && <span className="text-xs">Prayed</span>}
           </button>
 
           <button
@@ -414,10 +689,13 @@ const PrayerCard = ({
           </button>
 
           <button
-            onClick={onComment}
+            onClick={() => setShowComments(!showComments)}
             className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors duration-200"
           >
             <IoChatbubbleOutline className="w-5 h-5" />
+            {commentsState.length > 0 && (
+              <span className="text-xs">{commentsState.length}</span>
+            )}
           </button>
 
           <button
@@ -430,6 +708,7 @@ const PrayerCard = ({
       </div>
       )}
     </div>
+    </>
   );
 };
 
