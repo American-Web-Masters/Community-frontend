@@ -15,7 +15,10 @@ const PrayerPageLayout = ({
   loading = false,
   error = null,
   onRefresh,
-  onCreatePrayer
+  onCreatePrayer,
+  getPrayerStatus = null,
+  getFilteredPrayers = null,
+  user = null
 }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(customTabs.length > 0 ? customTabs[0] : "All");
@@ -261,7 +264,7 @@ const PrayerPageLayout = ({
 
       {/* Tabs Section - only show if showTabs is true */}
       {showTabs && customTabs.length > 0 && (
-        <div className="px-4 md:px-6 mb-6 md:w-[60%] lg:w-[40%]">
+        <div className="px-4 md:px-6 mb-6 md:w-[70%] lg:w-[55%]">
           <div className="bg-white/60 backdrop-blur-sm rounded-full shadow-sm border border-white/50 p-1 overflow-x-auto">
             <div className="flex min-w-max">
               {customTabs.map((tab, index) => (
@@ -303,53 +306,64 @@ const PrayerPageLayout = ({
               </button>
             </div>
           </div>
-        ) : prayers.length === 0 ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <p className="text-gray-600 mb-4">No prayers found</p>
-              <button 
-                onClick={handleCreatePrayerClick}
-                className="btn-blue-gradient text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
-              >
-                Create First Prayer
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-7xl mx-auto items-start">
-            {prayers.map((prayer) => (
-              <div key={prayer._id || prayer.id} className="w-full">
-                <PrayerCard
-                  user={prayer.anonymous ? { name: "Anonymous" } : { name: "User" }}
-                  timeAgo={prayer.createdAt ? getTimeAgo(prayer.createdAt) : prayer.timeAgo}
-                  urgency={prayer.urgency}
-                  prayerText={prayer.content || prayer.prayerText}
-                  status={prayer.status}
-                  communities={prayer.communities || ["Prayer Community"]}
-                  mood={prayer.moodEmoji || prayer.mood}
-                  timeline={prayer.timeline || [
-                    { user: "Someone", action: "Read", time: "1h ago" },
-                    { user: "Another", action: "Read", time: "2h ago" }
-                  ]}
-                  comments={prayer.comments ? prayer.comments.map(comment => ({
-                    user: "Community Member",
-                    text: comment.commentText || comment.text,
-                    time: comment.createdAt ? getTimeAgo(comment.createdAt) : comment.time,
-                    reactions: comment.reactions || { "🙏": 5, "♥️": 3 }
-                  })) : []}
-                  tags={prayer.tags}
-                  isExpanded={expandedCards.has(prayer._id || prayer.id)}
-                  onToggleExpand={() => handleToggleExpand(prayer._id || prayer.id)}
-                  onPray={() => console.log("Pray clicked", prayer._id || prayer.id)}
-                  onBookmark={() => console.log("Bookmark clicked", prayer._id || prayer.id)}
-                  onComment={() => console.log("Comment clicked", prayer._id || prayer.id)}
-                  onShare={() => console.log("Share clicked", prayer._id || prayer.id)}
-                  onMore={() => console.log("More clicked", prayer._id || prayer.id)}
-                />
+        ) : (() => {
+          // Apply filtering if we're on My Prayers page and have filtering functions
+          const filteredPrayers = (pageType === "my-prayers" && getFilteredPrayers) 
+            ? getFilteredPrayers(prayers, activeTab) 
+            : prayers;
+          
+          if (filteredPrayers.length === 0) {
+            return (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <p className="text-gray-600 mb-4">
+                    {pageType === "my-prayers" && activeTab !== "All" 
+                      ? `No ${activeTab.toLowerCase()} prayers found`
+                      : "No prayers found"
+                    }
+                  </p>
+                </div>
               </div>
-            ))}
-          </div>
-        )}
+            );
+          }
+
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-7xl mx-auto items-start">
+              {filteredPrayers.map((prayer) => (
+                <div key={prayer._id || prayer.id} className="w-full">
+                  <PrayerCard
+                    user={prayer.anonymous ? { name: "Anonymous" } : (prayer.user ? { name: prayer.user.firstname || "User" } : { name: "User" })}
+                    timeAgo={prayer.createdAt ? getTimeAgo(prayer.createdAt) : prayer.timeAgo}
+                    urgency={prayer.urgency}
+                    prayerText={prayer.content || prayer.prayerText}
+                    status={getPrayerStatus ? getPrayerStatus(prayer) : prayer.status}
+                    communities={prayer.communities || ["Prayer Community"]}
+                    mood={prayer.moodEmoji || prayer.mood}
+                    timeline={prayer.timeline || [
+                      { user: "Someone", action: "Liked", time: "1h ago" },
+                      { user: "Another", action: "Commented", time: "2h ago" }
+                    ]}
+                    comments={prayer.comments ? prayer.comments.map(comment => ({
+                      user: "Community Member",
+                      text: comment.commentText || comment.text,
+                      time: comment.createdAt ? getTimeAgo(comment.createdAt) : comment.time,
+                      reactions: comment.reactions || { "🙏": 5, "♥️": 3 }
+                    })) : []}
+                    tags={prayer.tags}
+                    isExpanded={expandedCards.has(prayer._id || prayer.id)}
+                    onToggleExpand={() => handleToggleExpand(prayer._id || prayer.id)}
+                    onPray={() => console.log("Pray clicked", prayer._id || prayer.id)}
+                    onBookmark={() => console.log("Bookmark clicked", prayer._id || prayer.id)}
+                    onComment={() => console.log("Comment clicked", prayer._id || prayer.id)}
+                    onShare={() => console.log("Share clicked", prayer._id || prayer.id)}
+                    onMore={() => console.log("More clicked", prayer._id || prayer.id)}
+                    showStatusPill={pageType === "my-prayers" && activeTab === "All"}
+                  />
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       <BottomNavBar />
