@@ -50,6 +50,7 @@ const PrayerCard = ({
   onShare,
   onMore,
   isPrayed = false,
+  prayerCount = 0,
   onPrayedStateChange,
   onCommentsUpdate,
   showStatusPill = false,
@@ -677,14 +678,19 @@ const PrayerCard = ({
           <button
             onClick={handlePrayClick}
             disabled={!currentUser?._id || isSubmittingPrayer}
-            className={`flex items-center space-x-1 transition-colors duration-200 ${
+            className={`flex items-center space-x-1 transition-all duration-200 ${
               isPrayedState 
-                ? 'text-blue-600 bg-blue-50 px-2 py-1 rounded-full' 
-                : 'text-gray-600 hover:text-blue-600'
+                ? 'text-white bg-blue-600 px-3 py-2 rounded-full shadow-sm hover:bg-blue-700' 
+                : 'text-gray-600 hover:text-blue-600 px-2 py-1'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <PiHandsPrayingThin className="w-5 h-5" />
-            {isPrayedState && <span className="text-xs">Prayed</span>}
+            {prayerCount > 0 && (
+              <span className="text-xs font-medium">
+                {isPrayedState ? `${prayerCount} Prayed` : prayerCount}
+              </span>
+            )}
+            {isPrayedState && prayerCount === 0 && <span className="text-xs">Prayed</span>}
           </button>
 
           <button

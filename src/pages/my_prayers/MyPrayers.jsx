@@ -120,7 +120,12 @@ const MyPrayers = () => {
   const getPrayerStatus = (prayer) => {
     if (prayer.isDraft) return "Draft";
     if (prayer.isScheduled) return "Scheduled";
-    if (prayer.isPrayed && prayer.isPrayed.includes(user?._id)) return "Answered";
+    // Check if user has prayed - handle both array formats
+    const userHasPrayed = prayer.isPrayed?.some(prayedUser => {
+      const userId = prayedUser.user?._id || prayedUser._id || prayedUser;
+      return userId === user?._id;
+    }) || false;
+    if (userHasPrayed) return "Answered";
     if (!prayer.isDraft && !prayer.isScheduled) return "Submitted";
     return "Submitted"; // Default fallback
   };

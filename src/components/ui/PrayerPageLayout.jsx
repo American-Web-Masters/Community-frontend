@@ -341,10 +341,13 @@ const PrayerPageLayout = ({
           return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-7xl mx-auto items-start">
               {filteredPrayers.map((prayer) => {
-                // Check if current user has prayed for this prayer
-                const userHasPrayed = prayer.isPrayed?.some(prayedUser => 
-                  prayedUser._id === currentUser?._id || prayedUser === currentUser?._id
-                ) || false;
+                // Process isPrayed array to get count and check if current user has prayed
+                const prayerCount = prayer.isPrayed ? prayer.isPrayed.length : 0;
+                const userHasPrayed = prayer.isPrayed?.some(prayedUser => {
+                  // Handle both object format {user: {_id: "..."}} and direct user ID format
+                  const userId = prayedUser.user?._id || prayedUser._id || prayedUser;
+                  return userId === currentUser?._id;
+                }) || false;
 
                 return (
                   <div key={prayer._id || prayer.id} className="w-full">
@@ -391,6 +394,7 @@ const PrayerPageLayout = ({
                       tags={prayer.tags}
                       isExpanded={expandedCards.has(prayer._id || prayer.id)}
                       isPrayed={userHasPrayed}
+                      prayerCount={prayerCount}
                       onToggleExpand={() => handleToggleExpand(prayer._id || prayer.id)}
                       onPray={() => console.log("Pray clicked", prayer._id || prayer.id)}
                       onBookmark={() => console.log("Bookmark clicked", prayer._id || prayer.id)}
