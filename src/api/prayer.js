@@ -73,3 +73,30 @@ export const removeCommentReaction = async (prayerId, commentId, userId) => {
     throw error;
   }
 };
+
+/**
+ * Share/Unshare prayer
+ */
+export const sharePrayer = async (prayerId, userId) => {
+  try {
+    const response = await apiClient.post(`/prayers/${prayerId}/share`, {
+      userId
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error sharing prayer:', error);
+    throw error;
+  }
+};
+
+export const unsharePrayer = async (prayerId, userId) => {
+  try {
+    const response = await apiClient.delete(`/prayers/${prayerId}/share`, {
+      data: { userId }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error unsharing prayer:', error);
+    throw error;
+  }
+};

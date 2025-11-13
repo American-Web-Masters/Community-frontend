@@ -17,7 +17,8 @@ import {
   unmarkAsPrayed, 
   addComment, 
   addCommentReaction, 
-  removeCommentReaction 
+  removeCommentReaction,
+  sharePrayer,
 } from "../../api/prayer";
 
 const PrayerCard = ({
@@ -51,7 +52,10 @@ const PrayerCard = ({
   onMore,
   isPrayed = false,
   prayerCount = 0,
+  isShared = false,
+  shareCount = 0,
   onPrayedStateChange,
+  onSharedStateChange,
   onCommentsUpdate,
   showStatusPill = false,
 }) => {
@@ -60,9 +64,11 @@ const PrayerCard = ({
   const [commentReactions, setCommentReactions] = useState({});
   const [newComment, setNewComment] = useState("");
   const [isPrayedState, setIsPrayedState] = useState(isPrayed);
+  const [isSharedState, setIsSharedState] = useState(isShared);
   const [commentsState, setCommentsState] = useState(comments);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isSubmittingPrayer, setIsSubmittingPrayer] = useState(false);
+  const [isSubmittingShare, setIsSubmittingShare] = useState(false);
   const [error, setError] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   
@@ -95,6 +101,33 @@ const PrayerCard = ({
       setTimeout(() => setError(null), 3000);
     } finally {
       setIsSubmittingPrayer(false);
+    }
+  };
+
+  // Handle sharing this prayer
+  const handleShareClick = async () => {
+    if (!currentUser?._id || isSubmittingShare) return;
+
+    setIsSubmittingShare(true);
+    try {
+      if (isSharedState) {
+        await sharePrayer(prayerId, currentUser._id);
+        setIsSharedState(false);
+        if (onSharedStateChange) onSharedStateChange(false);
+      } else {
+        await sharePrayer(prayerId, currentUser._id);
+        setIsSharedState(true);
+        if (onSharedStateChange) onSharedStateChange(true);
+      }
+      if (onShare) onShare();
+    } catch (error) {
+      console.error("Error toggling share state:", error);
+      setError("Failed to update share status. Please try again.");
+      // Reset state on error
+      setIsSharedState(isShared);
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsSubmittingShare(false);
     }
   };
 
@@ -259,19 +292,6 @@ const PrayerCard = ({
             { height: 'h-8', color: 'bg-gray-200', filled: false }
           ]
         };
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case "draft":
-        return "bg-gray-500 text-white";
-      case "scheduled":
-        return "bg-blue-600 text-white";
-      case "submitted":
-        return "bg-green-500 text-white";
-      default:
-        return "bg-gray-500 text-white";
     }
   };
 
@@ -672,7 +692,6 @@ const PrayerCard = ({
       </div>
 
       {/* Action Buttons */}
-      {isExpanded && (
       <div className="flex items-center justify-between pt-3 border-t border-blue-200/50">
         <div className="flex items-center space-x-4">
           <button
@@ -680,14 +699,14 @@ const PrayerCard = ({
             disabled={!currentUser?._id || isSubmittingPrayer}
             className={`flex items-center space-x-1 transition-all duration-200 ${
               isPrayedState 
-                ? 'text-white bg-blue-600 px-3 py-2 rounded-full shadow-sm hover:bg-blue-700' 
-                : 'text-gray-600 hover:text-blue-600 px-2 py-1'
+                ? 'text-white bg-blue-400 px-1 py-1 rounded-full shadow-sm hover:bg-blue-700' 
+                : 'text-gray-600 hover:text-blue-500 px-2 py-1'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <PiHandsPrayingThin className="w-5 h-5" />
             {prayerCount > 0 && (
               <span className="text-xs font-medium">
-                {isPrayedState ? `${prayerCount} Prayed` : prayerCount}
+                {isPrayedState ? `${prayerCount}` : prayerCount}
               </span>
             )}
             {isPrayedState && prayerCount === 0 && <span className="text-xs">Prayed</span>}
@@ -718,14 +737,23 @@ const PrayerCard = ({
           </button>
 
           <button
-            onClick={onShare}
-            className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors duration-200"
+            onClick={handleShareClick}
+            disabled={!currentUser?._id || isSubmittingShare}
+            className={`flex items-center space-x-1 transition-all duration-200 ${
+              isSharedState 
+                ? 'text-blue-600 border border-blue-600 rounded-full px-2 py-1' 
+                : 'text-gray-600 hover:text-blue-600 px-2 py-1'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <BsSend className="w-5 h-5" />
+            {shareCount > 0 && (
+              <span className="text-xs font-medium">
+                {shareCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
-      )}
     </div>
     </>
   );

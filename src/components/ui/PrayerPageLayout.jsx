@@ -344,8 +344,15 @@ const PrayerPageLayout = ({
                 // Process isPrayed array to get count and check if current user has prayed
                 const prayerCount = prayer.isPrayed ? prayer.isPrayed.length : 0;
                 const userHasPrayed = prayer.isPrayed?.some(prayedUser => {
-                  // Handle both object format {user: {_id: "..."}} and direct user ID format
                   const userId = prayedUser.user?._id || prayedUser._id || prayedUser;
+                  return userId === currentUser?._id;
+                }) || false;
+
+                // Process shares array to get count and check if current user has shared
+                const shareCount = prayer.shares ? prayer.shares.length : 0;
+                const userHasShared = prayer.shares?.some(sharedUser => {
+                  // In shares array, user is directly a string ID
+                  const userId = sharedUser.user || sharedUser._id || sharedUser;
                   return userId === currentUser?._id;
                 }) || false;
 
@@ -395,6 +402,8 @@ const PrayerPageLayout = ({
                       isExpanded={expandedCards.has(prayer._id || prayer.id)}
                       isPrayed={userHasPrayed}
                       prayerCount={prayerCount}
+                      isShared={userHasShared}
+                      shareCount={shareCount}
                       onToggleExpand={() => handleToggleExpand(prayer._id || prayer.id)}
                       onPray={() => console.log("Pray clicked", prayer._id || prayer.id)}
                       onBookmark={() => console.log("Bookmark clicked", prayer._id || prayer.id)}
@@ -404,6 +413,10 @@ const PrayerPageLayout = ({
                       onPrayedStateChange={(newState) => {
                         // Update the prayer in the prayers array
                         console.log("Prayer state changed:", prayer._id || prayer.id, newState);
+                      }}
+                      onSharedStateChange={(newState) => {
+                        // Update the prayer's share state in the prayers array
+                        console.log("Share state changed:", prayer._id || prayer.id, newState);
                       }}
                       onCommentsUpdate={(updatedComments) => {
                         // Update the prayer's comments in the prayers array
