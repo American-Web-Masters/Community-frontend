@@ -17,13 +17,15 @@ const MyPrayers = () => {
   };
 
   // Function to fetch user's prayers from API
+  console.log("User ID:", user?._id);
   const fetchMyPrayers = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiClient.get('/prayers/my-prayers');
-      
+      const response = await apiClient.get(`/prayers/user/${user?._id}`);
+
       if (response.data.success) {
+        console.log("Fetched My Prayers:", response.data.data.prayers);
         setPrayers(response.data.data.prayers || []);
       } else {
         throw new Error('Failed to fetch prayers');
@@ -114,7 +116,26 @@ const MyPrayers = () => {
     }
   ];
 
-  const myPrayersTabs = ["All", "Drafts", "Submitted", "Scheduled"];
+  // Function to determine prayer status based on schema
+  const getPrayerStatus = (prayer) => {
+    if (prayer.isDraft) return "Draft";
+    if (prayer.isScheduled) return "Scheduled";
+    if (prayer.isPrayed && prayer.isPrayed.includes(user?._id)) return "Answered";
+    if (!prayer.isDraft && !prayer.isScheduled) return "Submitted";
+    return "Submitted"; // Default fallback
+  };
+
+  // Function to filter prayers based on active tab
+  const getFilteredPrayers = (prayers, activeTab) => {
+    if (!activeTab || activeTab === "All") return prayers;
+
+    return prayers.filter(prayer => {
+      const status = getPrayerStatus(prayer);
+      return status === activeTab;
+    });
+  };
+
+  const myPrayersTabs = ["All", "Draft", "Scheduled", "Submitted", "Answered"];
 
   if (!isLoggedIn || !user) {
     return (
@@ -140,6 +161,9 @@ const MyPrayers = () => {
       error={error}
       onRefresh={fetchMyPrayers}
       onCreatePrayer={handlePrayerCreated}
+      getPrayerStatus={getPrayerStatus}
+      getFilteredPrayers={getFilteredPrayers}
+      user={user}
     />
   );
 };

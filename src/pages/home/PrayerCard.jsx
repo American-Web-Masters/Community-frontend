@@ -52,6 +52,7 @@ const PrayerCard = ({
   isPrayed = false,
   onPrayedStateChange,
   onCommentsUpdate,
+  showStatusPill = false,
 }) => {
   const currentUser = useSelector(selectUser);
   const [showComments, setShowComments] = useState(false);
@@ -188,6 +189,22 @@ const PrayerCard = ({
   const getEmojiCount = (commentIndex, emoji) => {
     const comment = commentsState[commentIndex];
     return comment?.reactions?.[emoji] || 0;
+  };
+
+  // Function to get status pill styling
+  const getStatusPillStyle = (status) => {
+    switch (status) {
+      case "Draft":
+        return "bg-gray-500 text-white";
+      case "Scheduled":
+        return "bg-blue-500 text-white";
+      case "Submitted":
+        return "bg-green-500 text-white";
+      case "Answered":
+        return "bg-purple-500 text-white";
+      default:
+        return "bg-gray-400 text-white";
+    }
   };
 
 
@@ -427,15 +444,11 @@ const PrayerCard = ({
         <div className="flex items-center space-x-4">
           {/* Right side actions */}
           <div className="flex items-center space-x-2">
-            {status === "Draft" && (
-              <button className="bg-blue-600 btn-blue-gradient text-white px-3 py-1 rounded-full text-sm font-medium hover:bg-blue-700 transition-colors duration-200">
-                Draft
-              </button>
-            )}
-            {status === "Scheduled" && (
-              <button className="btn-blue-gradient text-white px-3 py-1 rounded-full text-sm font-medium hover:bg-blue-700 transition-colors duration-200">
-                Scheduled
-              </button>
+            {/* Show status pill only when showStatusPill is true */}
+            {showStatusPill && status && (
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusPillStyle(status)}`}>
+                {status}
+              </span>
             )}
             <svg
               width="18"
