@@ -93,7 +93,7 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess }) => {
       const payload = {
         user: user._id,
         communities: ["68ff93765db352ca01d2a16b", "68ff93765db352ca01d2a16b"],
-        userProfile: "68ff93765db352ca01d2a16b",
+        userProfile: user._id,
         content: formData.content.trim(),
         urgency: formData.urgency,
         anonymous: formData.anonymous,
