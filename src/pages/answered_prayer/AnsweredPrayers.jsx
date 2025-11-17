@@ -22,7 +22,7 @@ const AnsweredPrayers = () => {
       setLoading(true);
       setError(null);
       const response = await apiClient.get('/prayers/answered');
-      
+      console.log(response);
       if (response.data.success) {
         setPrayers(response.data.data.prayers || []);
       } else {
