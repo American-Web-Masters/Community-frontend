@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/userSlice';
 import { apiClient } from '../../api';
 import { FaTimes, FaCalendarAlt } from 'react-icons/fa';
+import { localInputToUTC } from '../../utils/prayerUtils';
 
 const CreatePrayerModal = ({ isOpen, onClose, onSuccess }) => {
   const user = useSelector(selectUser);
@@ -112,8 +113,10 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess }) => {
     try {
       const payload = {
         ...createPayload(),
-        scheduledFor: scheduledDate
+        scheduledFor:  localInputToUTC(scheduledDate)
       };
+      console.log(scheduledDate);
+      console.log( localInputToUTC(scheduledDate));
       
       const response = await apiClient.post('/prayers/scheduled/create', payload);
       

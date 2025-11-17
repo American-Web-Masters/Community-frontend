@@ -343,7 +343,7 @@ const PrayerPageLayout = ({
             </svg>
             <div className="flex flex-col items-start">
               <span className="text-xs md:text-sm">My Prayers</span>
-              <span className="text-xs opacity-70">Recent Activity</span>
+              <span className="text-xs opacity-70">Your Requests</span>
             </div>
           </button>
 
@@ -368,7 +368,7 @@ const PrayerPageLayout = ({
             <IoMdCheckmarkCircleOutline className={`w-3 h-3 md:w-8 md:h-8 ${config.activeButton === 3 ? 'text-white' : 'text-gray-600'}`} />
             <div className="flex flex-col items-start">
               <span className="text-xs md:text-sm">Answered</span>
-              <span className="text-xs text-gray-500">Fulfilled Prayers</span>
+              <span className="text-xs opacity-70">Fulfilled Prayers</span>
             </div>
           </button>
         </div>
