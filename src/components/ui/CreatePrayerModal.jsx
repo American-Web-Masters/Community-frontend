@@ -2,49 +2,30 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/userSlice';
 import { apiClient } from '../../api';
-import Input from './Input';
-import { FaTimes, FaExclamationCircle, FaTag, FaUserSecret } from 'react-icons/fa';
-import { MdPriorityHigh } from 'react-icons/md';
+import { FaTimes, FaCalendarAlt } from 'react-icons/fa';
 
 const CreatePrayerModal = ({ isOpen, onClose, onSuccess }) => {
   const user = useSelector(selectUser);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [charCount, setCharCount] = useState(0);
+  const [showScheduler, setShowScheduler] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState('');
   
   const [formData, setFormData] = useState({
     content: '',
     urgency: 'normal',
     anonymous: false,
-    moodEmoji: '😔',
+    moodEmoji: '😊',
     tags: []
   });
   
   const [newTag, setNewTag] = useState('');
 
-  const moodOptions = [
-    { emoji: '😄', label: 'Happy' },
-    { emoji: '😐', label: 'Neutral' },
-    { emoji: '😔', label: 'Sad' },
-    { emoji: '😡', label: 'Angry' },
-    { emoji: '😢', label: 'Crying' }
-  ];
-
-  const urgencyOptions = [
-    { value: 'low', label: 'Low', color: 'text-green-600 bg-green-100' },
-    { value: 'normal', label: 'Normal', color: 'text-blue-600 bg-blue-100' },
-    { value: 'high', label: 'High', color: 'text-red-600 bg-red-100' }
-  ];
+  // Simple mood options like in the image
+  const moodOptions = ['😊', '😐', '😢', '😡', '😔'];
 
   const handleInputChange = (field, value) => {
-    if (field === 'content') {
-      setCharCount(value.length);
-      if (value.length <= 500) {
-        setFormData(prev => ({ ...prev, [field]: value }));
-      }
-    } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
-    }
+    setFormData(prev => ({ ...prev, [field]: value }));
     setError('');
   };
 
@@ -72,6 +53,86 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess }) => {
     }
   };
 
+  const createPayload = () => {
+    return {
+      user: user._id,
+      communities: ["68ff93765db352ca01d2a16b", "68ff93765db352ca01d2a16b"],
+      userProfile: user._id,
+      content: formData.content.trim(),
+      urgency: formData.urgency,
+      anonymous: formData.anonymous,
+      moodEmoji: formData.moodEmoji,
+      tags: formData.tags
+    };
+  };
+
+  const handleSaveAsDraft = async () => {
+    if (!formData.content.trim()) {
+      setError('Prayer content is required');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const payload = createPayload();
+      const response = await apiClient.post('/prayers/draft/create', payload);
+      
+      if (response.data.success) {
+        console.log('Draft saved successfully:', response.data.data);
+        resetForm();
+        if (onSuccess) onSuccess(response.data.data);
+        onClose();
+      } else {
+        throw new Error(response.data?.message || 'Failed to save draft');
+      }
+    } catch (err) {
+      console.error('Draft save error:', err);
+      setError(err.response?.data?.message || 'Failed to save draft. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleScheduledSubmit = async () => {
+    if (!formData.content.trim()) {
+      setError('Prayer content is required');
+      return;
+    }
+
+    if (!scheduledDate) {
+      setError('Please select a schedule date');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const payload = {
+        ...createPayload(),
+        scheduledFor: scheduledDate
+      };
+      
+      const response = await apiClient.post('/prayers/scheduled/create', payload);
+      
+      if (response.data.success) {
+        console.log('Scheduled prayer created:', response.data.data);
+        resetForm();
+        if (onSuccess) onSuccess(response.data.data);
+        onClose();
+      } else {
+        throw new Error(response.data?.message || 'Failed to schedule prayer');
+      }
+    } catch (err) {
+      console.error('Scheduled prayer error:', err);
+      setError(err.response?.data?.message || 'Failed to schedule prayer. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -80,8 +141,8 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess }) => {
       return;
     }
 
-    if (formData.content.length > 500) {
-      setError('Prayer content must be 500 characters or less');
+    if (showScheduler) {
+      await handleScheduledSubmit();
       return;
     }
 
@@ -89,74 +150,63 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess }) => {
     setError('');
 
     try {
-      // Generate random IDs for communities and userProfile as requested
-      const payload = {
-        user: user._id,
-        communities: ["68ff93765db352ca01d2a16b", "68ff93765db352ca01d2a16b"],
-        userProfile: user._id,
-        content: formData.content.trim(),
-        urgency: formData.urgency,
-        anonymous: formData.anonymous,
-        moodEmoji: formData.moodEmoji,
-        tags: formData.tags
-      };
-
+      const payload = createPayload();
       const response = await apiClient.post('/prayers/create', payload);
+      
       if (response.data.success) {
         console.log('Prayer created successfully:', response.data.data);
-        
-        // Reset form
-        setFormData({
-          content: '',
-          urgency: 'normal',
-          anonymous: false,
-          moodEmoji: '😔',
-          tags: []
-        });
-        setCharCount(0);
-        
-        // Call success callback if provided
-        if (onSuccess) {
-          onSuccess(response.data.data);
-        }
-        
-        // Close modal
+        resetForm();
+        if (onSuccess) onSuccess(response.data.data);
         onClose();
       } else {
         throw new Error(response.data?.message || 'Failed to create prayer');
       }
     } catch (err) {
       console.error('Prayer creation error:', err);
-      const errorMessage = err.response?.data?.message || 'Failed to create prayer. Please try again.';
-      setError(errorMessage);
+      setError(err.response?.data?.message || 'Failed to create prayer. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      content: '',
+      urgency: 'normal',
+      anonymous: false,
+      moodEmoji: '😊',
+      tags: []
+    });
+    setScheduledDate('');
+    setShowScheduler(false);
+  };
+
   const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && !loading) {
       onClose();
     }
   };
 
-  if (!isOpen) return null;
+  // Get minimum date (today) for date input
+  const getMinDate = () => {
+    const now = new Date();
+    return now.toISOString().slice(0, 16);
+  };
 
-  const isNearLimit = charCount >= 450;
-  const isOverLimit = charCount > 500;
+  if (!isOpen) return null;
 
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
-      <div className="light-background border border-gray-200 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <h2 className="text-xl font-semibold text-gray-800">Create Prayer Request</h2>
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-800">Prayer Request</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors duration-200"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
             disabled={loading}
           >
             <FaTimes className="w-5 h-5 text-gray-600" />
@@ -164,197 +214,278 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess }) => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Prayer Content */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Prayer Text <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <textarea
-                placeholder="Write your prayer request…"
-                value={formData.content}
-                onChange={(e) => handleInputChange('content', e.target.value)}
-                className={`
-                  w-full px-4 py-4 bg-white/80 backdrop-blur-sm border rounded-xl
-                  text-gray-800 placeholder-gray-400 resize-none
-                  focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500
-                  transition-all duration-200 shadow-sm min-h-[120px]
-                  ${isOverLimit ? 'border-red-400 focus:ring-red-500/50' : 'border-white/30'}
-                `}
-                rows={4}
-                maxLength={500}
-                required
-              />
-              <div className={`absolute bottom-3 right-3 text-xs font-medium ${
-                isNearLimit 
-                  ? isOverLimit 
-                    ? 'text-red-500' 
-                    : 'text-orange-500'
-                  : 'text-gray-400'
-              }`}>
-                {charCount}/500
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-6">
+              {/* Prayer Content */}
+              <div>
+                <textarea
+                  placeholder="Write your prayer request here..."
+                  value={formData.content}
+                  onChange={(e) => handleInputChange('content', e.target.value)}
+                  className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[140px] lg:min-h-[180px]"
+                  rows={6}
+                  required
+                />
               </div>
-            </div>
-            {isNearLimit && (
-              <div className={`mt-1 text-xs flex items-center gap-1 ${
-                isOverLimit ? 'text-red-500' : 'text-orange-500'
-              }`}>
-                <FaExclamationCircle className="w-3 h-3" />
-                {isOverLimit 
-                  ? 'Character limit exceeded' 
-                  : `${(500 - charCount)} characters remaining`
-                }
-              </div>
-            )}
-          </div>
 
-          {/* Mood Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">Mood</label>
-            <div className="flex gap-3 flex-wrap">
-              {moodOptions.map((mood) => (
-                <button
-                  key={mood.emoji}
-                  type="button"
-                  onClick={() => handleInputChange('moodEmoji', mood.emoji)}
-                  className={`
-                    flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200
-                    ${formData.moodEmoji === mood.emoji
-                      ? 'bg-primary-100 border-primary-500 text-primary-700'
-                      : 'bg-white/60 border-gray-200 text-gray-600 hover:bg-white/80'
-                    }
-                  `}
-                >
-                  <span className="text-lg">{mood.emoji}</span>
-                  <span className="text-sm font-medium">{mood.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Urgency Level */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              <MdPriorityHigh className="inline w-4 h-4 mr-1" />
-              Urgency Level
-            </label>
-            <div className="flex gap-3 flex-wrap">
-              {urgencyOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => handleInputChange('urgency', option.value)}
-                  className={`
-                    px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200
-                    ${formData.urgency === option.value
-                      ? `${option.color} border-current`
-                      : 'bg-white/60 border-gray-200 text-gray-600 hover:bg-white/80'
-                    }
-                  `}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Tags */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              <FaTag className="inline w-4 h-4 mr-1" />
-              Tags
-            </label>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {formData.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-primary-100 text-primary-700 text-sm rounded-full"
-                >
-                  #{tag}
+              {/* Urgency Level */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-4">Urgency Level</h3>
+                <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
-                    onClick={() => handleRemoveTag(tag)}
-                    className="ml-1 hover:text-primary-900 transition-colors"
+                    onClick={() => handleInputChange('urgency', 'low')}
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      formData.urgency === 'low'
+                        ? 'bg-green-100 text-green-700 border-2 border-green-300'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+                    }`}
                   >
-                    <FaTimes className="w-3 h-3" />
+                    Low
                   </button>
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                type="text"
-                placeholder="Add a tag..."
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="flex-1 !py-2"
-              />
-              <button
-                type="button"
-                onClick={handleAddTag}
-                disabled={!newTag.trim()}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Add
-              </button>
-            </div>
-          </div>
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange('urgency', 'normal')}
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      formData.urgency === 'normal'
+                        ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+                    }`}
+                  >
+                    Normal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange('urgency', 'high')}
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      formData.urgency === 'high'
+                        ? 'bg-red-100 text-red-700 border-2 border-red-300'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+                    }`}
+                  >
+                    High
+                  </button>
+                </div>
+              </div>
 
-          {/* Anonymous Toggle */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FaUserSecret className="w-4 h-4 text-gray-600" />
-              <label htmlFor="anonymous" className="text-sm font-medium text-gray-700">
-                Post anonymously
-              </label>
-            </div>
-            <button
-              type="button"
-              id="anonymous"
-              onClick={() => handleInputChange('anonymous', !formData.anonymous)}
-              className={`
-                relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200
-                ${formData.anonymous ? 'bg-primary-500' : 'bg-gray-300'}
-              `}
-            >
-              <span
-                className={`
-                  inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200
-                  ${formData.anonymous ? 'translate-x-6' : 'translate-x-1'}
-                `}
-              />
-            </button>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center gap-2 text-red-700">
-                <FaExclamationCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">{error}</span>
+              {/* Mood Selection */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">How are you feeling today?</h3>
+                <div className="flex gap-3 justify-center">
+                  {moodOptions.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => handleInputChange('moodEmoji', emoji)}
+                      className={`w-12 h-12 text-2xl rounded-full transition-all duration-200 hover:scale-110 ${
+                        formData.moodEmoji === emoji
+                          ? 'bg-blue-100 ring-2 ring-blue-600 scale-110'
+                          : 'bg-gray-100 hover:bg-gray-200'
+                      }`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          )}
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="flex-1 py-3 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !formData.content.trim() || isOverLimit}
-              className="flex-1 py-3 px-6 btn-blue-gradient rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Creating...' : 'Create Prayer'}
-            </button>
+            {/* Right Column */}
+            <div className="space-y-6">
+              {/* Visibility Options */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-4">Visibility</h3>
+                
+                {/* Public Option */}
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-3">
+                  <div>
+                    <div className="font-medium text-gray-800">Public</div>
+                    <div className="text-sm text-gray-500">Everyone can see and pray</div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="visibility"
+                      checked={!formData.anonymous}
+                      onChange={() => handleInputChange('anonymous', false)}
+                      className="sr-only"
+                    />
+                    <div className={`w-11 h-6 rounded-full transition-colors duration-200 ${
+                      !formData.anonymous ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}>
+                      <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                        !formData.anonymous ? 'translate-x-5' : 'translate-x-0'
+                      } mt-0.5 ml-0.5`}></div>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Anonymous Option */}
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div>
+                    <div className="font-medium text-gray-800">Anonymous</div>
+                    <div className="text-sm text-gray-500">Hide your identity</div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="visibility"
+                      checked={formData.anonymous}
+                      onChange={() => handleInputChange('anonymous', true)}
+                      className="sr-only"
+                    />
+                    <div className={`w-11 h-6 rounded-full transition-colors duration-200 ${
+                      formData.anonymous ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}>
+                      <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                        formData.anonymous ? 'translate-x-5' : 'translate-x-0'
+                      } mt-0.5 ml-0.5`}></div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Tags (Optional)</h3>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {/* Preset tags */}
+                  {['healing', 'family', 'work'].map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        if (formData.tags.includes(tag)) {
+                          handleRemoveTag(tag);
+                        } else {
+                          setFormData(prev => ({
+                            ...prev,
+                            tags: [...prev.tags, tag]
+                          }));
+                        }
+                      }}
+                      className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 ${
+                        formData.tags.includes(tag)
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                  
+                  {/* Custom tags */}
+                  {formData.tags.filter(tag => !['healing', 'family', 'work'].includes(tag)).map((tag, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-full"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="ml-1 hover:text-blue-200 transition-colors"
+                      >
+                        <FaTimes className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Add tags..."
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddTag}
+                    disabled={!newTag.trim()}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Full-width sections */}
+          <div className="mt-6 space-y-6">
+            {/* Schedule Entry */}
+            {showScheduler && (
+              <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                  <FaCalendarAlt className="w-4 h-4" />
+                  Schedule Entry
+                </h3>
+                <input
+                  type="datetime-local"
+                  value={scheduledDate}
+                  onChange={(e) => setScheduledDate(e.target.value)}
+                  min={getMinDate()}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required={showScheduler}
+                />
+              </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="text-red-700 text-sm">{error}</div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-3 pt-4">
+              {!showScheduler && (
+                <button
+                  type="button"
+                  onClick={() => setShowScheduler(true)}
+                  disabled={loading}
+                  className="w-full py-3 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <FaCalendarAlt className="w-4 h-4" />
+                  Schedule Entry
+                </button>
+              )}
+
+              {showScheduler && (
+                <button
+                  type="button"
+                  onClick={() => setShowScheduler(false)}
+                  disabled={loading}
+                  className="w-full py-3 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200"
+                >
+                  Remove Schedule
+                </button>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleSaveAsDraft}
+                  disabled={loading || !formData.content.trim()}
+                  className="flex-1 py-3 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50"
+                >
+                  {loading ? 'Saving...' : 'Save as Draft'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || !formData.content.trim() || (showScheduler && !scheduledDate)}
+                  className="flex-1 py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
+                >
+                  {loading ? 'Creating...' : showScheduler ? 'Share Prayer Request' : 'Share Prayer Request'}
+                </button>
+              </div>
+            </div>
           </div>
         </form>
       </div>
