@@ -77,86 +77,108 @@ const PrayerCard = ({
     onToggleExpand();
   };
 
-  // Handle praying for this prayer
+  // Handle praying for this prayer with optimistic update
   const handlePrayClick = async () => {
     if (!currentUser?._id || isSubmittingPrayer) return;
 
+    // Optimistic UI update
+    const previousState = isPrayedState;
+    const newState = !previousState;
+    setIsPrayedState(newState);
+    if (onPrayedStateChange) onPrayedStateChange(newState);
+    if (onPray) onPray();
+
     setIsSubmittingPrayer(true);
     try {
-      if (isPrayedState) {
+      if (previousState) {
         await unmarkAsPrayed(prayerId, currentUser._id);
-        setIsPrayedState(false);
-        if (onPrayedStateChange) onPrayedStateChange(false);
       } else {
         await markAsPrayed(prayerId, currentUser._id);
-        setIsPrayedState(true);
-        if (onPrayedStateChange) onPrayedStateChange(true);
       }
-      if (onPray) onPray();
     } catch (error) {
       console.error("Error toggling prayer state:", error);
+      // Revert optimistic update on error
+      setIsPrayedState(previousState);
+      if (onPrayedStateChange) onPrayedStateChange(previousState);
       setError("Failed to update prayer status. Please try again.");
-      // Reset state on error
-      setIsPrayedState(isPrayed);
       setTimeout(() => setError(null), 3000);
     } finally {
       setIsSubmittingPrayer(false);
     }
   };
 
-  // Handle sharing this prayer
+  // Handle sharing this prayer with optimistic update
   const handleShareClick = async () => {
     if (!currentUser?._id || isSubmittingShare) return;
 
+    // Optimistic UI update
+    const previousState = isSharedState;
+    const newState = !previousState;
+    setIsSharedState(newState);
+    if (onSharedStateChange) onSharedStateChange(newState);
+    if (onShare) onShare();
+
     setIsSubmittingShare(true);
     try {
-      if (isSharedState) {
-        await sharePrayer(prayerId, currentUser._id);
-        setIsSharedState(false);
-        if (onSharedStateChange) onSharedStateChange(false);
-      } else {
-        await sharePrayer(prayerId, currentUser._id);
-        setIsSharedState(true);
-        if (onSharedStateChange) onSharedStateChange(true);
-      }
-      if (onShare) onShare();
+      await sharePrayer(prayerId, currentUser._id);
     } catch (error) {
       console.error("Error toggling share state:", error);
+      // Revert optimistic update on error
+      setIsSharedState(previousState);
+      if (onSharedStateChange) onSharedStateChange(previousState);
       setError("Failed to update share status. Please try again.");
-      // Reset state on error
-      setIsSharedState(isShared);
       setTimeout(() => setError(null), 3000);
     } finally {
       setIsSubmittingShare(false);
     }
   };
 
-  // Handle adding a new comment
+  // Handle adding a new comment with optimistic update
   const handleAddComment = async () => {
     if (!currentUser?._id || !newComment.trim() || isSubmittingComment) return;
 
+    // Optimistic UI update
+    const commentText = newComment.trim();
+    const tempCommentId = `temp-${Date.now()}`;
+    const newCommentObj = {
+      _id: tempCommentId,
+      user: currentUser.username || "You",
+      text: commentText,
+      time: "Just now",
+      reactions: {},
+      userId: currentUser._id,
+      isOptimistic: true
+    };
+    
+    const previousComments = [...commentsState];
+    const updatedComments = [...commentsState, newCommentObj];
+    setCommentsState(updatedComments);
+    setNewComment("");
+    if (onCommentsUpdate) onCommentsUpdate(updatedComments);
+    if (onComment) onComment();
+
     setIsSubmittingComment(true);
     try {
-      const response = await addComment(prayerId, currentUser._id, newComment.trim());
+      const response = await addComment(prayerId, currentUser._id, commentText);
       
-      // Add the new comment to the local state
-      const newCommentObj = {
-        _id: response.comment?._id || Date.now().toString(),
-        user: currentUser.username || "You",
-        text: newComment.trim(),
-        time: "Just now",
-        reactions: {},
-        userId: currentUser._id
-      };
-      
-      const updatedComments = [...commentsState, newCommentObj];
-      setCommentsState(updatedComments);
-      setNewComment("");
-      
-      if (onCommentsUpdate) onCommentsUpdate(updatedComments);
-      if (onComment) onComment();
+      // Replace optimistic comment with real comment
+      const finalComments = updatedComments.map(comment => 
+        comment._id === tempCommentId 
+          ? {
+              ...comment,
+              _id: response.comment?._id || comment._id,
+              isOptimistic: false
+            }
+          : comment
+      );
+      setCommentsState(finalComments);
+      if (onCommentsUpdate) onCommentsUpdate(finalComments);
     } catch (error) {
       console.error("Error adding comment:", error);
+      // Revert optimistic update on error
+      setCommentsState(previousComments);
+      setNewComment(commentText); // Restore the comment text
+      if (onCommentsUpdate) onCommentsUpdate(previousComments);
       setError("Failed to add comment. Please try again.");
       setTimeout(() => setError(null), 3000);
     } finally {
@@ -164,57 +186,55 @@ const PrayerCard = ({
     }
   };
 
-  // Handle emoji reactions on comments
+  // Handle emoji reactions on comments with optimistic update
   const handleEmojiReaction = async (commentIndex, emoji) => {
     if (!currentUser?._id) return;
 
     const comment = commentsState[commentIndex];
-    if (!comment?._id) return;
+    if (!comment?._id || comment.isOptimistic) return;
+
+    // Optimistic UI update
+    const currentUserReaction = comment.userReaction;
+    const previousComments = [...commentsState];
+    
+    let newUserReaction;
+    let newReactions = { ...comment.reactions };
+    
+    if (currentUserReaction === emoji) {
+      // Remove the reaction
+      newUserReaction = null;
+      newReactions[emoji] = Math.max(0, (newReactions[emoji] || 0) - 1);
+    } else {
+      // Add new reaction (and remove old one if exists)
+      newUserReaction = emoji;
+      if (currentUserReaction) {
+        newReactions[currentUserReaction] = Math.max(0, (newReactions[currentUserReaction] || 0) - 1);
+      }
+      newReactions[emoji] = (newReactions[emoji] || 0) + 1;
+    }
+    
+    const updatedComments = [...commentsState];
+    updatedComments[commentIndex] = {
+      ...comment,
+      userReaction: newUserReaction,
+      reactions: newReactions
+    };
+    setCommentsState(updatedComments);
+    if (onCommentsUpdate) onCommentsUpdate(updatedComments);
 
     try {
-      // Check if user already has this reaction
-      const currentUserReaction = comment.userReaction;
-      
       if (currentUserReaction === emoji) {
-        // Remove the reaction if clicking the same emoji
+        // Remove the reaction
         await removeCommentReaction(prayerId, comment._id, currentUser._id);
-        
-        // Update local state
-        const updatedComments = [...commentsState];
-        updatedComments[commentIndex] = {
-          ...comment,
-          userReaction: null,
-          reactions: {
-            ...comment.reactions,
-            [emoji]: Math.max(0, (comment.reactions[emoji] || 0) - 1)
-          }
-        };
-        setCommentsState(updatedComments);
-        if (onCommentsUpdate) onCommentsUpdate(updatedComments);
       } else {
         // Add new reaction (backend will handle removing old one if exists)
         await addCommentReaction(prayerId, comment._id, currentUser._id, emoji);
-        
-        // Update local state
-        const updatedComments = [...commentsState];
-        const oldReaction = comment.userReaction;
-        
-        updatedComments[commentIndex] = {
-          ...comment,
-          userReaction: emoji,
-          reactions: {
-            ...comment.reactions,
-            // Remove old reaction count
-            ...(oldReaction && { [oldReaction]: Math.max(0, (comment.reactions[oldReaction] || 0) - 1) }),
-            // Add new reaction count
-            [emoji]: (comment.reactions[emoji] || 0) + 1
-          }
-        };
-        setCommentsState(updatedComments);
-        if (onCommentsUpdate) onCommentsUpdate(updatedComments);
       }
     } catch (error) {
       console.error("Error handling emoji reaction:", error);
+      // Revert optimistic update on error
+      setCommentsState(previousComments);
+      if (onCommentsUpdate) onCommentsUpdate(previousComments);
       setError("Failed to update reaction. Please try again.");
       setTimeout(() => setError(null), 3000);
     }
@@ -320,9 +340,18 @@ const PrayerCard = ({
           {/* Modal Body - Scrollable Comments */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {commentsState.map((comment, index) => (
-              <div key={comment._id || index} className="bg-blue-50 rounded-lg p-4">
+              <div key={comment._id || index} className={`bg-blue-50 rounded-lg p-4 ${
+                comment.isOptimistic ? 'opacity-70' : ''
+              }`}>
                 <div className="flex items-start justify-between mb-2">
-                  <span className="font-medium text-sm text-gray-800">{comment.user}</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium text-sm text-gray-800">{comment.user}</span>
+                    {comment.isOptimistic && (
+                      <div className="animate-pulse">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                      </div>
+                    )}
+                  </div>
                   <span className="text-xs text-gray-500">{comment.time}</span>
                 </div>
                 <p className="text-sm text-gray-700 mb-3">{comment.text}</p>
@@ -332,8 +361,8 @@ const PrayerCard = ({
                       onClick={() => handleEmojiReaction(index, "🙏")}
                       className={`text-lg hover:scale-110 transition-transform ${
                         comment.userReaction === "🙏" ? 'bg-blue-200 rounded-full p-1' : ''
-                      }`}
-                      disabled={!currentUser?._id}
+                      } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
+                      disabled={!currentUser?._id || comment.isOptimistic}
                     >
                       🙏
                     </button>
@@ -344,8 +373,8 @@ const PrayerCard = ({
                       onClick={() => handleEmojiReaction(index, "♥️")}
                       className={`text-lg hover:scale-110 transition-transform ${
                         comment.userReaction === "♥️" ? 'bg-blue-200 rounded-full p-1' : ''
-                      }`}
-                      disabled={!currentUser?._id}
+                      } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
+                      disabled={!currentUser?._id || comment.isOptimistic}
                     >
                       ♥️
                     </button>
@@ -356,8 +385,8 @@ const PrayerCard = ({
                       onClick={() => handleEmojiReaction(index, "😇")}
                       className={`text-lg hover:scale-110 transition-transform ${
                         comment.userReaction === "😇" ? 'bg-blue-200 rounded-full p-1' : ''
-                      }`}
-                      disabled={!currentUser?._id}
+                      } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
+                      disabled={!currentUser?._id || comment.isOptimistic}
                     >
                       😇
                     </button>
@@ -368,8 +397,8 @@ const PrayerCard = ({
                       onClick={() => handleEmojiReaction(index, "😢")}
                       className={`text-lg hover:scale-110 transition-transform ${
                         comment.userReaction === "😢" ? 'bg-blue-200 rounded-full p-1' : ''
-                      }`}
-                      disabled={!currentUser?._id}
+                      } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
+                      disabled={!currentUser?._id || comment.isOptimistic}
                     >
                       😢
                     </button>
@@ -380,8 +409,8 @@ const PrayerCard = ({
                       onClick={() => handleEmojiReaction(index, "🎉")}
                       className={`text-lg hover:scale-110 transition-transform ${
                         comment.userReaction === "🎉" ? 'bg-blue-200 rounded-full p-1' : ''
-                      }`}
-                      disabled={!currentUser?._id}
+                      } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
+                      disabled={!currentUser?._id || comment.isOptimistic}
                     >
                       🎉
                     </button>
@@ -567,9 +596,18 @@ const PrayerCard = ({
             {showComments && (
               <div className="mb-4 animate-in fade-in duration-300 ease-in-out">
                 {commentsState.slice(0, 2).map((comment, index) => (
-                  <div key={comment._id || index} className="bg-blue-50 rounded-lg p-3 mb-3">
+                  <div key={comment._id || index} className={`bg-blue-50 rounded-lg p-3 mb-3 ${
+                    comment.isOptimistic ? 'opacity-70' : ''
+                  }`}>
                     <div className="flex items-start justify-between mb-2">
-                      <span className="font-medium text-sm text-gray-800">{comment.user}</span>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium text-sm text-gray-800">{comment.user}</span>
+                        {comment.isOptimistic && (
+                          <div className="animate-pulse">
+                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                          </div>
+                        )}
+                      </div>
                       <span className="text-xs text-gray-500">{comment.time}</span>
                     </div>
                     <p className="text-sm text-gray-700 mb-3">{comment.text}</p>
@@ -579,8 +617,8 @@ const PrayerCard = ({
                           onClick={() => handleEmojiReaction(index, "🙏")}
                           className={`text-lg hover:scale-110 transition-transform ${
                             comment.userReaction === "🙏" ? 'bg-blue-200 rounded-full p-1' : ''
-                          }`}
-                          disabled={!currentUser?._id}
+                          } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
+                          disabled={!currentUser?._id || comment.isOptimistic}
                         >
                           🙏
                         </button>
@@ -591,8 +629,8 @@ const PrayerCard = ({
                           onClick={() => handleEmojiReaction(index, "♥️")}
                           className={`text-lg hover:scale-110 transition-transform ${
                             comment.userReaction === "♥️" ? 'bg-blue-200 rounded-full p-1' : ''
-                          }`}
-                          disabled={!currentUser?._id}
+                          } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
+                          disabled={!currentUser?._id || comment.isOptimistic}
                         >
                           ♥️
                         </button>
@@ -603,8 +641,8 @@ const PrayerCard = ({
                           onClick={() => handleEmojiReaction(index, "😇")}
                           className={`text-lg hover:scale-110 transition-transform ${
                             comment.userReaction === "😇" ? 'bg-blue-200 rounded-full p-1' : ''
-                          }`}
-                          disabled={!currentUser?._id}
+                          } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
+                          disabled={!currentUser?._id || comment.isOptimistic}
                         >
                           😇
                         </button>
@@ -615,8 +653,8 @@ const PrayerCard = ({
                           onClick={() => handleEmojiReaction(index, "😢")}
                           className={`text-lg hover:scale-110 transition-transform ${
                             comment.userReaction === "😢" ? 'bg-blue-200 rounded-full p-1' : ''
-                          }`}
-                          disabled={!currentUser?._id}
+                          } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
+                          disabled={!currentUser?._id || comment.isOptimistic}
                         >
                           😢
                         </button>
@@ -627,8 +665,8 @@ const PrayerCard = ({
                           onClick={() => handleEmojiReaction(index, "🎉")}
                           className={`text-lg hover:scale-110 transition-transform ${
                             comment.userReaction === "🎉" ? 'bg-blue-200 rounded-full p-1' : ''
-                          }`}
-                          disabled={!currentUser?._id}
+                          } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
+                          disabled={!currentUser?._id || comment.isOptimistic}
                         >
                           🎉
                         </button>
@@ -701,11 +739,15 @@ const PrayerCard = ({
               isPrayedState 
                 ? 'text-white bg-blue-400 px-1 py-1 rounded-full shadow-sm hover:bg-blue-700' 
                 : 'text-gray-600 hover:text-blue-500 px-2 py-1'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            } disabled:opacity-50 disabled:cursor-not-allowed ${
+              isSubmittingPrayer ? 'animate-pulse' : ''
+            }`}
           >
-            <PiHandsPrayingThin className="w-5 h-5" />
+            <PiHandsPrayingThin className={`w-5 h-5 ${
+              isSubmittingPrayer ? 'animate-pulse' : ''
+            }`} />
             {prayerCount > 0 && (
-              <span className="text-xs font-medium">
+              <span className="text-xs font-medium transition-all duration-200 ease-in-out">
                 {isPrayedState ? `${prayerCount}` : prayerCount}
               </span>
             )}
@@ -743,11 +785,15 @@ const PrayerCard = ({
               isSharedState 
                 ? 'text-blue-600 border border-blue-600 rounded-full px-2 py-1' 
                 : 'text-gray-600 hover:text-blue-600 px-2 py-1'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            } disabled:opacity-50 disabled:cursor-not-allowed ${
+              isSubmittingShare ? 'animate-pulse' : ''
+            }`}
           >
-            <BsSend className="w-5 h-5" />
+            <BsSend className={`w-5 h-5 ${
+              isSubmittingShare ? 'animate-pulse' : ''
+            }`} />
             {shareCount > 0 && (
-              <span className="text-xs font-medium">
+              <span className="text-xs font-medium transition-all duration-200 ease-in-out">
                 {shareCount}
               </span>
             )}
