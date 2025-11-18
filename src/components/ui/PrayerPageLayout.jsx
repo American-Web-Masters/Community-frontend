@@ -27,6 +27,15 @@ const PrayerPageLayout = ({
   const [activeTab, setActiveTab] = useState(customTabs.length > 0 ? customTabs[0] : "All");
   const [expandedCards, setExpandedCards] = useState(new Set());
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFilter, setShowFilter] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({
+    urgency: [],
+    mood: [],
+    tags: [],
+    anonymous: null
+  });
 
   const handleToggleExpand = (cardId) => {
     setExpandedCards(prev => {
@@ -53,6 +62,99 @@ const PrayerPageLayout = ({
       onCreatePrayer(newPrayer);
     }
     handleCloseModal();
+  };
+
+  // Search and Filter handlers
+  const handleSearchClick = () => {
+    setShowSearch(!showSearch);
+    if (showSearch) {
+      setSearchQuery(""); // Clear search when closing
+    }
+  };
+
+  const handleFilterClick = () => {
+    setShowFilter(!showFilter);
+  };
+
+  const handleFilterChange = (filterType, value) => {
+    setActiveFilters(prev => {
+      const newFilters = { ...prev };
+      
+      if (filterType === 'anonymous') {
+        newFilters.anonymous = newFilters.anonymous === value ? null : value;
+      } else {
+        const currentValues = newFilters[filterType];
+        if (currentValues.includes(value)) {
+          newFilters[filterType] = currentValues.filter(v => v !== value);
+        } else {
+          newFilters[filterType] = [...currentValues, value];
+        }
+      }
+      
+      return newFilters;
+    });
+  };
+
+  const clearAllFilters = () => {
+    setActiveFilters({
+      urgency: [],
+      mood: [],
+      tags: [],
+      anonymous: null
+    });
+    setSearchQuery("");
+  };
+
+  // Apply search and filters to prayers
+  const applySearchAndFilters = (prayersToFilter) => {
+    let filtered = [...prayersToFilter];
+
+    // Apply search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(prayer => {
+        const content = (prayer.content || prayer.prayerText || "").toLowerCase();
+        const userName = (prayer.user?.firstname || prayer.user?.username || "").toLowerCase();
+        const tags = (prayer.tags || []).join(" ").toLowerCase();
+        
+        return content.includes(query) || userName.includes(query) || tags.includes(query);
+      });
+    }
+
+    // Apply urgency filter
+    if (activeFilters.urgency.length > 0) {
+      filtered = filtered.filter(prayer => 
+        activeFilters.urgency.includes(prayer.urgency)
+      );
+    }
+
+    // Apply mood filter
+    if (activeFilters.mood.length > 0) {
+      filtered = filtered.filter(prayer => 
+        activeFilters.mood.includes(prayer.moodEmoji || prayer.mood)
+      );
+    }
+
+    // Apply tags filter
+    if (activeFilters.tags.length > 0) {
+      filtered = filtered.filter(prayer => {
+        const prayerTags = prayer.tags || [];
+        return activeFilters.tags.some(tag => 
+          prayerTags.some(prayerTag => 
+            prayerTag.toLowerCase().includes(tag.toLowerCase())
+          )
+        );
+      });
+    }
+
+    // Apply anonymous filter
+    if (activeFilters.anonymous !== null) {
+      filtered = filtered.filter(prayer => 
+        prayer.anonymous === activeFilters.anonymous
+      );
+    }
+
+    return filtered;
   };
 
   // Helper function to calculate time ago
@@ -103,9 +205,16 @@ const PrayerPageLayout = ({
       {/* Header */}
       <Header
         onNotificationClick={() => console.log("Notification clicked")}
-        onFilterClick={() => console.log("Filter clicked")}
-        onSearchClick={() => console.log("Search clicked")}
+        onFilterClick={handleFilterClick}
+        onSearchClick={handleSearchClick}
         onLogoutClick={onLogout}
+        isSearchActive={showSearch}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        isFilterActive={showFilter}
+        activeFilters={activeFilters}
+        onFilterChange={handleFilterChange}
+        onClearFilters={clearAllFilters}
       />
 
       {/* Statistics - only show for prayer wall */}
@@ -311,9 +420,12 @@ const PrayerPageLayout = ({
           </div>
         ) : (() => {
           // Apply filtering if we're on My Prayers page and have filtering functions
-          const filteredPrayers = (pageType === "my-prayers" && getFilteredPrayers) 
+          let filteredPrayers = (pageType === "my-prayers" && getFilteredPrayers) 
             ? getFilteredPrayers(prayers, activeTab) 
             : prayers;
+          
+          // Apply search and filters
+          filteredPrayers = applySearchAndFilters(filteredPrayers);
           
           if (filteredPrayers.length === 0) {
             return (

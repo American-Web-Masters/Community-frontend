@@ -477,7 +477,7 @@ const PrayerCard = ({
               {!isExpanded && (
                 <div className="flex items-center space-x-1">
                   <span className="bg-blue-400 text-white px-2 py-1 rounded-full text-xs">
-                    {communities[0]}
+                    {communities[0]?.slice(0,7)}
                   </span>
                   {communities.length > 1 && (
                     <span className="bg-gray-400 text-white px-2 py-1 rounded-full text-xs">
