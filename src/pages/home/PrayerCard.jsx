@@ -19,6 +19,9 @@ import {
   addCommentReaction, 
   removeCommentReaction,
   sharePrayer,
+  addBookmark,
+  removeBookmark,
+  isBookmarked,
 } from "../../api/prayer";
 
 const PrayerCard = ({
@@ -71,6 +74,7 @@ const PrayerCard = ({
   const [isSubmittingShare, setIsSubmittingShare] = useState(false);
   const [error, setError] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [isBookmarkedState, setIsBookmarkedState] = useState(() => isBookmarked(prayerId));
   
   const handleToggleExpand = () => {
     console.log("PrayerCard toggle clicked for user:", user?.name);
@@ -130,6 +134,31 @@ const PrayerCard = ({
       setTimeout(() => setError(null), 3000);
     } finally {
       setIsSubmittingShare(false);
+    }
+  };
+
+  // Handle bookmark toggle
+  const handleBookmarkClick = () => {
+    try {
+      const currentBookmarkState = isBookmarkedState;
+      if (currentBookmarkState) {
+        const success = removeBookmark(prayerId);
+        if (success) {
+          setIsBookmarkedState(false);
+          console.log('Prayer removed from bookmarks');
+        }
+      } else {
+        const success = addBookmark(prayerId);
+        if (success) {
+          setIsBookmarkedState(true);
+          console.log('Prayer added to bookmarks');
+        }
+      }
+      if (onBookmark) onBookmark();
+    } catch (error) {
+      console.error('Error handling bookmark:', error);
+      setError("Failed to update bookmark. Please try again.");
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -755,17 +784,15 @@ const PrayerCard = ({
           </button>
 
           <button
-            onClick={onBookmark}
-            className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors duration-200"
-          >
-            <PiBookBookmarkLight className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={onBookmark}
-            className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors duration-200"
+            onClick={handleBookmarkClick}
+            className={`flex items-center space-x-1 transition-colors duration-200 ${
+              isBookmarkedState 
+                ? 'text-blue-600 bg-blue-50 px-2 py-1 rounded-full' 
+                : 'text-gray-600 hover:text-blue-600'
+            }`}
           >
             <IoBookmarkOutline className="w-5 h-5" />
+            {isBookmarkedState && <span className="text-xs">Saved</span>}
           </button>
 
           <button

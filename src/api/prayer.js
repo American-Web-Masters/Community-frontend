@@ -100,3 +100,67 @@ export const unsharePrayer = async (prayerId, userId) => {
     throw error;
   }
 };
+
+/**
+ * Bookmark functions
+ */
+export const fetchBookmarkedPrayers = async (ids) => {
+  try {
+    console.log('Fetching bookmarked prayers with IDs:', ids);
+    console.log('Request body:', { ids: ids });
+    const response = await apiClient.post('/prayers/bookmark', {
+      ids: ids
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error details:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Local storage utilities for bookmarks
+export const getBookmarkedIds = () => {
+  try {
+    const bookmarks = localStorage.getItem('prayerBookmarks');
+    if (bookmarks) {
+      const parsed = JSON.parse(bookmarks);
+      return parsed.ids || [];
+    }
+    return [];
+  } catch (error) {
+    console.error('Error getting bookmarked IDs:', error);
+    return [];
+  }
+};
+
+export const addBookmark = (prayerId) => {
+  try {
+    const currentIds = getBookmarkedIds();
+    if (!currentIds.includes(prayerId)) {
+      const updatedIds = [...currentIds, prayerId];
+      localStorage.setItem('prayerBookmarks', JSON.stringify({ ids: updatedIds }));
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error adding bookmark:', error);
+    return false;
+  }
+};
+
+export const removeBookmark = (prayerId) => {
+  try {
+    const currentIds = getBookmarkedIds();
+    const updatedIds = currentIds.filter(id => id !== prayerId);
+    localStorage.setItem('prayerBookmarks', JSON.stringify({ ids: updatedIds }));
+    return true;
+  } catch (error) {
+    console.error('Error removing bookmark:', error);
+    return false;
+  }
+};
+
+export const isBookmarked = (prayerId) => {
+  const bookmarkedIds = getBookmarkedIds();
+  return bookmarkedIds.includes(prayerId);
+};

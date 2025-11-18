@@ -20,7 +20,10 @@ const PrayerPageLayout = ({
   onCreatePrayer,
   getPrayerStatus = null,
   getFilteredPrayers = null,
-  user = null
+  user = null,
+  bookmarkedPrayers = [],
+  loadingBookmarks = false,
+  onRefreshBookmarks
 }) => {
   const navigate = useNavigate();
   const currentUser = useSelector(selectUser);
@@ -36,6 +39,13 @@ const PrayerPageLayout = ({
     tags: [],
     anonymous: null
   });
+
+  // Effect to fetch bookmarks when switching to bookmarks tab
+  useEffect(() => {
+    if (activeTab === "Bookmarks" && onRefreshBookmarks) {
+      onRefreshBookmarks();
+    }
+  }, []);
 
   const handleToggleExpand = (cardId) => {
     setExpandedCards(prev => {
@@ -343,7 +353,7 @@ const PrayerPageLayout = ({
             </svg>
             <div className="flex flex-col items-start">
               <span className="text-xs md:text-sm">My Prayers</span>
-              <span className="text-xs opacity-70">Recent Activity</span>
+              <span className="text-xs opacity-70">Your Requests</span>
             </div>
           </button>
 
@@ -368,7 +378,7 @@ const PrayerPageLayout = ({
             <IoMdCheckmarkCircleOutline className={`w-3 h-3 md:w-8 md:h-8 ${config.activeButton === 3 ? 'text-white' : 'text-gray-600'}`} />
             <div className="flex flex-col items-start">
               <span className="text-xs md:text-sm">Answered</span>
-              <span className="text-xs text-gray-500">Fulfilled Prayers</span>
+              <span className="text-xs opacity-70">Fulfilled Prayers</span>
             </div>
           </button>
         </div>
@@ -399,11 +409,14 @@ const PrayerPageLayout = ({
 
       {/* Prayer Cards Grid */}
       <div className="flex-1 px-6 pb-24">
-        {loading ? (
+        {/* Handle loading state for different tabs */}
+        {(loading || (activeTab === "Bookmarks" && loadingBookmarks)) ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading prayers...</p>
+              <p className="text-gray-600">
+                {activeTab === "Bookmarks" ? "Loading bookmarked prayers..." : "Loading prayers..."}
+              </p>
             </div>
           </div>
         ) : error ? (
@@ -432,12 +445,18 @@ const PrayerPageLayout = ({
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
                   <p className="text-gray-600 mb-4">
-                    {pageType === "my-prayers" && activeTab !== "All" 
-                      ? `No ${activeTab.toLowerCase()} prayers found`
-                      : "No prayers found"
+                    {activeTab === "Bookmarks" 
+                      ? "No bookmarked prayers found" 
+                      : pageType === "my-prayers" && activeTab !== "All" 
+                        ? `No ${activeTab.toLowerCase()} prayers found`
+                        : "No prayers found"
                     }
                   </p>
-                  {prayers.length === 0 && (
+                  {activeTab === "Bookmarks" ? (
+                    <p className="text-sm text-gray-500">
+                      Bookmark prayers by clicking the bookmark icon on any prayer card.
+                    </p>
+                  ) : prayers.length === 0 && (
                     <button 
                       onClick={handleCreatePrayerClick}
                       className="btn-blue-gradient text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
