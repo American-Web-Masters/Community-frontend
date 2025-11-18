@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
 import PrayerPageLayout from "../../components/ui/PrayerPageLayout";
 import { apiClient } from "../../api";
+import { fetchBookmarkedPrayers, getBookmarkedIds } from "../../api/prayer";
 
 const MyPrayers = () => {
   const user = useSelector(selectUser);
@@ -11,6 +12,8 @@ const MyPrayers = () => {
   const [prayers, setPrayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [bookmarkedPrayers, setBookmarkedPrayers] = useState([]);
+  const [loadingBookmarks, setLoadingBookmarks] = useState(false);
 
   const handleLogout = () => {
     dispatch(clearUser());
@@ -40,12 +43,42 @@ const MyPrayers = () => {
     }
   };
 
+  // Function to fetch bookmarked prayers
+  const fetchBookmarks = async () => {
+    try {
+      setLoadingBookmarks(true);
+      const bookmarkedIds = getBookmarkedIds();
+      
+      if (bookmarkedIds.length === 0) {
+        setBookmarkedPrayers([]);
+        return;
+      }
+      const response = await fetchBookmarkedPrayers(bookmarkedIds);
+      
+      if (response.success) {
+        setBookmarkedPrayers(response.data.prayers || []);
+        setLoadingBookmarks(false);
+      } else {
+        throw new Error('Failed to fetch bookmarked prayers');
+      }
+    } catch (err) {
+      console.error('Error fetching bookmarked prayers:', err);
+      setBookmarkedPrayers([]);
+    } finally {
+      setLoadingBookmarks(false);
+    }
+  };
+
   // Fetch prayers on component mount
   useEffect(() => {
     if (isLoggedIn && user) {
       fetchMyPrayers();
     }
   }, [isLoggedIn, user]);
+
+  useEffect(() => {
+      fetchBookmarks(); 
+  }, []);
 
   const handlePrayerCreated = (newPrayer) => {
     console.log('New prayer created:', newPrayer);
@@ -133,6 +166,7 @@ const MyPrayers = () => {
   // Function to filter prayers based on active tab
   const getFilteredPrayers = (prayers, activeTab) => {
     if (!activeTab || activeTab === "All") return prayers;
+    if (activeTab === "Bookmarks") return bookmarkedPrayers;
 
     return prayers.filter(prayer => {
       const status = getPrayerStatus(prayer);
@@ -140,7 +174,7 @@ const MyPrayers = () => {
     });
   };
 
-  const myPrayersTabs = ["All", "Draft", "Scheduled", "Submitted", "Answered"];
+  const myPrayersTabs = ["All", "Draft", "Scheduled", "Submitted", "Answered", "Bookmarks"];
 
   if (!isLoggedIn || !user) {
     return (
@@ -169,6 +203,9 @@ const MyPrayers = () => {
       getPrayerStatus={getPrayerStatus}
       getFilteredPrayers={getFilteredPrayers}
       user={user}
+      bookmarkedPrayers={bookmarkedPrayers}
+      loadingBookmarks={loadingBookmarks}
+      onRefreshBookmarks={fetchBookmarks}
     />
   );
 };
