@@ -21,10 +21,12 @@ const UpdatePrayers = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiClient.get('/prayers/updates');
-      
+      const response = await apiClient.get(`/prayers/recent-activity/${user._id}`);
+      console.log(response?.data?.data?.recentActivity);
+      const prayersData = [...response?.data?.data?.recentActivity?.comments, ...response?.data?.data?.recentActivity?.prayed, ...response?.data?.data?.recentActivity?.shares];
+      console.log(prayersData);
       if (response.data.success) {
-        setPrayers(response.data.data.prayers || []);
+        setPrayers(prayersData || []);
       } else {
         throw new Error('Failed to fetch prayer updates');
       }
