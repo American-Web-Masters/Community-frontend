@@ -1,17 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
 import PrayerPageLayout from "../../components/ui/PrayerPageLayout";
 import { apiClient } from "../../api";
 import { fetchBookmarkedPrayers, getBookmarkedIds } from "../../api/prayer";
+import useInfiniteScroll from "../../hooks/useInfiniteScroll";
 
 const MyPrayers = () => {
   const user = useSelector(selectUser);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useDispatch();
-  const [prayers, setPrayers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [bookmarkedPrayers, setBookmarkedPrayers] = useState([]);
   const [loadingBookmarks, setLoadingBookmarks] = useState(false);
 
@@ -19,29 +17,52 @@ const MyPrayers = () => {
     dispatch(clearUser());
   };
 
-  // Function to fetch user's prayers from API
+  // Function to fetch user's prayers from API with pagination
   console.log("User ID:", user?._id);
-  const fetchMyPrayers = async () => {
+  const fetchMyPrayers = useCallback(async (page, limit) => {
     try {
-      setLoading(true);
-      setError(null);
-      const response = await apiClient.get(`/prayers/user/${user?._id}`);
-
+      const response = await apiClient.get(`/prayers/user/${user?._id}?page=${page}&limit=${limit}`);
+      console.log('Fetched my prayers:', response);
+      
       if (response.data.success) {
-        console.log("Fetched My Prayers:", response.data.data.prayers);
-        setPrayers(response.data.data.prayers || []);
+        return response.data;
       } else {
         throw new Error('Failed to fetch prayers');
       }
     } catch (err) {
       console.error('Error fetching my prayers:', err);
-      setError('Failed to load your prayers. Please try again.');
-      // Fallback to mock data if API fails
-      setPrayers(mockMyPrayers);
-    } finally {
-      setLoading(false);
+      
+      // Fallback to mock data only on first page for development
+      if (page === 1) {
+        return {
+          success: true,
+          data: {
+            prayers: mockMyPrayers,
+            pagination: {
+              currentPage: 1,
+              hasNextPage: false,
+              totalCount: mockMyPrayers.length
+            }
+          }
+        };
+      }
+      
+      throw new Error('Failed to fetch my prayers');
     }
-  };
+  }, [user?._id]);
+
+  // Use infinite scroll hook for prayers
+  const {
+    items: prayers,
+    hasMore,
+    loading,
+    error,
+    fetchMoreItems,
+    refresh
+  } = useInfiniteScroll(fetchMyPrayers, {
+    limit: 5,
+    enabledCondition: isLoggedIn && user
+  });
 
   // Function to fetch bookmarked prayers
   const fetchBookmarks = async () => {
@@ -69,21 +90,15 @@ const MyPrayers = () => {
     }
   };
 
-  // Fetch prayers on component mount
+  // Fetch bookmarks on component mount
   useEffect(() => {
-    if (isLoggedIn && user) {
-      fetchMyPrayers();
-    }
-  }, [isLoggedIn, user]);
-
-  useEffect(() => {
-      fetchBookmarks(); 
+    fetchBookmarks(); 
   }, []);
 
   const handlePrayerCreated = (newPrayer) => {
     console.log('New prayer created:', newPrayer);
     // Refresh prayers list after creating new prayer
-    fetchMyPrayers();
+    refresh();
   };
 
   // Mock data for my prayers - used as fallback
@@ -198,7 +213,9 @@ const MyPrayers = () => {
       prayers={prayers}
       loading={loading}
       error={error}
-      onRefresh={fetchMyPrayers}
+      hasMore={hasMore}
+      fetchMoreItems={fetchMoreItems}
+      onRefresh={refresh}
       onCreatePrayer={handlePrayerCreated}
       getPrayerStatus={getPrayerStatus}
       getFilteredPrayers={getFilteredPrayers}
@@ -206,6 +223,7 @@ const MyPrayers = () => {
       bookmarkedPrayers={bookmarkedPrayers}
       loadingBookmarks={loadingBookmarks}
       onRefreshBookmarks={fetchBookmarks}
+      useInfiniteScroll={true}
     />
   );
 };
