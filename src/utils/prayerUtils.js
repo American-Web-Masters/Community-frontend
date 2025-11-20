@@ -12,16 +12,17 @@ export function localInputToUTC(localString) {
 }
 
 
- export const getActivityText = (activityType) => {
+ export const getActivityText = (activityType, prayerOwnerName) => {
+    const ownerText = prayerOwnerName ? `${prayerOwnerName}'s prayer` : 'your prayer';
     switch (activityType) {
       case 'comment':
-        return 'commented on your prayer';
+        return `commented on ${ownerText}`;
       case 'prayed':
-        return 'prayed for your prayer';
+        return `prayed for ${ownerText}`;
       case 'share':
-        return 'shared your prayer';
+        return `shared ${ownerText}`;
       default:
-        return 'interacted with your prayer';
+        return `interacted with ${ownerText}`;
     }
   };
 

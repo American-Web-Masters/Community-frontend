@@ -17,9 +17,9 @@ const NotificationCard = ({ prayer, activityType, onCardClick }) => {
         return <IoChatbubbleOutline className="w-5 h-5 text-blue-600" />;
     }
   };
-  
   const latestActivity = getLatestActivity(activityType, prayer);
   const userName = latestActivity?.user?.firstname || 'Someone';
+  const prayerOwnerName = prayer.user?.firstname || null;
   const activityTime = latestActivity?.createdAt || latestActivity?.prayedAt || latestActivity?.sharedAt || prayer.createdAt;
 
   return (
@@ -38,7 +38,7 @@ const NotificationCard = ({ prayer, activityType, onCardClick }) => {
           <div className="flex items-start justify-between">
             <div className="flex-1 gap-y-2">
               <p className="text-medium text-gray-900">
-                <span className="font-medium">{userName}</span> {getActivityText(activityType)}
+                <span className="font-medium">You</span> {getActivityText(activityType, prayerOwnerName)}
               </p>
               <p className="text-medium text-gray-500 mt-1 line-clamp-2">
                 "{prayer.content?.substring(0, 80)}..."
