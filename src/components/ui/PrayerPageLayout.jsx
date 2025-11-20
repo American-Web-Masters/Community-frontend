@@ -27,7 +27,8 @@ const PrayerPageLayout = ({
   user = null,
   bookmarkedPrayers = [],
   loadingBookmarks = false,
-  onRefreshBookmarks
+  onRefreshBookmarks,
+  customRenderer = null
 }) => {
   const navigate = useNavigate();
   const currentUser = useSelector(selectUser);
@@ -436,13 +437,23 @@ const PrayerPageLayout = ({
             </div>
           </div>
         ) : (() => {
-          // Apply filtering if we're on My Prayers page and have filtering functions
-          let filteredPrayers = (pageType === "my-prayers" && getFilteredPrayers) 
-            ? getFilteredPrayers(prayers, activeTab) 
-            : prayers;
+          // Apply filtering based on page type and custom functions
+          let filteredPrayers;
           
-          // Apply search and filters
-          filteredPrayers = applySearchAndFilters(filteredPrayers);
+          if (pageType === "updates" && getFilteredPrayers) {
+            // For updates page, use the custom filter function
+            filteredPrayers = getFilteredPrayers(activeTab);
+          } else if (pageType === "my-prayers" && getFilteredPrayers) {
+            // For my prayers page, use existing logic
+            filteredPrayers = getFilteredPrayers(prayers, activeTab);
+          } else {
+            filteredPrayers = prayers;
+          }
+          
+          // Apply search and filters (skip for updates page with custom renderer)
+          if (!(pageType === "updates" && customRenderer)) {
+            filteredPrayers = applySearchAndFilters(filteredPrayers);
+          }
           
           if (filteredPrayers.length === 0) {
             return (
@@ -593,11 +604,11 @@ const PrayerPageLayout = ({
                 }
                 style={{ overflow: 'visible' }}
               >
-                {renderPrayerCards(filteredPrayers)}
+                {customRenderer ? customRenderer(filteredPrayers) : renderPrayerCards(filteredPrayers)}
               </InfiniteScroll>
             );
           } else {
-            return renderPrayerCards(filteredPrayers);
+            return customRenderer ? customRenderer(filteredPrayers) : renderPrayerCards(filteredPrayers);
           }
         })()}
       </div>

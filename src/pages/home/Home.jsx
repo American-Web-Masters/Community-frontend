@@ -51,7 +51,7 @@ const Home = () => {
     fetchMoreItems,
     refresh
   } = useInfiniteScroll(fetchPrayers, {
-    limit: 5,
+    limit: 10,
     enabledCondition: isLoggedIn && user
   });
 

@@ -51,7 +51,7 @@ const AnsweredPrayers = () => {
     fetchMoreItems,
     refresh
   } = useInfiniteScroll(fetchAnsweredPrayers, {
-    limit: 5,
+    limit: 10,
     enabledCondition: isLoggedIn && user
   });
 
