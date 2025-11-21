@@ -8,6 +8,7 @@ import Header from "./Header";
 import PrayerCard from "../../pages/home/PrayerCard";
 import CreatePrayerModal from "./CreatePrayerModal";
 import { selectUser } from "../../store/userSlice";
+import { isSharedByUser } from "../../api/prayer";
 
 const PrayerPageLayout = ({ 
   pageType = "prayer-wall", // prayer-wall, my-prayers, updates, answered
@@ -497,11 +498,7 @@ const PrayerPageLayout = ({
 
                 // Process shares array to get count and check if current user has shared
                 const shareCount = prayer.shares ? prayer.shares.length : 0;
-                const userHasShared = prayer.shares?.some(sharedUser => {
-                  // In shares array, user is directly a string ID
-                  const userId = sharedUser.user || sharedUser._id || sharedUser;
-                  return userId === currentUser?._id;
-                }) || false;
+                const userHasShared = isSharedByUser(prayer, currentUser?._id);
 
                 return (
                   <div key={prayer._id || prayer.id} className="w-full">

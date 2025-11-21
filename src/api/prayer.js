@@ -118,8 +118,9 @@ export const bookmarkPrayer = async (prayerId, userId) => {
 
 export const unbookmarkPrayer = async (prayerId, userId) => {
   try {
-    const response = await apiClient.post(`/prayers/${prayerId}/bookmark`, { userId }
-    );
+    const response = await apiClient.delete(`/prayers/${prayerId}/bookmark`, {
+      data: { userId }
+    });
     return response.data;
   } catch (error) {
     console.error('Error unbookmarking prayer:', error);
@@ -143,5 +144,14 @@ export const isBookmarkedByUser = (prayer, userId) => {
   return prayer.bookmarks.some(bookmark => {
     const bookmarkUserId = bookmark.user?._id || bookmark.user;
     return bookmarkUserId === userId;
+  });
+};
+
+// Utility function to check if a prayer is shared by the current user
+export const isSharedByUser = (prayer, userId) => {
+  if (!prayer.shares || !userId) return false;
+  return prayer.shares.some(share => {
+    const shareUserId = share.user?._id || share.user;
+    return shareUserId === userId;
   });
 };

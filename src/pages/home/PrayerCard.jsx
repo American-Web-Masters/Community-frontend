@@ -22,6 +22,7 @@ import {
   bookmarkPrayer,
   unbookmarkPrayer,
   isBookmarkedByUser,
+  isSharedByUser,
 } from "../../api/prayer";
 
 const PrayerCard = ({
@@ -69,7 +70,9 @@ const PrayerCard = ({
   const [commentReactions, setCommentReactions] = useState({});
   const [newComment, setNewComment] = useState("");
   const [isPrayedState, setIsPrayedState] = useState(isPrayed);
-  const [isSharedState, setIsSharedState] = useState(isShared);
+  const [isSharedState, setIsSharedState] = useState(() => 
+    prayer ? isSharedByUser(prayer, currentUser?._id) : isShared
+  );
   const [commentsState, setCommentsState] = useState(comments);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isSubmittingPrayer, setIsSubmittingPrayer] = useState(false);
