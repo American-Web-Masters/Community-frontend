@@ -506,6 +506,7 @@ const PrayerPageLayout = ({
                 return (
                   <div key={prayer._id || prayer.id} className="w-full">
                     <PrayerCard
+                      prayer={prayer} // Pass full prayer object
                       prayerId={prayer._id || prayer.id}
                       user={prayer.anonymous ? { name: "Anonymous" } : { name: prayer.user?.firstname || prayer.user?.username || "User" }}
                       timeAgo={prayer.createdAt ? getTimeAgo(prayer.createdAt) : prayer.timeAgo}
@@ -553,7 +554,13 @@ const PrayerPageLayout = ({
                       shareCount={shareCount}
                       onToggleExpand={() => handleToggleExpand(prayer._id || prayer.id)}
                       onPray={() => console.log("Pray clicked", prayer._id || prayer.id)}
-                      onBookmark={() => console.log("Bookmark clicked", prayer._id || prayer.id)}
+                      onBookmark={() => {
+                        // Refresh bookmarks when bookmark state changes
+                        if (onRefreshBookmarks && activeTab === "Bookmarks") {
+                          onRefreshBookmarks();
+                        }
+                        console.log("Bookmark clicked", prayer._id || prayer.id);
+                      }}
                       onComment={() => console.log("Comment clicked", prayer._id || prayer.id)}
                       onShare={() => console.log("Share clicked", prayer._id || prayer.id)}
                       onMore={() => console.log("More clicked", prayer._id || prayer.id)}
@@ -568,6 +575,13 @@ const PrayerPageLayout = ({
                       onCommentsUpdate={(updatedComments) => {
                         // Update the prayer's comments in the prayers array
                         console.log("Comments updated:", prayer._id || prayer.id, updatedComments);
+                      }}
+                      onBookmarkStateChange={(newState) => {
+                        // Refresh bookmarks when bookmark state changes
+                        if (onRefreshBookmarks && activeTab === "Bookmarks") {
+                          setTimeout(() => onRefreshBookmarks(), 1000); // Small delay to ensure API has processed
+                        }
+                        console.log("Bookmark state changed:", prayer._id || prayer.id, newState);
                       }}
                       showStatusPill={pageType === "my-prayers" && activeTab === "All"}
                     />

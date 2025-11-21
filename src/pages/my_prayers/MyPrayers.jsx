@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
 import PrayerPageLayout from "../../components/ui/PrayerPageLayout";
 import { apiClient } from "../../api";
-import { fetchBookmarkedPrayers, getBookmarkedIds } from "../../api/prayer";
+import { fetchUserBookmarks } from "../../api/prayer";
 import useInfiniteScroll from "../../hooks/useInfiniteScroll";
 
 const MyPrayers = () => {
@@ -68,17 +68,16 @@ const MyPrayers = () => {
   const fetchBookmarks = async () => {
     try {
       setLoadingBookmarks(true);
-      const bookmarkedIds = getBookmarkedIds();
       
-      if (bookmarkedIds.length === 0) {
+      if (!user?._id) {
         setBookmarkedPrayers([]);
         return;
       }
-      const response = await fetchBookmarkedPrayers(bookmarkedIds);
+
+      const response = await fetchUserBookmarks(user._id);
       
       if (response.success) {
         setBookmarkedPrayers(response.data.prayers || []);
-        setLoadingBookmarks(false);
       } else {
         throw new Error('Failed to fetch bookmarked prayers');
       }

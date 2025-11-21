@@ -104,63 +104,44 @@ export const unsharePrayer = async (prayerId, userId) => {
 /**
  * Bookmark functions
  */
-export const fetchBookmarkedPrayers = async (ids) => {
+export const bookmarkPrayer = async (prayerId, userId) => {
   try {
-    console.log('Fetching bookmarked prayers with IDs:', ids);
-    console.log('Request body:', { ids: ids });
-    const response = await apiClient.post('/prayers/bookmark', {
-      ids: ids
+    const response = await apiClient.post(`/prayers/${prayerId}/bookmark`, {
+      userId
     });
     return response.data;
   } catch (error) {
-    console.error('Error details:', error.response?.data || error.message);
+    console.error('Error bookmarking prayer:', error);
     throw error;
   }
 };
 
-// Local storage utilities for bookmarks
-export const getBookmarkedIds = () => {
+export const unbookmarkPrayer = async (prayerId, userId) => {
   try {
-    const bookmarks = localStorage.getItem('prayerBookmarks');
-    if (bookmarks) {
-      const parsed = JSON.parse(bookmarks);
-      return parsed.ids || [];
-    }
-    return [];
+    const response = await apiClient.post(`/prayers/${prayerId}/bookmark`, { userId }
+    );
+    return response.data;
   } catch (error) {
-    console.error('Error getting bookmarked IDs:', error);
-    return [];
+    console.error('Error unbookmarking prayer:', error);
+    throw error;
   }
 };
 
-export const addBookmark = (prayerId) => {
+export const fetchUserBookmarks = async (userId) => {
   try {
-    const currentIds = getBookmarkedIds();
-    if (!currentIds.includes(prayerId)) {
-      const updatedIds = [...currentIds, prayerId];
-      localStorage.setItem('prayerBookmarks', JSON.stringify({ ids: updatedIds }));
-      return true;
-    }
-    return false;
+    const response = await apiClient.get(`/prayers/user/${userId}/bookmark`);
+    return response.data;
   } catch (error) {
-    console.error('Error adding bookmark:', error);
-    return false;
+    console.error('Error fetching user bookmarks:', error);
+    throw error;
   }
 };
 
-export const removeBookmark = (prayerId) => {
-  try {
-    const currentIds = getBookmarkedIds();
-    const updatedIds = currentIds.filter(id => id !== prayerId);
-    localStorage.setItem('prayerBookmarks', JSON.stringify({ ids: updatedIds }));
-    return true;
-  } catch (error) {
-    console.error('Error removing bookmark:', error);
-    return false;
-  }
-};
-
-export const isBookmarked = (prayerId) => {
-  const bookmarkedIds = getBookmarkedIds();
-  return bookmarkedIds.includes(prayerId);
+// Utility function to check if a prayer is bookmarked by the current user
+export const isBookmarkedByUser = (prayer, userId) => {
+  if (!prayer.bookmarks || !userId) return false;
+  return prayer.bookmarks.some(bookmark => {
+    const bookmarkUserId = bookmark.user?._id || bookmark.user;
+    return bookmarkUserId === userId;
+  });
 };
