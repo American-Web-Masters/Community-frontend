@@ -12,19 +12,21 @@ import { BsSend } from "react-icons/bs";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../store/userSlice";
-import { 
+import {
   markAsPrayed, 
   unmarkAsPrayed, 
   addComment, 
   addCommentReaction, 
   removeCommentReaction,
   sharePrayer,
-  addBookmark,
-  removeBookmark,
-  isBookmarked,
+  bookmarkPrayer,
+  unbookmarkPrayer,
+  isBookmarkedByUser,
+  isSharedByUser,
 } from "../../api/prayer";
 
 const PrayerCard = ({
+  prayer, // Full prayer object with bookmarks array
   prayerId,
   user,
   timeAgo,
@@ -60,6 +62,7 @@ const PrayerCard = ({
   onPrayedStateChange,
   onSharedStateChange,
   onCommentsUpdate,
+  onBookmarkStateChange, // New callback for bookmark state changes
   showStatusPill = false,
 }) => {
   const currentUser = useSelector(selectUser);
@@ -67,14 +70,19 @@ const PrayerCard = ({
   const [commentReactions, setCommentReactions] = useState({});
   const [newComment, setNewComment] = useState("");
   const [isPrayedState, setIsPrayedState] = useState(isPrayed);
-  const [isSharedState, setIsSharedState] = useState(isShared);
+  const [isSharedState, setIsSharedState] = useState(() => 
+    prayer ? isSharedByUser(prayer, currentUser?._id) : isShared
+  );
   const [commentsState, setCommentsState] = useState(comments);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isSubmittingPrayer, setIsSubmittingPrayer] = useState(false);
   const [isSubmittingShare, setIsSubmittingShare] = useState(false);
+  const [isSubmittingBookmark, setIsSubmittingBookmark] = useState(false);
   const [error, setError] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
-  const [isBookmarkedState, setIsBookmarkedState] = useState(() => isBookmarked(prayerId));
+  const [isBookmarkedState, setIsBookmarkedState] = useState(() => 
+    prayer ? isBookmarkedByUser(prayer, currentUser?._id) : false
+  );
   
   const handleToggleExpand = () => {
     console.log("PrayerCard toggle clicked for user:", user?.name);
@@ -137,28 +145,33 @@ const PrayerCard = ({
     }
   };
 
-  // Handle bookmark toggle
-  const handleBookmarkClick = () => {
+  // Handle bookmark toggle with optimistic update
+  const handleBookmarkClick = async () => {
+    if (!currentUser?._id || isSubmittingBookmark) return;
+
+    // Optimistic UI update
+    const previousState = isBookmarkedState;
+    const newState = !previousState;
+    setIsBookmarkedState(newState);
+    if (onBookmarkStateChange) onBookmarkStateChange(newState);
+    if (onBookmark) onBookmark();
+
+    setIsSubmittingBookmark(true);
     try {
-      const currentBookmarkState = isBookmarkedState;
-      if (currentBookmarkState) {
-        const success = removeBookmark(prayerId);
-        if (success) {
-          setIsBookmarkedState(false);
-          console.log('Prayer removed from bookmarks');
-        }
+      if (previousState) {
+        await unbookmarkPrayer(prayerId, currentUser._id);
       } else {
-        const success = addBookmark(prayerId);
-        if (success) {
-          setIsBookmarkedState(true);
-          console.log('Prayer added to bookmarks');
-        }
+        await bookmarkPrayer(prayerId, currentUser._id);
       }
-      if (onBookmark) onBookmark();
     } catch (error) {
-      console.error('Error handling bookmark:', error);
-      setError("Failed to update bookmark. Please try again.");
+      console.error("Error toggling bookmark state:", error);
+      // Revert optimistic update on error
+      setIsBookmarkedState(previousState);
+      if (onBookmarkStateChange) onBookmarkStateChange(previousState);
+      setError("Failed to update bookmark status. Please try again.");
       setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsSubmittingBookmark(false);
     }
   };
 
@@ -785,13 +798,18 @@ const PrayerCard = ({
 
           <button
             onClick={handleBookmarkClick}
-            className={`flex items-center space-x-1 transition-colors duration-200 ${
+            disabled={!currentUser?._id || isSubmittingBookmark}
+            className={`flex items-center space-x-1 transition-all duration-200 ${
               isBookmarkedState 
                 ? 'text-blue-600 bg-blue-50 px-2 py-1 rounded-full' 
                 : 'text-gray-600 hover:text-blue-600'
+            } disabled:opacity-50 disabled:cursor-not-allowed ${
+              isSubmittingBookmark ? 'animate-pulse' : ''
             }`}
           >
-            <IoBookmarkOutline className="w-5 h-5" />
+            <IoBookmarkOutline className={`w-5 h-5 ${
+              isSubmittingBookmark ? 'animate-pulse' : ''
+            }`} />
             {isBookmarkedState && <span className="text-xs">Saved</span>}
           </button>
 
