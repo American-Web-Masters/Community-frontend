@@ -512,10 +512,6 @@ const PrayerPageLayout = ({
                       status={getPrayerStatus ? getPrayerStatus(prayer) : prayer.status}
                       communities={prayer.communities || ["Prayer Community"]}
                       mood={prayer.moodEmoji || prayer.mood}
-                      timeline={prayer.timeline || [
-                        { user: "Someone", action: "Read", time: "1h ago" },
-                        { user: "Another", action: "Read", time: "2h ago" }
-                      ]}
                       comments={prayer.comments ? prayer.comments.map(comment => {
                         // Process comment reactions to create a reactions object and find user's reaction
                         const reactionsCount = {};

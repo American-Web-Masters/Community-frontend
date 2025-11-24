@@ -35,10 +35,6 @@ const PrayerCard = ({
   status,
   communities = ["Church Group", "Prayer Group", "Youth Group"],
   mood = "😊",
-  timeline = [
-    { user: "Micheal R.", action: "Read", time: "3h ago" },
-    { user: "John Ray", action: "Read", time: "3h ago" }
-  ],
   comments = [
     { 
       user: "Michael Chen", 
@@ -80,9 +76,17 @@ const PrayerCard = ({
   const [isSubmittingBookmark, setIsSubmittingBookmark] = useState(false);
   const [error, setError] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [showTimelineModal, setShowTimelineModal] = useState(false);
   const [isBookmarkedState, setIsBookmarkedState] = useState(() => 
     prayer ? isBookmarkedByUser(prayer, currentUser?._id) : false
   );
+  
+  // Extract timeline from prayer object and sort by date (recent first)
+  const timelineData = (prayer?.timeline || []).sort((a, b) => {
+    const dateA = new Date(a.createdAt);
+    const dateB = new Date(b.createdAt);
+    return dateB - dateA; // Descending order (most recent first)
+  });
   
   const handleToggleExpand = () => {
     console.log("PrayerCard toggle clicked for user:", user?.name);
@@ -359,6 +363,164 @@ const PrayerCard = ({
 
   const urgencyMeter = getUrgencyMeter(urgency);
 
+  // Helper function to format timeline activity text
+  const getTimelineActivityText = (activityType, activityData) => {
+    switch (activityType) {
+      case 'prayer_created':
+        return 'created this prayer';
+      case 'prayer_prayed':
+        return 'prayed for this prayer';
+      case 'prayer_commented':
+        return activityData?.commentText 
+          ? `commented: "${activityData.commentText.substring(0, 50)}${activityData.commentText.length > 50 ? '...' : ''}"`
+          : 'commented on this prayer';
+      case 'comment_reacted':
+        return `reacted ${activityData?.reactionEmoji || '❤️'} to a comment`;
+      case 'prayer_shared':
+        return 'shared this prayer';
+      case 'prayer_bookmarked':
+        return 'bookmarked this prayer';
+      default:
+        return 'interacted with this prayer';
+    }
+  };
+
+  // Helper function to get user name from timeline activity
+  const getTimelineUserName = (activity) => {
+    // Handle different user data structures
+    if (activity.user?.firstname) {
+      // Check if it's the current user
+      const userId = activity.user._id || activity.user;
+      if (userId === currentUser?._id) {
+        return 'You';
+      }
+      return activity.user.firstname;
+    }
+    if (activity.user?.username) {
+      // Check if it's the current user
+      const userId = activity.user._id || activity.user;
+      if (userId === currentUser?._id) {
+        return 'You';
+      }
+      return activity.user.username;
+    }
+    if (typeof activity.user === 'string') {
+      // User is just an ObjectId reference - check if it's current user
+      if (activity.user === currentUser?._id) {
+        return 'You';
+      }
+      return 'Someone';
+    }
+    return 'Unknown User';
+  };
+
+  // Helper function to get timeline activity icon
+  const getTimelineActivityIcon = (activityType, reaction) => {
+    switch (activityType) {
+      case 'prayer_created':
+        return '✨';
+      case 'prayer_prayed':
+        return '🙏';
+      case 'prayer_commented':
+        return '💬';
+      case 'comment_reacted':
+        return `${reaction || ''}`;
+      case 'prayer_shared':
+        return '🔗';
+      case 'prayer_bookmarked':
+        return '🔖';
+      default:
+        return '📝';
+    }
+  };
+
+  // Helper function to format timeline time
+  const formatTimelineTime = (dateString) => {
+    try {
+      const now = new Date();
+      const date = new Date(dateString);
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        return 'Unknown time';
+      }
+      
+      const diffInMs = now - date;
+      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+      const diffInDays = Math.floor(diffInHours / 24);
+
+      if (diffInDays > 0) {
+        return `${diffInDays}d ago`;
+      } else if (diffInHours > 0) {
+        return `${diffInHours}h ago`;
+      } else {
+        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+        return diffInMinutes > 0 ? `${diffInMinutes}m ago` : 'Just now';
+      }
+    } catch (error) {
+      console.error('Error formatting timeline time:', error);
+      return 'Unknown time';
+    }
+  };
+
+  // Timeline Modal Component
+  const TimelineModal = () => {
+    if (!showTimelineModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+          {/* Modal Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Prayer Timeline ({timelineData.length} activities)
+            </h3>
+            <button
+              onClick={() => setShowTimelineModal(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            >
+              <IoClose className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Modal Body - Scrollable Timeline */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="space-y-4">
+              {timelineData.length === 0 ? (
+                <div className="text-center text-gray-500 py-8">
+                  <p>No timeline activities yet.</p>
+                </div>
+              ) : (
+                timelineData.map((activity, index) => (
+                  <div key={activity._id || index} className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm">
+                      {getTimelineActivityIcon(activity.activityType, activity.activityData?.reactionEmoji)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm text-gray-900">
+                            <span className="font-medium">
+                              {getTimelineUserName(activity)}
+                            </span>{' '}
+                            {getTimelineActivityText(activity.activityType, activity.activityData)}
+                          </p>
+                        </div>
+                        <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                          {formatTimelineTime(activity.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Comments Modal Component
   const CommentsModal = () => {
     if (!showCommentsModal) return null;
@@ -494,6 +656,9 @@ const PrayerCard = ({
       {/* Comments Modal */}
       <CommentsModal />
       
+      {/* Timeline Modal */}
+      <TimelineModal />
+      
       <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4 mb-4 transition-all duration-500 ease-in-out">
         {/* Error Message */}
       {error && (
@@ -621,16 +786,42 @@ const PrayerCard = ({
             <div className="bg-blue-50 rounded-lg p-3 mb-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-medium text-gray-800">Recent Updates</h4>
-                <button className="text-xs text-blue-600 hover:underline">
-                  View full timeline →
-                </button>
+                {timelineData.length > 2 && (
+                  <button 
+                    onClick={() => setShowTimelineModal(true)}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    View full timeline →
+                  </button>
+                )}
               </div>
-              <div className="space-y-1">
-                {timeline.map((update, index) => (
-                  <div key={index} className="text-xs text-gray-600">
-                    Liked By {update.user} · {update.time}
-                  </div>
-                ))}
+              <div className="space-y-2">
+                {timelineData.length === 0 ? (
+                  <div className="text-xs text-gray-500">No recent activity</div>
+                ) : (
+                  timelineData.slice(0, 2).map((activity, index) => (
+                    <div key={activity._id || index} className="flex items-start space-x-2">
+                      <span className="text-sm">{getTimelineActivityIcon(activity.activityType)}</span>
+                      <div className="flex-1 text-xs text-gray-600">
+                        <span className="font-medium">
+                          {getTimelineUserName(activity)}
+                        </span>{' '}
+                        {getTimelineActivityText(activity.activityType, activity.activityData)}
+                        <span className="text-gray-400 ml-1">
+                          · {formatTimelineTime(activity.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+                {timelineData.length > 2 && (
+                  <button 
+                    onClick={() => setShowTimelineModal(true)}
+                    className="text-xs text-blue-600 hover:underline mt-1"
+                  >
+                    View {timelineData.length - 2} more activities
+                  </button>
+                )}
               </div>
             </div>
             
