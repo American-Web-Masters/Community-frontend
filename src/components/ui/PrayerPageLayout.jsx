@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
+import InfiniteScroll from 'react-infinite-scroll-component';
 import BottomNavBar from "./BottomNavBar";
 import Header from "./Header";
 import PrayerCard from "../../pages/home/PrayerCard";
 import CreatePrayerModal from "./CreatePrayerModal";
 import { selectUser } from "../../store/userSlice";
+import { isSharedByUser } from "../../api/prayer";
 
 const PrayerPageLayout = ({ 
   pageType = "prayer-wall", // prayer-wall, my-prayers, updates, answered
@@ -16,6 +18,9 @@ const PrayerPageLayout = ({
   prayers = [],
   loading = false,
   error = null,
+  hasMore = false,
+  fetchMoreItems = null,
+  useInfiniteScroll = false,
   onRefresh,
   onCreatePrayer,
   getPrayerStatus = null,
@@ -23,7 +28,8 @@ const PrayerPageLayout = ({
   user = null,
   bookmarkedPrayers = [],
   loadingBookmarks = false,
-  onRefreshBookmarks
+  onRefreshBookmarks,
+  customRenderer = null
 }) => {
   const navigate = useNavigate();
   const currentUser = useSelector(selectUser);
@@ -432,13 +438,23 @@ const PrayerPageLayout = ({
             </div>
           </div>
         ) : (() => {
-          // Apply filtering if we're on My Prayers page and have filtering functions
-          let filteredPrayers = (pageType === "my-prayers" && getFilteredPrayers) 
-            ? getFilteredPrayers(prayers, activeTab) 
-            : prayers;
+          // Apply filtering based on page type and custom functions
+          let filteredPrayers;
           
-          // Apply search and filters
-          filteredPrayers = applySearchAndFilters(filteredPrayers);
+          if (pageType === "updates" && getFilteredPrayers) {
+            // For updates page, use the custom filter function
+            filteredPrayers = getFilteredPrayers(activeTab);
+          } else if (pageType === "my-prayers" && getFilteredPrayers) {
+            // For my prayers page, use existing logic
+            filteredPrayers = getFilteredPrayers(prayers, activeTab);
+          } else {
+            filteredPrayers = prayers;
+          }
+          
+          // Apply search and filters (skip for updates page with custom renderer)
+          if (!(pageType === "updates" && customRenderer)) {
+            filteredPrayers = applySearchAndFilters(filteredPrayers);
+          }
           
           if (filteredPrayers.length === 0) {
             return (
@@ -469,9 +485,10 @@ const PrayerPageLayout = ({
             );
           }
 
-          return (
+          // Render with or without InfiniteScroll based on useInfiniteScroll prop
+          const renderPrayerCards = (prayersToRender) => (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-7xl mx-auto items-start">
-              {filteredPrayers.map((prayer) => {
+              {prayersToRender.map((prayer) => {
                 // Process isPrayed array to get count and check if current user has prayed
                 const prayerCount = prayer.isPrayed ? prayer.isPrayed.length : 0;
                 const userHasPrayed = prayer.isPrayed?.some(prayedUser => {
@@ -481,15 +498,12 @@ const PrayerPageLayout = ({
 
                 // Process shares array to get count and check if current user has shared
                 const shareCount = prayer.shares ? prayer.shares.length : 0;
-                const userHasShared = prayer.shares?.some(sharedUser => {
-                  // In shares array, user is directly a string ID
-                  const userId = sharedUser.user || sharedUser._id || sharedUser;
-                  return userId === currentUser?._id;
-                }) || false;
+                const userHasShared = isSharedByUser(prayer, currentUser?._id);
 
                 return (
                   <div key={prayer._id || prayer.id} className="w-full">
                     <PrayerCard
+                      prayer={prayer} // Pass full prayer object
                       prayerId={prayer._id || prayer.id}
                       user={prayer.anonymous ? { name: "Anonymous" } : { name: prayer.user?.firstname || prayer.user?.username || "User" }}
                       timeAgo={prayer.createdAt ? getTimeAgo(prayer.createdAt) : prayer.timeAgo}
@@ -498,10 +512,6 @@ const PrayerPageLayout = ({
                       status={getPrayerStatus ? getPrayerStatus(prayer) : prayer.status}
                       communities={prayer.communities || ["Prayer Community"]}
                       mood={prayer.moodEmoji || prayer.mood}
-                      timeline={prayer.timeline || [
-                        { user: "Someone", action: "Read", time: "1h ago" },
-                        { user: "Another", action: "Read", time: "2h ago" }
-                      ]}
                       comments={prayer.comments ? prayer.comments.map(comment => {
                         // Process comment reactions to create a reactions object and find user's reaction
                         const reactionsCount = {};
@@ -537,7 +547,13 @@ const PrayerPageLayout = ({
                       shareCount={shareCount}
                       onToggleExpand={() => handleToggleExpand(prayer._id || prayer.id)}
                       onPray={() => console.log("Pray clicked", prayer._id || prayer.id)}
-                      onBookmark={() => console.log("Bookmark clicked", prayer._id || prayer.id)}
+                      onBookmark={() => {
+                        // Refresh bookmarks when bookmark state changes
+                        if (onRefreshBookmarks && activeTab === "Bookmarks") {
+                          onRefreshBookmarks();
+                        }
+                        console.log("Bookmark clicked", prayer._id || prayer.id);
+                      }}
                       onComment={() => console.log("Comment clicked", prayer._id || prayer.id)}
                       onShare={() => console.log("Share clicked", prayer._id || prayer.id)}
                       onMore={() => console.log("More clicked", prayer._id || prayer.id)}
@@ -553,6 +569,13 @@ const PrayerPageLayout = ({
                         // Update the prayer's comments in the prayers array
                         console.log("Comments updated:", prayer._id || prayer.id, updatedComments);
                       }}
+                      onBookmarkStateChange={(newState) => {
+                        // Refresh bookmarks when bookmark state changes
+                        if (onRefreshBookmarks && activeTab === "Bookmarks") {
+                          setTimeout(() => onRefreshBookmarks(), 1000); // Small delay to ensure API has processed
+                        }
+                        console.log("Bookmark state changed:", prayer._id || prayer.id, newState);
+                      }}
                       showStatusPill={pageType === "my-prayers" && activeTab === "All"}
                     />
                   </div>
@@ -560,6 +583,40 @@ const PrayerPageLayout = ({
               })}
             </div>
           );
+
+          // Return with or without InfiniteScroll wrapper
+          if (useInfiniteScroll && fetchMoreItems) {
+            return (
+              <InfiniteScroll
+                dataLength={filteredPrayers.length}
+                next={fetchMoreItems}
+                hasMore={hasMore}
+                loader={
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      <p className="text-gray-600 text-sm">Loading more prayers...</p>
+                    </div>
+                  </div>
+                }
+                endMessage={
+                  <div className="flex items-center justify-center py-6">
+                    <p className="text-gray-500 text-sm">
+                      {pageType === "answered" 
+                        ? "You've reached the end of answered prayers" 
+                        : "You've reached the end of prayers"
+                      }
+                    </p>
+                  </div>
+                }
+                style={{ overflow: 'visible' }}
+              >
+                {customRenderer ? customRenderer(filteredPrayers) : renderPrayerCards(filteredPrayers)}
+              </InfiniteScroll>
+            );
+          } else {
+            return customRenderer ? customRenderer(filteredPrayers) : renderPrayerCards(filteredPrayers);
+          }
         })()}
       </div>
 

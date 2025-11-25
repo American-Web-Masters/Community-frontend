@@ -1,54 +1,64 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
 import PrayerPageLayout from "../../components/ui/PrayerPageLayout";
 import { apiClient } from "../../api";
+import useInfiniteScroll from "../../hooks/useInfiniteScroll";
 
 const AnsweredPrayers = () => {
   const user = useSelector(selectUser);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useDispatch();
-  const [prayers, setPrayers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const handleLogout = () => {
     dispatch(clearUser());
   };
 
-  // Function to fetch answered prayers from API
-  const fetchAnsweredPrayers = async () => {
+  // Function to fetch answered prayers from API with pagination
+  const fetchAnsweredPrayers = useCallback(async (page, limit) => {
     try {
-      setLoading(true);
-      setError(null);
-      const response = await apiClient.get('/prayers/answered');
-      console.log(response);
-      if (response.data.success) {
-        setPrayers(response.data.data.prayers || []);
-      } else {
-        throw new Error('Failed to fetch answered prayers');
-      }
+      const response = await apiClient.get(`/prayers/answered?page=${page}&limit=${limit}`);
+      console.log('Fetched answered prayers:', response);
+      return response.data;
     } catch (err) {
       console.error('Error fetching answered prayers:', err);
-      setError('Failed to load answered prayers. Please try again.');
-      // Fallback to mock data if API fails
-      setPrayers(mockAnsweredPrayers);
-    } finally {
-      setLoading(false);
+      
+      // Fallback to mock data only on first page for development
+      if (page === 1) {
+        return {
+          success: true,
+          data: {
+            prayers: mockAnsweredPrayers,
+            pagination: {
+              currentPage: 1,
+              hasNextPage: false,
+              totalCount: mockAnsweredPrayers.length
+            }
+          }
+        };
+      }
+      
+      throw new Error('Failed to fetch answered prayers');
     }
-  };
+  }, []);
 
-  // Fetch prayers on component mount
-  useEffect(() => {
-    if (isLoggedIn && user) {
-      fetchAnsweredPrayers();
-    }
-  }, [isLoggedIn, user]);
+  // Use infinite scroll hook
+  const {
+    items: prayers,
+    hasMore,
+    loading,
+    error,
+    fetchMoreItems,
+    refresh
+  } = useInfiniteScroll(fetchAnsweredPrayers, {
+    limit: 10,
+    enabledCondition: isLoggedIn && user
+  });
 
   const handlePrayerCreated = (newPrayer) => {
     console.log('New prayer created:', newPrayer);
     // Refresh prayers list after creating new prayer
-    fetchAnsweredPrayers();
+    refresh();
   };
 
   // Mock data for answered prayers - used as fallback
@@ -227,8 +237,11 @@ const AnsweredPrayers = () => {
       prayers={prayers}
       loading={loading}
       error={error}
-      onRefresh={fetchAnsweredPrayers}
+      hasMore={hasMore}
+      fetchMoreItems={fetchMoreItems}
+      onRefresh={refresh}
       onCreatePrayer={handlePrayerCreated}
+      useInfiniteScroll={true}
     />
   );
 };
