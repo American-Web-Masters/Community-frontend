@@ -481,120 +481,7 @@ const PrayerCard = ({
               </div>
             </div>
             
-            {/* Comments Section */}
-            {showComments && (
-              <div className="mb-4 animate-in fade-in duration-300 ease-in-out">
-                {commentsState.slice(0, 2).map((comment, index) => (
-                  <div key={comment._id || index} className={`bg-blue-50 rounded-lg p-3 mb-3 ${
-                    comment.isOptimistic ? 'opacity-70' : ''
-                  }`}>
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium text-sm text-gray-800">{comment.user}</span>
-                        {comment.isOptimistic && (
-                          <div className="animate-pulse">
-                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-xs text-gray-500">{comment.time}</span>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-3">{comment.text}</p>
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        <button 
-                          onClick={() => handleEmojiReaction(index, "🙏")}
-                          className={`text-lg hover:scale-110 transition-transform ${
-                            comment.userReaction === "🙏" ? 'bg-blue-200 rounded-full p-1' : ''
-                          } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
-                          disabled={!currentUser?._id || comment.isOptimistic}
-                        >
-                          🙏
-                        </button>
-                        <span className="text-xs text-gray-500">{getEmojiCount(index, "🙏")}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <button 
-                          onClick={() => handleEmojiReaction(index, "♥️")}
-                          className={`text-lg hover:scale-110 transition-transform ${
-                            comment.userReaction === "♥️" ? 'bg-blue-200 rounded-full p-1' : ''
-                          } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
-                          disabled={!currentUser?._id || comment.isOptimistic}
-                        >
-                          ♥️
-                        </button>
-                        <span className="text-xs text-gray-500">{getEmojiCount(index, "♥️")}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <button 
-                          onClick={() => handleEmojiReaction(index, "😇")}
-                          className={`text-lg hover:scale-110 transition-transform ${
-                            comment.userReaction === "😇" ? 'bg-blue-200 rounded-full p-1' : ''
-                          } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
-                          disabled={!currentUser?._id || comment.isOptimistic}
-                        >
-                          😇
-                        </button>
-                        <span className="text-xs text-gray-500">{getEmojiCount(index, "😇")}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <button 
-                          onClick={() => handleEmojiReaction(index, "😢")}
-                          className={`text-lg hover:scale-110 transition-transform ${
-                            comment.userReaction === "😢" ? 'bg-blue-200 rounded-full p-1' : ''
-                          } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
-                          disabled={!currentUser?._id || comment.isOptimistic}
-                        >
-                          😢
-                        </button>
-                        <span className="text-xs text-gray-500">{getEmojiCount(index, "😢")}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <button 
-                          onClick={() => handleEmojiReaction(index, "🎉")}
-                          className={`text-lg hover:scale-110 transition-transform ${
-                            comment.userReaction === "🎉" ? 'bg-blue-200 rounded-full p-1' : ''
-                          } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
-                          disabled={!currentUser?._id || comment.isOptimistic}
-                        >
-                          🎉
-                        </button>
-                        <span className="text-xs text-gray-500">{getEmojiCount(index, "🎉")}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {commentsState.length > 2 && (
-                  <button 
-                    onClick={() => setShowCommentsModal(true)}
-                    className="text-sm text-blue-600 hover:underline mb-3"
-                  >
-                    View {commentsState.length - 2} more comments
-                  </button>
-                )}
-                
-                {/* Add comment input */}
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
-                    placeholder="Add a prayer or encouragement..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={!currentUser?._id || isSubmittingComment}
-                  />
-                  <button 
-                    onClick={handleAddComment}
-                    disabled={!currentUser?._id || !newComment.trim() || isSubmittingComment}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmittingComment ? "..." : "Post"}
-                  </button>
-                </div>
-              </div>
-            )}
+
             
             <button 
               onClick={handleToggleExpand}
@@ -617,6 +504,121 @@ const PrayerCard = ({
           </div>
         )}
       </div>
+
+      {/* Comments Section - Available in both collapsed and expanded views */}
+      {showComments && (
+        <div className="mb-4 animate-in fade-in duration-300 ease-in-out">
+          {commentsState.slice(0, 2).map((comment, index) => (
+            <div key={comment._id || index} className={`bg-blue-50 rounded-lg p-3 mb-3 ${
+              comment.isOptimistic ? 'opacity-70' : ''
+            }`}>
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium text-sm text-gray-800">{comment.user}</span>
+                  {comment.isOptimistic && (
+                    <div className="animate-pulse">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    </div>
+                  )}
+                </div>
+                <span className="text-xs text-gray-500">{comment.time}</span>
+              </div>
+              <p className="text-sm text-gray-700 mb-3">{comment.text}</p>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-1">
+                  <button 
+                    onClick={() => handleEmojiReaction(index, "🙏")}
+                    className={`text-lg hover:scale-110 transition-transform ${
+                      comment.userReaction === "🙏" ? 'bg-blue-200 rounded-full p-1' : ''
+                    } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
+                    disabled={!currentUser?._id || comment.isOptimistic}
+                  >
+                    🙏
+                  </button>
+                  <span className="text-xs text-gray-500">{getEmojiCount(index, "🙏")}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <button 
+                    onClick={() => handleEmojiReaction(index, "♥️")}
+                    className={`text-lg hover:scale-110 transition-transform ${
+                      comment.userReaction === "♥️" ? 'bg-blue-200 rounded-full p-1' : ''
+                    } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
+                    disabled={!currentUser?._id || comment.isOptimistic}
+                  >
+                    ♥️
+                  </button>
+                  <span className="text-xs text-gray-500">{getEmojiCount(index, "♥️")}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <button 
+                    onClick={() => handleEmojiReaction(index, "😇")}
+                    className={`text-lg hover:scale-110 transition-transform ${
+                      comment.userReaction === "😇" ? 'bg-blue-200 rounded-full p-1' : ''
+                    } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
+                    disabled={!currentUser?._id || comment.isOptimistic}
+                  >
+                    😇
+                  </button>
+                  <span className="text-xs text-gray-500">{getEmojiCount(index, "😇")}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <button 
+                    onClick={() => handleEmojiReaction(index, "😢")}
+                    className={`text-lg hover:scale-110 transition-transform ${
+                      comment.userReaction === "😢" ? 'bg-blue-200 rounded-full p-1' : ''
+                    } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
+                    disabled={!currentUser?._id || comment.isOptimistic}
+                  >
+                    😢
+                  </button>
+                  <span className="text-xs text-gray-500">{getEmojiCount(index, "😢")}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <button 
+                    onClick={() => handleEmojiReaction(index, "🎉")}
+                    className={`text-lg hover:scale-110 transition-transform ${
+                      comment.userReaction === "🎉" ? 'bg-blue-200 rounded-full p-1' : ''
+                    } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
+                    disabled={!currentUser?._id || comment.isOptimistic}
+                  >
+                    🎉
+                  </button>
+                  <span className="text-xs text-gray-500">{getEmojiCount(index, "🎉")}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          {commentsState.length > 2 && (
+            <button 
+              onClick={() => setShowCommentsModal(true)}
+              className="text-sm text-blue-600 hover:underline mb-3"
+            >
+              View {commentsState.length - 2} more comments
+            </button>
+          )}
+          
+          {/* Add comment input */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+              placeholder="Add a prayer or encouragement..."
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={!currentUser?._id || isSubmittingComment}
+            />
+            <button 
+              onClick={handleAddComment}
+              disabled={!currentUser?._id || !newComment.trim() || isSubmittingComment}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmittingComment ? "..." : "Post"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between pt-3 border-t border-blue-200/50">
@@ -661,7 +663,7 @@ const PrayerCard = ({
           </button>
 
           <button
-            onClick={() => setShowComments(true)}
+            onClick={() => setShowComments(!showComments)}
             className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors duration-200"
           >
             <IoChatbubbleOutline className="w-5 h-5" />
