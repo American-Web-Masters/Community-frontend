@@ -5,6 +5,7 @@ import PrayerPageLayout from "../../components/ui/PrayerPageLayout";
 import { apiClient } from "../../api";
 import { fetchUserBookmarks } from "../../api/prayer";
 import useInfiniteScroll from "../../hooks/useInfiniteScroll";
+import { mockMyPrayers } from "../../data/mockData";
 
 const MyPrayers = () => {
   const user = useSelector(selectUser);
@@ -100,69 +101,6 @@ const MyPrayers = () => {
     refresh();
   };
 
-  // Mock data for my prayers - used as fallback
-  const mockMyPrayers = [
-    {
-      id: 1,
-      user: { name: user?.name || "You" },
-      timeAgo: "2 hours ago",
-      urgency: "Normal",
-      prayerText: "Please pray for my upcoming job interview. I've been preparing for weeks and I'm feeling nervous but hopeful.",
-      status: "Draft",
-      communities: ["Career Ministry", "Personal"],
-      mood: "😰",
-      timeline: [
-        { user: "You", action: "Created", time: "2h ago" }
-      ],
-      comments: []
-    },
-    {
-      id: 2,
-      user: { name: user?.name || "You" },
-      timeAgo: "1 day ago",
-      urgency: "Urgent",
-      prayerText: "Thank you all for your prayers! My grandmother's surgery went well and she's recovering nicely. God is faithful!",
-      status: "Submitted",
-      communities: ["Family Prayer", "Church Group"],
-      mood: "🙏",
-      timeline: [
-        { user: "Pastor Mike", action: "Read", time: "1h ago" },
-        { user: "Sarah K.", action: "Read", time: "3h ago" },
-        { user: "You", action: "Submitted", time: "1d ago" }
-      ],
-      comments: [
-        { 
-          user: "Pastor Mike", 
-          text: "Praise God! So wonderful to hear this testimony of His faithfulness.", 
-          time: "20 hours ago",
-          reactions: { "🙏": 8, "♥️": 5, "🎉": 3 }
-        }
-      ]
-    },
-    {
-      id: 3,
-      user: { name: user?.name || "You" },
-      timeAgo: "3 days ago",
-      urgency: "Low",
-      prayerText: "Please pray for wisdom in making some important financial decisions for our family. We want to honor God with our choices.",
-      status: "Scheduled",
-      communities: ["Financial Peace", "Marriage Ministry"],
-      mood: "🤔",
-      timeline: [
-        { user: "Financial Counselor", action: "Read", time: "2d ago" },
-        { user: "You", action: "Scheduled", time: "3d ago" }
-      ],
-      comments: [
-        { 
-          user: "Financial Counselor Tom", 
-          text: "Happy to pray for you both. Feel free to reach out if you need guidance.", 
-          time: "2 days ago",
-          reactions: { "🙏": 4, "♥️": 2 }
-        }
-      ]
-    }
-  ];
-
   // Function to determine prayer status based on schema
   const getPrayerStatus = (prayer) => {
     if (prayer.isDraft) return "Draft";
@@ -184,6 +122,16 @@ const MyPrayers = () => {
 
     return prayers.filter(prayer => {
       const status = getPrayerStatus(prayer);
+      if (activeTab === "Submitted") {
+        const isBookmarked = bookmarkedPrayers.some(bookmarked => 
+          bookmarked._id === prayer._id || bookmarked.id === prayer.id
+        );
+        return (
+          status === "Submitted" || 
+          status === "Answered" || 
+          (isBookmarked && status !== "Draft" && status !== "Scheduled")
+        );
+      }
       return status === activeTab;
     });
   };

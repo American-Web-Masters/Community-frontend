@@ -14,6 +14,42 @@ export const MILESTONES = {
   REVIEW: 'review'
 };
 
+
+  export const calculatePasswordStrength = (password) => {
+    let score = 0;
+    let label = 'Weak';
+    let color = '#FF6B6B'; // Red for weak
+
+    if (password.length >= 8) score += 1;
+    if (password.length >= 12) score += 1;
+    if (/[a-z]/.test(password)) score += 1;
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/\d/.test(password)) score += 1;
+    if (/[@$!%*?&]/.test(password)) score += 1;
+    if (/[^a-zA-Z\d@$!%*?&]/.test(password)) score += 1;
+
+    // Determine strength based on score
+    if (score >= 6) {
+      label = 'Strong';
+      color = '#4CAF50'; // Green for strong
+    } else if (score >= 4) {
+      label = 'Medium';
+      color = '#FF9800'; // Orange for medium
+    } else if (score >= 2) {
+      label = 'Fair';
+      color = '#FFC107'; // Yellow for fair
+    }
+
+    // Calculate percentage (0-100)
+    const percentage = Math.min((score / 6) * 100, 100);
+
+    return {
+      score: percentage,
+      label,
+      color
+    };
+  };
+
 // LocalStorage utilities
 export const storage = {
   get: (key) => {

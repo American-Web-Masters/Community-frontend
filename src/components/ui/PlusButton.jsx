@@ -4,6 +4,7 @@ import PrayerRequestTab from './tabs/PrayerRequestTab';
 import CommunityTab from './tabs/CommunityTab';
 import InnerCircleTab from './tabs/InnerCircleTab';
 import JournalEntryTab from './tabs/JournalEntryTab';
+import { getTabTitle, getTabSubtitle } from '../../utils/plusButtonUtils';
 
 const PlusButton = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('prayer-request');
@@ -24,36 +25,6 @@ const PlusButton = ({ isOpen, onClose }) => {
   const handleSuccess = (data) => {
     console.log('Operation successful:', data);
     // You can add global success handling here if needed
-  };
-
-  const getTabTitle = () => {
-    switch (activeTab) {
-      case 'prayer-request':
-        return 'Create Prayer Request';
-      case 'community':
-        return 'Create Community';
-      case 'inner-circle':
-        return 'Create Inner Circle';
-      case 'journal-entry':
-        return 'Create Journal Entry';
-      default:
-        return 'Create Prayer Request';
-    }
-  };
-
-  const getTabSubtitle = () => {
-    switch (activeTab) {
-      case 'prayer-request':
-        return 'Share your prayer request with the community';
-      case 'community':
-        return 'Create a new community space';
-      case 'inner-circle':
-        return 'Create an intimate study circle';
-      case 'journal-entry':
-        return 'Capture your thoughts and reflections';
-      default:
-        return 'Share your prayer request with the community';
-    }
   };
 
   const renderTabContent = () => {
@@ -87,8 +58,8 @@ const PlusButton = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="flex items-center justify-center p-6">
           <div>
-            <h2 className="text-lg text-center md:text-3xl font-bold text-gray-800">{getTabTitle()}</h2>
-            <p className="text-sm mt-2 text-center md:text-lg text-gray-500">{getTabSubtitle()}</p>
+            <h2 className="text-lg text-center md:text-3xl font-bold text-gray-800">{getTabTitle(activeTab)}</h2>
+            <p className="text-sm mt-2 text-center md:text-lg text-gray-500">{getTabSubtitle(activeTab)}</p>
           </div>
           {/* <button
             onClick={onClose}
