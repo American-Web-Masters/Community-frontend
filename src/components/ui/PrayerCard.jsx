@@ -2,7 +2,6 @@ import {
   IoBookmarkOutline,
   IoChatbubbleOutline,
   IoShareOutline,
-  IoClose,
 } from "react-icons/io5";
 import {
   PiHandsPrayingThin,
@@ -12,6 +11,7 @@ import { BsSend } from "react-icons/bs";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../store/userSlice";
+import {CommentsModal, TimelineModal} from "../../pages/home/subcomponents";
 import {
   markAsPrayed, 
   unmarkAsPrayed, 
@@ -24,6 +24,7 @@ import {
   isBookmarkedByUser,
   isSharedByUser,
 } from "../../api/prayer";
+import { getUrgencyMeter, getTimelineUserName, getStatusPillStyle, getTimelineActivityText, getTimelineActivityIcon, formatTimelineTime } from "../../utils/prayerUtils";
 
 const PrayerCard = ({
   prayer, // Full prayer object with bookmarks array
@@ -291,373 +292,29 @@ const PrayerCard = ({
     return comment?.reactions?.[emoji] || 0;
   };
 
-  // Function to get status pill styling
-  const getStatusPillStyle = (status) => {
-    switch (status) {
-      case "Draft":
-        return "bg-gray-500 text-white";
-      case "Scheduled":
-        return "bg-blue-500 text-white";
-      case "Submitted":
-        return "bg-green-500 text-white";
-      case "Answered":
-        return "bg-purple-500 text-white";
-      default:
-        return "bg-gray-400 text-white";
-    }
-  };
-
-
-  const getUrgencyMeter = (urgency) => {
-    const baseHeights = ['h-3', 'h-4', 'h-5', 'h-6', 'h-7', 'h-8'];
-    
-    switch (urgency?.toLowerCase()) {
-      case "low":
-        return {
-          bars: [
-            { height: 'h-3', color: 'bg-yellow-400', filled: true },
-            { height: 'h-4', color: 'bg-yellow-500', filled: true },
-            { height: 'h-5', color: 'bg-gray-200', filled: false },
-            { height: 'h-6', color: 'bg-gray-200', filled: false },
-            { height: 'h-7', color: 'bg-gray-200', filled: false },
-            { height: 'h-8', color: 'bg-gray-200', filled: false }
-          ]
-        };
-      case "normal":
-      case "medium":
-        return {
-          bars: [
-            { height: 'h-3', color: 'bg-green-400', filled: true },
-            { height: 'h-4', color: 'bg-green-500', filled: true },
-            { height: 'h-5', color: 'bg-green-500', filled: true },
-            { height: 'h-6', color: 'bg-green-600', filled: true },
-            { height: 'h-7', color: 'bg-gray-200', filled: false },
-            { height: 'h-8', color: 'bg-gray-200', filled: false }
-          ]
-        };
-      case "urgent":
-      case "high":
-        return {
-          bars: [
-            { height: 'h-3', color: 'bg-red-400', filled: true },
-            { height: 'h-4', color: 'bg-red-500', filled: true },
-            { height: 'h-5', color: 'bg-red-500', filled: true },
-            { height: 'h-6', color: 'bg-red-600', filled: true },
-            { height: 'h-7', color: 'bg-red-600', filled: true },
-            { height: 'h-8', color: 'bg-red-700', filled: true }
-          ]
-        };
-      default:
-        return {
-          bars: [
-            { height: 'h-3', color: 'bg-gray-200', filled: false },
-            { height: 'h-4', color: 'bg-gray-200', filled: false },
-            { height: 'h-5', color: 'bg-gray-200', filled: false },
-            { height: 'h-6', color: 'bg-gray-200', filled: false },
-            { height: 'h-7', color: 'bg-gray-200', filled: false },
-            { height: 'h-8', color: 'bg-gray-200', filled: false }
-          ]
-        };
-    }
-  };
-
   const urgencyMeter = getUrgencyMeter(urgency);
-
-  // Helper function to format timeline activity text
-  const getTimelineActivityText = (activityType, activityData) => {
-    switch (activityType) {
-      case 'prayer_created':
-        return 'created this prayer';
-      case 'prayer_prayed':
-        return 'prayed for this prayer';
-      case 'prayer_commented':
-        return activityData?.commentText 
-          ? `commented: "${activityData.commentText.substring(0, 50)}${activityData.commentText.length > 50 ? '...' : ''}"`
-          : 'commented on this prayer';
-      case 'comment_reacted':
-        return `reacted ${activityData?.reactionEmoji || '❤️'} to a comment`;
-      case 'prayer_shared':
-        return 'shared this prayer';
-      case 'prayer_bookmarked':
-        return 'bookmarked this prayer';
-      default:
-        return 'interacted with this prayer';
-    }
-  };
-
-  // Helper function to get user name from timeline activity
-  const getTimelineUserName = (activity) => {
-    // Handle different user data structures
-    if (activity.user?.firstname) {
-      // Check if it's the current user
-      const userId = activity.user._id || activity.user;
-      if (userId === currentUser?._id) {
-        return 'You';
-      }
-      return activity.user.firstname;
-    }
-    if (activity.user?.username) {
-      // Check if it's the current user
-      const userId = activity.user._id || activity.user;
-      if (userId === currentUser?._id) {
-        return 'You';
-      }
-      return activity.user.username;
-    }
-    if (typeof activity.user === 'string') {
-      // User is just an ObjectId reference - check if it's current user
-      if (activity.user === currentUser?._id) {
-        return 'You';
-      }
-      return 'Someone';
-    }
-    return 'Unknown User';
-  };
-
-  // Helper function to get timeline activity icon
-  const getTimelineActivityIcon = (activityType, reaction) => {
-    switch (activityType) {
-      case 'prayer_created':
-        return '✨';
-      case 'prayer_prayed':
-        return '🙏';
-      case 'prayer_commented':
-        return '💬';
-      case 'comment_reacted':
-        return `${reaction || ''}`;
-      case 'prayer_shared':
-        return '🔗';
-      case 'prayer_bookmarked':
-        return '🔖';
-      default:
-        return '📝';
-    }
-  };
-
-  // Helper function to format timeline time
-  const formatTimelineTime = (dateString) => {
-    try {
-      const now = new Date();
-      const date = new Date(dateString);
-      
-      // Check if the date is valid
-      if (isNaN(date.getTime())) {
-        return 'Unknown time';
-      }
-      
-      const diffInMs = now - date;
-      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-      const diffInDays = Math.floor(diffInHours / 24);
-
-      if (diffInDays > 0) {
-        return `${diffInDays}d ago`;
-      } else if (diffInHours > 0) {
-        return `${diffInHours}h ago`;
-      } else {
-        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-        return diffInMinutes > 0 ? `${diffInMinutes}m ago` : 'Just now';
-      }
-    } catch (error) {
-      console.error('Error formatting timeline time:', error);
-      return 'Unknown time';
-    }
-  };
-
-  // Timeline Modal Component
-  const TimelineModal = () => {
-    if (!showTimelineModal) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-          {/* Modal Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Prayer Timeline ({timelineData.length} activities)
-            </h3>
-            <button
-              onClick={() => setShowTimelineModal(false)}
-              className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
-            >
-              <IoClose className="w-6 h-6" />
-            </button>
-          </div>
-
-          {/* Modal Body - Scrollable Timeline */}
-          <div className="flex-1 overflow-y-auto p-6">
-            <div className="space-y-4">
-              {timelineData.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  <p>No timeline activities yet.</p>
-                </div>
-              ) : (
-                timelineData.map((activity, index) => (
-                  <div key={activity._id || index} className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm">
-                      {getTimelineActivityIcon(activity.activityType, activity.activityData?.reactionEmoji)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="text-sm text-gray-900">
-                            <span className="font-medium">
-                              {getTimelineUserName(activity)}
-                            </span>{' '}
-                            {getTimelineActivityText(activity.activityType, activity.activityData)}
-                          </p>
-                        </div>
-                        <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
-                          {formatTimelineTime(activity.createdAt)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Comments Modal Component
-  const CommentsModal = () => {
-    if (!showCommentsModal) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-          {/* Modal Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">
-              All Comments ({commentsState.length})
-            </h3>
-            <button
-              onClick={() => setShowCommentsModal(false)}
-              className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
-            >
-              <IoClose className="w-6 h-6" />
-            </button>
-          </div>
-
-          {/* Modal Body - Scrollable Comments */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            {commentsState.map((comment, index) => (
-              <div key={comment._id || index} className={`bg-blue-50 rounded-lg p-4 ${
-                comment.isOptimistic ? 'opacity-70' : ''
-              }`}>
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium text-sm text-gray-800">{comment.user}</span>
-                    {comment.isOptimistic && (
-                      <div className="animate-pulse">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-xs text-gray-500">{comment.time}</span>
-                </div>
-                <p className="text-sm text-gray-700 mb-3">{comment.text}</p>
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-1">
-                    <button 
-                      onClick={() => handleEmojiReaction(index, "🙏")}
-                      className={`text-lg hover:scale-110 transition-transform ${
-                        comment.userReaction === "🙏" ? 'bg-blue-200 rounded-full p-1' : ''
-                      } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
-                      disabled={!currentUser?._id || comment.isOptimistic}
-                    >
-                      🙏
-                    </button>
-                    <span className="text-xs text-gray-500">{getEmojiCount(index, "🙏")}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <button 
-                      onClick={() => handleEmojiReaction(index, "♥️")}
-                      className={`text-lg hover:scale-110 transition-transform ${
-                        comment.userReaction === "♥️" ? 'bg-blue-200 rounded-full p-1' : ''
-                      } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
-                      disabled={!currentUser?._id || comment.isOptimistic}
-                    >
-                      ♥️
-                    </button>
-                    <span className="text-xs text-gray-500">{getEmojiCount(index, "♥️")}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <button 
-                      onClick={() => handleEmojiReaction(index, "😇")}
-                      className={`text-lg hover:scale-110 transition-transform ${
-                        comment.userReaction === "😇" ? 'bg-blue-200 rounded-full p-1' : ''
-                      } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
-                      disabled={!currentUser?._id || comment.isOptimistic}
-                    >
-                      😇
-                    </button>
-                    <span className="text-xs text-gray-500">{getEmojiCount(index, "😇")}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <button 
-                      onClick={() => handleEmojiReaction(index, "😢")}
-                      className={`text-lg hover:scale-110 transition-transform ${
-                        comment.userReaction === "😢" ? 'bg-blue-200 rounded-full p-1' : ''
-                      } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
-                      disabled={!currentUser?._id || comment.isOptimistic}
-                    >
-                      😢
-                    </button>
-                    <span className="text-xs text-gray-500">{getEmojiCount(index, "😢")}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <button 
-                      onClick={() => handleEmojiReaction(index, "🎉")}
-                      className={`text-lg hover:scale-110 transition-transform ${
-                        comment.userReaction === "🎉" ? 'bg-blue-200 rounded-full p-1' : ''
-                      } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
-                      disabled={!currentUser?._id || comment.isOptimistic}
-                    >
-                      🎉
-                    </button>
-                    <span className="text-xs text-gray-500">{getEmojiCount(index, "🎉")}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Modal Footer - Add Comment */}
-          <div className="p-6 border-t border-gray-200">
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
-                placeholder="Add a prayer or encouragement..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={!currentUser?._id || isSubmittingComment}
-              />
-              <button 
-                onClick={handleAddComment}
-                disabled={!currentUser?._id || !newComment.trim() || isSubmittingComment}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmittingComment ? "..." : "Post"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <>
       {/* Comments Modal */}
-      <CommentsModal />
+      <CommentsModal 
+        showCommentsModal={showCommentsModal}
+        setShowCommentsModal={setShowCommentsModal}
+        commentsState={commentsState}
+        newComment={newComment}
+        setNewComment={setNewComment}
+        handleAddComment={handleAddComment}
+        handleEmojiReaction={handleEmojiReaction}
+        getEmojiCount={getEmojiCount}
+        isSubmittingComment={isSubmittingComment}
+      />
       
       {/* Timeline Modal */}
-      <TimelineModal />
+      <TimelineModal 
+        showTimelineModal={showTimelineModal}
+        setShowTimelineModal={setShowTimelineModal}
+        timelineData={timelineData}
+      />
       
       <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4 mb-4 transition-all duration-500 ease-in-out">
         {/* Error Message */}
@@ -804,7 +461,7 @@ const PrayerCard = ({
                       <span className="text-sm">{getTimelineActivityIcon(activity.activityType)}</span>
                       <div className="flex-1 text-xs text-gray-600">
                         <span className="font-medium">
-                          {getTimelineUserName(activity)}
+                          {getTimelineUserName(activity, currentUser)}
                         </span>{' '}
                         {getTimelineActivityText(activity.activityType, activity.activityData)}
                         <span className="text-gray-400 ml-1">

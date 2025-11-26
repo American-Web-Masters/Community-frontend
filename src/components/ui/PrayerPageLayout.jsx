@@ -5,7 +5,7 @@ import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import InfiniteScroll from 'react-infinite-scroll-component';
 import BottomNavBar from "./BottomNavBar";
 import Header from "./Header";
-import PrayerCard from "../../pages/home/PrayerCard";
+import PrayerCard from "./PrayerCard";
 import CreatePrayerModal from "./CreatePrayerModal";
 import { selectUser } from "../../store/userSlice";
 import { isSharedByUser } from "../../api/prayer";
