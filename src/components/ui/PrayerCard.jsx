@@ -325,7 +325,6 @@ const PrayerCard = ({
       )}
       
       {/* Header */}
-      {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
@@ -662,7 +661,7 @@ const PrayerCard = ({
           </button>
 
           <button
-            onClick={() => setShowComments(!showComments)}
+            onClick={() => setShowComments(true)}
             className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors duration-200"
           >
             <IoChatbubbleOutline className="w-5 h-5" />

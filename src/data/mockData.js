@@ -1,3 +1,4 @@
+
   export const mockPrayerCards = [
     {
       id: 1,
@@ -199,7 +200,7 @@
   export const mockMyPrayers = [
     {
       id: 1,
-      user: { name: user?.name || "You" },
+      user: { name: "Arham" || "You" },
       timeAgo: "2 hours ago",
       urgency: "Normal",
       prayerText: "Please pray for my upcoming job interview. I've been preparing for weeks and I'm feeling nervous but hopeful.",
@@ -213,7 +214,7 @@
     },
     {
       id: 2,
-      user: { name: user?.name || "You" },
+      user: { name: "Ahad" || "You" },
       timeAgo: "1 day ago",
       urgency: "Urgent",
       prayerText: "Thank you all for your prayers! My grandmother's surgery went well and she's recovering nicely. God is faithful!",
@@ -236,7 +237,7 @@
     },
     {
       id: 3,
-      user: { name: user?.name || "You" },
+      user: { name: "Ahad" || "You" },
       timeAgo: "3 days ago",
       urgency: "Low",
       prayerText: "Please pray for wisdom in making some important financial decisions for our family. We want to honor God with our choices.",
