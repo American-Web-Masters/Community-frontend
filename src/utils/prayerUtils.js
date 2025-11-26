@@ -148,8 +148,6 @@ export const getUrgencyColor = (urgency) => {
       // Helper function to format timeline activity text
   export const getTimelineActivityText = (activityType, activityData) => {
     switch (activityType) {
-      case 'prayer_created':
-        return 'created this prayer';
       case 'prayer_prayed':
         return 'prayed for this prayer';
       case 'prayer_commented':
@@ -201,8 +199,6 @@ export const getUrgencyColor = (urgency) => {
     // Helper function to get timeline activity icon
   export const getTimelineActivityIcon = (activityType, reaction) => {
     switch (activityType) {
-      case 'prayer_created':
-        return '✨';
       case 'prayer_prayed':
         return '🙏';
       case 'prayer_commented':

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { IoClose } from "react-icons/io5";
 import { 
   getTimelineUserName, 
@@ -12,11 +13,32 @@ const TimelineModal = ({
   setShowTimelineModal,
   timelineData
 }) => {
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showTimelineModal) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, [showTimelineModal]);
+
   if (!showTimelineModal) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+  const modalContent = (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal-portal p-4"
+      onClick={() => setShowTimelineModal(false)}
+      style={{ zIndex: 9999 }}
+    >
+      <div 
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">
@@ -66,6 +88,8 @@ const TimelineModal = ({
       </div>
     </div>
   );
+
+  return ReactDOM.createPortal(modalContent, document.body);
 };
 
 export default TimelineModal;

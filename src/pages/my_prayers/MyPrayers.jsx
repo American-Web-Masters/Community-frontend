@@ -122,6 +122,16 @@ const MyPrayers = () => {
 
     return prayers.filter(prayer => {
       const status = getPrayerStatus(prayer);
+      if (activeTab === "Submitted") {
+        const isBookmarked = bookmarkedPrayers.some(bookmarked => 
+          bookmarked._id === prayer._id || bookmarked.id === prayer.id
+        );
+        return (
+          status === "Submitted" || 
+          status === "Answered" || 
+          (isBookmarked && status !== "Draft" && status !== "Scheduled")
+        );
+      }
       return status === activeTab;
     });
   };
