@@ -1,16 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
 import Header from "../../components/ui/Header";
 import BottomNavBar from "../../components/ui/BottomNavBar";
+import CreateCommunityModal from "../../components/ui/CreateCommunityModal";
 import { CommunityCard } from "./subcomponents";
-import { myCommunities, discoveryCommunitiesRow1, discoveryCommunitiesRow2 } from "../../data/mockData";
+import { fetchCommunities as apiFetchCommunities } from "../../api";
 
 const Communities = () => {
   const user = useSelector(selectUser);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("My Communities");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [communities, setCommunities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleLogout = () => {
     dispatch(clearUser());
@@ -27,8 +32,41 @@ const Communities = () => {
   };
 
   const handleCreateCommunity = () => {
-    console.log("Creating new community");
-    // TODO: Implement create community modal/navigation
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsCreateModalOpen(false);
+  };
+
+  const fetchCommunities = async () => {
+    try {
+      setLoading(true);
+      const response = await apiFetchCommunities(user);
+      
+      if (response.success) {
+        setCommunities(response.data);
+        console.log('Fetched communities:', response.data);
+        setError(null);
+      } else {
+        setError(response.error);
+      }
+    } catch (err) {
+      console.error('Error fetching communities:', err);
+      setError('Failed to load communities. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    setLoading(true);
+    fetchCommunities().finally(() => setLoading(false));
+  }, []);
+
+  const handleCommunityCreated = (newCommunity) => {
+    fetchCommunities();
+    setIsCreateModalOpen(false);
   };
 
   if (!isLoggedIn || !user) {
@@ -100,42 +138,75 @@ const Communities = () => {
           </div>
 
           {/* Content based on active tab */}
-          {activeTab === "My Communities" ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-pulse text-gray-600">Loading communities...</div>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-red-600 text-center">
+                <p className="mb-2">{error}</p>
+                <button 
+                  onClick={fetchCommunities}
+                  className="text-blue-600 underline hover:no-underline"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          ) : activeTab === "My Communities" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {myCommunities.map((community) => (
-                <CommunityCard
-                  key={community.id}
-                  {...community}
-                  onJoinClick={handleJoinCommunity}
-                  onViewClick={handleViewCommunity}
-                />
-              ))}
+              {communities.filter(community => community.isMember || community.isOwner).length === 0 ? (
+                <div className="col-span-full text-center py-12 text-gray-500">
+                  <p>You haven't joined any communities yet.</p>
+                  <p className="text-sm mt-2">Join communities or create your own!</p>
+                </div>
+              ) : (
+                communities
+                  .filter(community => community.isMember || community.isOwner)
+                  .map((community) => (
+                    <CommunityCard
+                      key={community._id || community.id}
+                      id={community._id || community.id}
+                      name={community.name}
+                      description={community.description}
+                      category={community.tags || []}
+                      status={community.isOwner ? "Owner" : (community.privacyLevel === "private" ? "Private" : "Public")}
+                      members={community.memberCount}
+                      avatar={community.coverPhoto}
+                      isJoined={true}
+                      onJoinClick={handleJoinCommunity}
+                      onViewClick={handleViewCommunity}
+                    />
+                  ))
+              )}
             </div>
           ) : (
-            <div className="space-y-4">
-              {/* First row of discovery communities */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {discoveryCommunitiesRow1.map((community) => (
-                  <CommunityCard
-                    key={community.id}
-                    {...community}
-                    onJoinClick={handleJoinCommunity}
-                    onViewClick={handleViewCommunity}
-                  />
-                ))}
-              </div>
-              
-              {/* Second row of discovery communities */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {discoveryCommunitiesRow2.map((community) => (
-                  <CommunityCard
-                    key={community.id}
-                    {...community}
-                    onJoinClick={handleJoinCommunity}
-                    onViewClick={handleViewCommunity}
-                  />
-                ))}
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {communities?.filter(community => !community.isMember && !community.isOwner).length === 0 ? (
+                <div className="col-span-full text-center py-12 text-gray-500">
+                  <p>No communities available to discover.</p>
+                  <p className="text-sm mt-2">Create the first community!</p>
+                </div>
+              ) : (
+                communities
+                  .filter(community => !community.isMember && !community.isOwner)
+                  .map((community) => (
+                    <CommunityCard
+                      key={community._id || community.id}
+                      id={community._id || community.id}
+                      name={community.name}
+                      description={community.description}
+                      category={community.tags || []}
+                      status={community.privacyLevel === "private" ? "Private" : "Public"}
+                      members={community.memberCount}
+                      avatar={community.coverPhoto}
+                      isJoined={false}
+                      onJoinClick={handleJoinCommunity}
+                      onViewClick={handleViewCommunity}
+                    />
+                  ))
+              )}
             </div>
           )}
       </div>
@@ -144,6 +215,13 @@ const Communities = () => {
       <div className="pb-24"></div>
       
       <BottomNavBar />
+      
+      {/* Create Community Modal */}
+      <CreateCommunityModal
+        isOpen={isCreateModalOpen}
+        onClose={handleCloseModal}
+        onSuccess={handleCommunityCreated}
+      />
     </div>
   );
 };
