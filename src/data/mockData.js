@@ -258,3 +258,76 @@
       ]
     }
   ];
+
+
+
+
+    // Mock data for communities
+   export const myCommunities = [
+      {
+        id: 1,
+        name: "Faith & Healing",
+        category: "Faith & Healing • Fellowship • 16",
+        memberCount: 150,
+        isJoined: true,
+        badgeText: "New",
+        badgeColor: "blue",
+        avatarUrl: null
+      },
+      {
+        id: 2,
+        name: "Youth Prayer Circle",
+        category: "Faith & Healing • Fellowship • 26",
+        memberCount: 84,
+        isJoined: true,
+        badgeText: "Active",
+        badgeColor: "blue",
+        avatarUrl: null
+      }
+    ];
+  
+    export const discoveryCommunitiesRow1 = [
+      {
+        id: 3,
+        name: "Faith & Healing",
+        category: "Faith & Healing",
+        memberCount: 233,
+        isJoined: false,
+        badgeText: "Popular",
+        badgeColor: "blue",
+        avatarUrl: null
+      },
+      {
+        id: 4,
+        name: "Morning Blessings",
+        category: "Faith & Healing",
+        memberCount: 189,
+        isJoined: false,
+        badgeText: "Popular",
+        badgeColor: "blue",
+        avatarUrl: null
+      },
+      {
+        id: 5,
+        name: "Morning Blessings",
+        category: "Faith & Healing • Fellowship • 32",
+        memberCount: 167,
+        isJoined: false,
+        badgeText: "Trending",
+        badgeColor: "green",
+        avatarUrl: null
+      }
+    ];
+  
+    export const discoveryCommunitiesRow2 = [
+      {
+        id: 6,
+        name: "Youth Prayer Circle",
+        category: "Faith & Healing • Fellowship • 26",
+        memberCount: 94,
+        isJoined: false,
+        badgeText: "Active",
+        badgeColor: "blue",
+        avatarUrl: null
+      }
+    ];

@@ -330,7 +330,7 @@ const PrayerCard = ({
         {isDraft && onPublishDraft && (
           <button
             onClick={handlePublishDraft}
-            className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 shadow-lg hover:shadow-xl z-10"
+            className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-2xl cursor-pointer text-xs font-medium transition-colors duration-200 shadow-lg hover:shadow-xl z-10"
           >
             Publish
           </button>
