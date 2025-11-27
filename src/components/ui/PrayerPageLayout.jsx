@@ -30,7 +30,8 @@ const PrayerPageLayout = ({
   bookmarkedPrayers = [],
   loadingBookmarks = false,
   onRefreshBookmarks,
-  customRenderer = null
+  customRenderer = null,
+  onPublishDraft = null, // New callback for publishing draft prayers
 }) => {
   const navigate = useNavigate();
   const currentUser = useSelector(selectUser);
@@ -597,6 +598,8 @@ const PrayerPageLayout = ({
                               console.log("Bookmark state changed:", prayer._id || prayer.id, newState);
                             }}
                             showStatusPill={pageType === "my-prayers" && activeTab === "All"}
+                            isDraft={prayer.isDraft === true}
+                            onPublishDraft={onPublishDraft}
                           />
                         </div>
                       );
@@ -689,6 +692,8 @@ const PrayerPageLayout = ({
                             console.log("Bookmark state changed:", prayer._id || prayer.id, newState);
                           }}
                           showStatusPill={pageType === "my-prayers" && activeTab === "All"}
+                          isDraft={prayer.isDraft === true}
+                          onPublishDraft={onPublishDraft}
                         />
                       </div>
                     );

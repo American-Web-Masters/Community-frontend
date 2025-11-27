@@ -61,6 +61,8 @@ const PrayerCard = ({
   onCommentsUpdate,
   onBookmarkStateChange, // New callback for bookmark state changes
   showStatusPill = false,
+  onPublishDraft = null, // New callback for publishing draft prayers
+  isDraft = false, // Flag to show if this is a draft prayer
 }) => {
   const currentUser = useSelector(selectUser);
   const [showComments, setShowComments] = useState(false);
@@ -292,6 +294,13 @@ const PrayerCard = ({
     return comment?.reactions?.[emoji] || 0;
   };
 
+  // Handle publishing a draft prayer
+  const handlePublishDraft = () => {
+    if (onPublishDraft && isDraft && prayer) {
+      onPublishDraft(prayer);
+    }
+  };
+
   const urgencyMeter = getUrgencyMeter(urgency);
 
   return (
@@ -316,7 +325,17 @@ const PrayerCard = ({
         timelineData={timelineData}
       />
       
-      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4 mb-4 transition-all duration-500 ease-in-out">
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4 mb-4 transition-all duration-500 ease-in-out relative">
+        {/* Publish Draft Button - positioned absolutely */}
+        {isDraft && onPublishDraft && (
+          <button
+            onClick={handlePublishDraft}
+            className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 shadow-lg hover:shadow-xl z-10"
+          >
+            Publish
+          </button>
+        )}
+        
         {/* Error Message */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
