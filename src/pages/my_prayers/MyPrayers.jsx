@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
 import PrayerPageLayout from "../../components/ui/PrayerPageLayout";
+import CreatePrayerModal from "../../components/ui/CreatePrayerModal";
 import { apiClient } from "../../api";
 import { fetchUserBookmarks } from "../../api/prayer";
 import useInfiniteScroll from "../../hooks/useInfiniteScroll";
@@ -13,6 +14,8 @@ const MyPrayers = () => {
   const dispatch = useDispatch();
   const [bookmarkedPrayers, setBookmarkedPrayers] = useState([]);
   const [loadingBookmarks, setLoadingBookmarks] = useState(false);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [selectedDraftPrayer, setSelectedDraftPrayer] = useState(null);
 
   const handleLogout = () => {
     dispatch(clearUser());
@@ -101,6 +104,27 @@ const MyPrayers = () => {
     refresh();
   };
 
+  // Handle publish draft prayer
+  const handlePublishDraft = (draftPrayer) => {
+    console.log('Publishing draft prayer:', draftPrayer);
+    setSelectedDraftPrayer(draftPrayer);
+    setIsPublishModalOpen(true);
+  };
+
+  // Handle publish modal close
+  const handlePublishModalClose = () => {
+    setIsPublishModalOpen(false);
+    setSelectedDraftPrayer(null);
+  };
+
+  // Handle successful publish
+  const handlePublishSuccess = (updatedPrayer) => {
+    console.log('Prayer published successfully:', updatedPrayer);
+    // Refresh prayers list after publishing
+    refresh();
+    handlePublishModalClose();
+  };
+
   // Function to determine prayer status based on schema
   const getPrayerStatus = (prayer) => {
     if (prayer.isDraft) return "Draft";
@@ -152,26 +176,39 @@ const MyPrayers = () => {
   }
 
   return (
-    <PrayerPageLayout
-      pageType="my-prayers"
-      onLogout={handleLogout}
-      showTabs={true}
-      customTabs={myPrayersTabs}
-      prayers={prayers}
-      loading={loading}
-      error={error}
-      hasMore={hasMore}
-      fetchMoreItems={fetchMoreItems}
-      onRefresh={refresh}
-      onCreatePrayer={handlePrayerCreated}
-      getPrayerStatus={getPrayerStatus}
-      getFilteredPrayers={getFilteredPrayers}
-      user={user}
-      bookmarkedPrayers={bookmarkedPrayers}
-      loadingBookmarks={loadingBookmarks}
-      onRefreshBookmarks={fetchBookmarks}
-      useInfiniteScroll={true}
-    />
+    <>
+      <PrayerPageLayout
+        pageType="my-prayers"
+        onLogout={handleLogout}
+        showTabs={true}
+        customTabs={myPrayersTabs}
+        prayers={prayers}
+        loading={loading}
+        error={error}
+        hasMore={hasMore}
+        fetchMoreItems={fetchMoreItems}
+        onRefresh={refresh}
+        onCreatePrayer={handlePrayerCreated}
+        getPrayerStatus={getPrayerStatus}
+        getFilteredPrayers={getFilteredPrayers}
+        user={user}
+        bookmarkedPrayers={bookmarkedPrayers}
+        loadingBookmarks={loadingBookmarks}
+        onRefreshBookmarks={fetchBookmarks}
+        useInfiniteScroll={true}
+        onPublishDraft={handlePublishDraft}
+      />
+      
+      {/* Publish Modal */}
+      <CreatePrayerModal
+        isOpen={isPublishModalOpen}
+        onClose={handlePublishModalClose}
+        onSuccess={handlePublishSuccess}
+        editMode={true}
+        initialData={selectedDraftPrayer}
+        editPrayerId={selectedDraftPrayer?._id}
+      />
+    </>
   );
 };
 

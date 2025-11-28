@@ -3,6 +3,7 @@ import SignUp from "../pages/signup/signup"
 import LandingPage from "../pages/landing_page/LandingPage"
 import Home from "../pages/home/Home"
 import Communities from "../pages/communities/Communities"
+import CommunityDetails from "../pages/communities/CommunityDetails"
 import Create from "../pages/create/Create"
 import Messages from "../pages/messages/Messages"
 import Profile from "../pages/profile/Profile"
@@ -72,6 +73,14 @@ const Routes = () =>{
             element={
                 <ProtectedRoute>
                     <Communities/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/communities/:id"
+            element={
+                <ProtectedRoute>
+                    <CommunityDetails/>
                 </ProtectedRoute>
             }
             />

@@ -5,7 +5,7 @@ import { apiClient } from '../../api';
 import { FaTimes, FaCalendarAlt } from 'react-icons/fa';
 import { localInputToUTC } from '../../utils/prayerUtils';
 
-const CreatePrayerModal = ({ isOpen, onClose, onSuccess }) => {
+const CreatePrayerModal = ({ isOpen, onClose, onSuccess, editMode = false, initialData = null, editPrayerId = null }) => {
   const user = useSelector(selectUser);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -24,6 +24,28 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess }) => {
 
   // Simple mood options like in the image
   const moodOptions = ['😊', '😐', '😢', '😡', '😔'];
+
+  // Effect to populate form data when editing
+  React.useEffect(() => {
+    if (editMode && initialData && isOpen) {
+      setFormData({
+        content: initialData.content || '',
+        urgency: initialData.urgency || 'normal',
+        anonymous: initialData.anonymous || false,
+        moodEmoji: initialData.moodEmoji || '😊',
+        tags: initialData.tags || []
+      });
+    } else if (!editMode && isOpen) {
+      // Reset form for create mode
+      setFormData({
+        content: '',
+        urgency: 'normal',
+        anonymous: false,
+        moodEmoji: '😊',
+        tags: []
+      });
+    }
+  }, [editMode, initialData, isOpen]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -153,20 +175,39 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess }) => {
     setError('');
 
     try {
-      const payload = createPayload();
-      const response = await apiClient.post('/prayers/create', payload);
-      
-      if (response.data.success) {
-        console.log('Prayer created successfully:', response.data.data);
-        resetForm();
-        if (onSuccess) onSuccess(response.data.data);
-        onClose();
+      if (editMode && editPrayerId) {
+        // Update existing prayer (publish draft)
+        const payload = {
+          ...createPayload(),
+          isDraft: false // Publish the draft
+        };
+        const response = await apiClient.put(`/prayers/${editPrayerId}`, payload);
+        
+        if (response.data.success) {
+          console.log('Prayer published successfully:', response.data.data);
+          resetForm();
+          if (onSuccess) onSuccess(response.data.data);
+          onClose();
+        } else {
+          throw new Error(response.data?.message || 'Failed to publish prayer');
+        }
       } else {
-        throw new Error(response.data?.message || 'Failed to create prayer');
+        // Create new prayer
+        const payload = createPayload();
+        const response = await apiClient.post('/prayers/create', payload);
+        
+        if (response.data.success) {
+          console.log('Prayer created successfully:', response.data.data);
+          resetForm();
+          if (onSuccess) onSuccess(response.data.data);
+          onClose();
+        } else {
+          throw new Error(response.data?.message || 'Failed to create prayer');
+        }
       }
     } catch (err) {
-      console.error('Prayer creation error:', err);
-      setError(err.response?.data?.message || 'Failed to create prayer. Please try again.');
+      console.error('Prayer operation error:', err);
+      setError(err.response?.data?.message || `Failed to ${editMode ? 'publish' : 'create'} prayer. Please try again.`);
     } finally {
       setLoading(false);
     }
@@ -206,7 +247,7 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess }) => {
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800">Prayer Request</h2>
+          <h2 className="text-lg font-semibold text-gray-800">{editMode ? 'Publish Prayer' : 'Prayer Request'}</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
@@ -472,20 +513,22 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess }) => {
               )}
 
               <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleSaveAsDraft}
-                  disabled={loading || !formData.content.trim()}
-                  className="flex-1 py-3 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50"
-                >
-                  {loading ? 'Saving...' : 'Save as Draft'}
-                </button>
+                {!editMode && (
+                  <button
+                    type="button"
+                    onClick={handleSaveAsDraft}
+                    disabled={loading || !formData.content.trim()}
+                    className="flex-1 py-3 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50"
+                  >
+                    {loading ? 'Saving...' : 'Save as Draft'}
+                  </button>
+                )}
                 <button
                   type="submit"
                   disabled={loading || !formData.content.trim() || (showScheduler && !scheduledDate)}
-                  className="flex-1 py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
+                  className={`${editMode ? 'w-full' : 'flex-1'} py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50`}
                 >
-                  {loading ? 'Creating...' : showScheduler ? 'Share Prayer Request' : 'Share Prayer Request'}
+                  {loading ? (editMode ? 'Publishing...' : 'Creating...') : (editMode ? 'Publish Prayer' : (showScheduler ? 'Share Prayer Request' : 'Share Prayer Request'))}
                 </button>
               </div>
             </div>
