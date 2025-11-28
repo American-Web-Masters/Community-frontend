@@ -5,6 +5,7 @@ const CommunityCard = ({
   id,
   name,
   description,
+  wallAssociation,
   category,
   status,
   members = 0,
@@ -51,9 +52,10 @@ const CommunityCard = ({
   return (
     <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-white/50 hover:shadow-lg transition-all duration-200 relative">
       {/* Badge positioned absolutely in top right */}
-      {badgeText && (
+      {console.log(badgeText)}
+      {wallAssociation && (
         <span className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium btn-blue-gradient`}>
-          {badgeText}
+          {wallAssociation}
         </span>
       )}
 

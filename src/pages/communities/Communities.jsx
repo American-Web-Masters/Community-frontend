@@ -174,6 +174,7 @@ const Communities = () => {
                       status={community.isOwner ? "Owner" : (community.privacyLevel === "private" ? "Private" : "Public")}
                       members={community.memberCount}
                       avatar={community.coverPhoto}
+                      wallAssociation={community.wallAssociation}
                       isJoined={true}
                       onJoinClick={handleJoinCommunity}
                       onViewClick={handleViewCommunity}
@@ -200,6 +201,7 @@ const Communities = () => {
                       category={community.tags || []}
                       status={community.privacyLevel === "private" ? "Private" : "Public"}
                       members={community.memberCount}
+                      wallAssociation={community.wallAssociation}
                       avatar={community.coverPhoto}
                       isJoined={false}
                       onJoinClick={handleJoinCommunity}
