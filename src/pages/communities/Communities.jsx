@@ -1,34 +1,60 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
 import Header from "../../components/ui/Header";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import CreateCommunityModal from "../../components/ui/CreateCommunityModal";
 import { CommunityCard } from "./subcomponents";
-import { fetchCommunities as apiFetchCommunities } from "../../api";
+import { fetchCommunities as apiFetchCommunities, joinCommunity as apiJoinCommunity } from "../../api";
 
 const Communities = () => {
   const user = useSelector(selectUser);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("My Communities");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [joiningCommunityId, setJoiningCommunityId] = useState(null);
 
   const handleLogout = () => {
     dispatch(clearUser());
   };
 
-  const handleJoinCommunity = (communityId) => {
-    console.log("Joining community:", communityId);
-    // TODO: Implement join community API call
+  const handleJoinCommunity = async (communityId) => {
+    try {
+      setJoiningCommunityId(communityId);
+      const response = await apiJoinCommunity(communityId);
+      
+      if (response.success) {
+        // Update the community in the local state to reflect the join
+        setCommunities(prevCommunities => 
+          prevCommunities.map(community => 
+            community._id === communityId || community.id === communityId
+              ? { ...community, isMember: true, memberCount: (community.memberCount || 0) + 1 }
+              : community
+          )
+        );
+        
+        // Optionally show success message
+        console.log(response.message || 'Successfully joined community!');
+      } else {
+        console.error('Failed to join community:', response.error);
+        setError(response.error);
+      }
+    } catch (err) {
+      console.error('Error joining community:', err);
+      setError('Failed to join community. Please try again.');
+    } finally {
+      setJoiningCommunityId(null);
+    }
   };
 
   const handleViewCommunity = (communityId) => {
-    console.log("Viewing community:", communityId);
-    // TODO: Implement view community navigation
+    navigate(`/communities/${communityId}`);
   };
 
   const handleCreateCommunity = () => {
@@ -176,6 +202,7 @@ const Communities = () => {
                       avatar={community.coverPhoto}
                       wallAssociation={community.wallAssociation}
                       isJoined={true}
+                      isLoading={joiningCommunityId === (community._id || community.id)}
                       onJoinClick={handleJoinCommunity}
                       onViewClick={handleViewCommunity}
                     />
@@ -204,6 +231,7 @@ const Communities = () => {
                       wallAssociation={community.wallAssociation}
                       avatar={community.coverPhoto}
                       isJoined={false}
+                      isLoading={joiningCommunityId === (community._id || community.id)}
                       onJoinClick={handleJoinCommunity}
                       onViewClick={handleViewCommunity}
                     />

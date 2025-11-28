@@ -11,6 +11,7 @@ const CommunityCard = ({
   members = 0,
   avatar = null,
   isJoined = false,
+  isLoading = false,
   badgeText = null,
   badgeColor = "blue",
   onJoinClick,
@@ -118,10 +119,22 @@ const CommunityCard = ({
           </button>
         ) : (
           <button
-            onClick={() => onJoinClick && onJoinClick(id)}
-            className="w-full py-2.5 btn-blue-gradient text-sm font-medium rounded-3xl hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+            onClick={() => !isLoading && onJoinClick && onJoinClick(id)}
+            disabled={isLoading}
+            className={`w-full py-2.5 text-sm font-medium rounded-3xl transition-colors duration-200 shadow-sm ${
+              isLoading 
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                : 'btn-blue-gradient hover:bg-blue-700'
+            }`}
           >
-            Join Community
+            {isLoading ? (
+              <span className="flex items-center justify-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                <span>Joining...</span>
+              </span>
+            ) : (
+              'Join Community'
+            )}
           </button>
         )}
       </div>
