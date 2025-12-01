@@ -1,41 +1,65 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo, act } from "react";
+import { toast } from "react-hot-toast";
+import { fetchPendingPosts, handlePendingPost } from "../../../api/communities";
+import { formatTimestamp , getFilteredItems} from "../../../utils/communityUtils";
 import { mockModeratorQueue, mockPrayerCards } from "../../../data/mockData";
 import PrayerCard from "../../../components/ui/PrayerCard";
 
 const ModeratorQueue = ({ community, currentUser }) => {
   const [activeTab, setActiveTab] = useState("All");
   const [selectedItems, setSelectedItems] = useState([]);
+  const [pendingPosts, setPendingPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Check if user is owner or moderator
   const isOwnerOrModerator = community?.isOwner || 
     (community?.moderators && community.moderators.some(mod => mod.id === currentUser?.id));
 
-  if (!isOwnerOrModerator) {
-    return null; // Don't render if user doesn't have permissions
-  }
+  // Fetch pending posts on component mount and when community changes
+  useEffect(() => {
+    if (community?._id && isOwnerOrModerator) {
+      loadPendingPosts();
+    }
+  }, [community?._id, isOwnerOrModerator]);
 
-  // Get all items for "All" tab
-  const allItems = [
-    ...mockModeratorQueue.pendingPosts,
-    ...mockModeratorQueue.flaggedPosts, 
-    ...mockModeratorQueue.joinRequests
-  ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-  // Filter items based on active tab
-  const getFilteredItems = () => {
-    switch (activeTab) {
-      case "Flagged Posts":
-        return mockModeratorQueue.flaggedPosts;
-      case "Pending Posts":
-        return mockModeratorQueue.pendingPosts;
-      case "Join Request":
-        return mockModeratorQueue.joinRequests;
-      default:
-        return allItems;
+  const loadPendingPosts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetchPendingPosts(community._id);
+        const transformedPosts = response.data.pendingPosts.map(post => ({
+          id: post.prayer?._id,
+          type: "pending",
+          title: post.title,
+          content: post.prayer?.content,
+          author: {
+            name: post.submittedBy?.firstname || post.author?.username || "Unknown",
+            avatar: community?.coverPhoto || "/api/placeholder/32/32"
+          },
+          timestamp: formatTimestamp(post.createdAt),
+          status: post.status || "pending"
+        }));
+        setPendingPosts(transformedPosts);
+    } catch (err) {
+      setError('Failed to load pending posts');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const filteredItems = getFilteredItems();
+  if (!isOwnerOrModerator) {
+    return null;
+  }
+
+  const allItems = useMemo(() => [
+    ...pendingPosts,
+    ...mockModeratorQueue.flaggedPosts, 
+    ...mockModeratorQueue.joinRequests
+  ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)), [pendingPosts]);
+
+
+  const filteredItems = getFilteredItems(activeTab, mockModeratorQueue, pendingPosts, allItems);
   const pendingCount = allItems.length;
 
   // Handle item selection
@@ -55,21 +79,77 @@ const ModeratorQueue = ({ community, currentUser }) => {
     }
   };
 
-  const handleApprove = (itemId = null) => {
-    if (itemId) {
-      console.log(`Approved item ${itemId}`);
-    } else {
-      console.log(`Approved items: ${selectedItems}`);
+  const handleApprove = async (itemId = null) => {
+    try {
+      const itemsToApprove = itemId ? [itemId] : selectedItems;
+      
+      if (itemsToApprove.length === 0) {
+        toast.error('No items selected');
+        return;
+      }
+
+      // Handle each item individually
+      for (const id of itemsToApprove) {
+        const item = allItems.find(item => item.id === id);
+        
+        // Only handle pending posts with API, others are mock data
+        if (item && item.type === 'pending') {
+          const response = await handlePendingPost(community._id, id, 'approve');
+          
+          if (response.success) {
+            // Remove from pending posts
+            setPendingPosts(prev => prev.filter(post => post.id !== id));
+            toast.success(`Post approved successfully!`);
+          } else {
+            toast.error(response.error);
+          }
+        } else if (item) {
+          // For mock data items, just log for now
+          console.log(`Approved ${item.type} item ${id}`);
+        }
+      }
+      
       setSelectedItems([]);
+    } catch (error) {
+      console.error('Error approving items:', error);
+      toast.error('Failed to approve items');
     }
   };
 
-  const handleReject = (itemId = null) => {
-    if (itemId) {
-      console.log(`Rejected item ${itemId}`);
-    } else {
-      console.log(`Rejected items: ${selectedItems}`);
+  const handleReject = async (itemId = null) => {
+    try {
+      const itemsToReject = itemId ? [itemId] : selectedItems;
+      
+      if (itemsToReject.length === 0) {
+        toast.error('No items selected');
+        return;
+      }
+
+      // Handle each item individually
+      for (const id of itemsToReject) {
+        const item = allItems.find(item => item.id === id);
+        
+        // Only handle pending posts with API, others are mock data
+        if (item && item.type === 'pending') {
+          const response = await handlePendingPost(community._id, id, 'reject');
+          
+          if (response.success) {
+            // Remove from pending posts
+            setPendingPosts(prev => prev.filter(post => post.id !== id));
+            toast.success(`Post rejected successfully!`);
+          } else {
+            toast.error(response.error);
+          }
+        } else if (item) {
+          // For mock data items, just log for now
+          console.log(`Rejected ${item.type} item ${id}`);
+        }
+      }
+      
       setSelectedItems([]);
+    } catch (error) {
+      console.error('Error rejecting items:', error);
+      toast.error('Failed to reject items');
     }
   };
 
@@ -163,7 +243,22 @@ const ModeratorQueue = ({ community, currentUser }) => {
 
         {/* Queue Items */}
         <div className="max-h-96 overflow-y-auto">
-          {filteredItems.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-sm">Loading moderator queue...</p>
+            </div>
+          ) : error && activeTab === "Pending Posts" ? (
+            <div className="text-center py-8 text-red-500">
+              <p className="text-sm">{error}</p>
+              <button 
+                onClick={loadPendingPosts}
+                className="mt-2 text-blue-600 hover:text-blue-800 text-sm underline"
+              >
+                Try again
+              </button>
+            </div>
+          ) : filteredItems.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <p className="text-sm">No items in queue</p>
             </div>
@@ -231,7 +326,6 @@ const ModeratorQueue = ({ community, currentUser }) => {
                         </div>
                         <p className="font-medium text-gray-900 text-sm">{item.title}</p>
                         <p className="text-xs text-gray-600 mb-1">by {item.author.name}</p>
-                        
                         {item.type === "flagged" && (
                           <p className="text-xs text-red-600 mb-2">
                             Reason: {item.reason} • {item.flags} Flags

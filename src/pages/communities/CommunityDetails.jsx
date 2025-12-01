@@ -408,18 +408,19 @@ const CommunityDetails = () => {
 
                       return (
                         <div key={prayer._id || prayer.id} className="masonry-item">
+                          {console.log("Rendering PrayerCard for prayer:", prayer)}
                           <PrayerCard
                             prayer={prayer}
                             prayerId={prayer._id || prayer.id}
                             user={prayer.anonymous ? { name: "Anonymous" } : { 
-                              name: `${prayer.user?.firstname || ''} ${prayer.user?.lastname || ''}`.trim() || 
-                                     prayer.user?.username || "User" 
+                              name: `${prayer.addedBy?.firstname || ''} ${prayer.addedBy?.lastname || ''}`.trim() || 
+                                     prayer.addedBy?.username || "User" 
                             }}
                             timeAgo={prayer.createdAt ? getTimeAgo(prayer.createdAt) : "Unknown"}
                             urgency={prayer.urgency}
                             prayerText={prayer.content}
                             status={prayer.status}
-                            communities={[community.name]}
+                            communities={prayer.communities}
                             mood={prayer.moodEmoji}
                             comments={prayer.comments ? prayer.comments.map(comment => {
                               const reactionsCount = {};

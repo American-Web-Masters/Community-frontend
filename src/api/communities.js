@@ -115,3 +115,73 @@ export const joinCommunity = async (communityId) => {
     };
   }
 };
+
+/**
+ * Fetch pending posts for a community (moderator queue)
+ * @param {string} communityId - The ID of the community
+ * @returns {Promise<Object>} Response containing pending posts data
+ */
+export const fetchPendingPosts = async (communityId) => {
+  try {
+    const response = await apiClient.get(`/communities/${communityId}/pending-posts`);
+    console.log('Pending posts response:', response.data);
+    if (response.data?.success) {
+      return {
+        success: true,
+        data: response.data.data
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.message || 'Failed to load pending posts.'
+      };
+    }
+  } catch (err) {
+    console.error('Error fetching pending posts:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to load pending posts. Please try again.'
+    };
+  }
+};
+
+/**
+ * Handle pending post approval/rejection
+ * @param {string} postId - The ID of the post to handle
+ * @param {string} action - 'approve' or 'reject'
+ * @param {string} [reason] - Optional reason for rejection
+ * @returns {Promise<Object>} Response containing success status
+ */
+export const handlePendingPost = async (communityId, postId, action, reason = null) => {
+  try {
+    const payload = {
+      communityId: communityId,
+      postId,
+      action
+    };
+    
+    if (action === 'reject' && reason) {
+      payload.reason = reason;
+    }
+    
+    const response = await apiClient.post('/communities/handle-pending-post', payload);
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message || `Post ${action}d successfully!`
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.message || `Failed to ${action} post.`
+      };
+    }
+  } catch (err) {
+    console.error(`Error ${action}ing post:`, err);
+    return {
+      success: false,
+      error: err.response?.data?.message || `Failed to ${action} post. Please try again.`
+    };
+  }
+};
