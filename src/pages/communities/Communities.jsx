@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import toast from 'react-hot-toast';
 import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
 import Header from "../../components/ui/Header";
 import BottomNavBar from "../../components/ui/BottomNavBar";
@@ -39,15 +40,15 @@ const Communities = () => {
           )
         );
         
-        // Optionally show success message
-        console.log(response.message || 'Successfully joined community!');
+        // Show success toast
+        toast.success(response.message || '🎉 Successfully joined community!');
       } else {
         console.error('Failed to join community:', response.error);
-        setError(response.error);
+        toast.error(response.error || 'Failed to join community');
       }
     } catch (err) {
       console.error('Error joining community:', err);
-      setError('Failed to join community. Please try again.');
+      toast.error('Failed to join community. Please try again.');
     } finally {
       setJoiningCommunityId(null);
     }
@@ -75,10 +76,12 @@ const Communities = () => {
         console.log('Fetched communities:', response.data);
         setError(null);
       } else {
+        toast.error(response.error || 'Failed to load communities');
         setError(response.error);
       }
     } catch (err) {
       console.error('Error fetching communities:', err);
+      toast.error('Failed to load communities. Please try again.');
       setError('Failed to load communities. Please try again.');
     } finally {
       setLoading(false);
@@ -91,6 +94,7 @@ const Communities = () => {
   }, []);
 
   const handleCommunityCreated = (newCommunity) => {
+    toast.success('🎉 Community created successfully!');
     fetchCommunities();
     setIsCreateModalOpen(false);
   };
@@ -168,18 +172,6 @@ const Communities = () => {
             <div className="flex items-center justify-center py-12">
               <div className="animate-pulse text-gray-600">Loading communities...</div>
             </div>
-          ) : error ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-red-600 text-center">
-                <p className="mb-2">{error}</p>
-                <button 
-                  onClick={fetchCommunities}
-                  className="text-blue-600 underline hover:no-underline"
-                >
-                  Try Again
-                </button>
-              </div>
-            </div>
           ) : activeTab === "My Communities" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {communities.filter(community => community.isMember || community.isOwner).length === 0 ? (
@@ -196,6 +188,7 @@ const Communities = () => {
                       id={community._id || community.id}
                       name={community.name}
                       description={community.description}
+                      privacyLevel={community.privacyLevel}
                       category={community.tags || []}
                       status={community.isOwner ? "Owner" : (community.privacyLevel === "private" ? "Private" : "Public")}
                       members={community.memberCount}
@@ -225,6 +218,7 @@ const Communities = () => {
                       id={community._id || community.id}
                       name={community.name}
                       description={community.description}
+                      privacyLevel={community.privacyLevel}
                       category={community.tags || []}
                       status={community.privacyLevel === "private" ? "Private" : "Public"}
                       members={community.memberCount}
