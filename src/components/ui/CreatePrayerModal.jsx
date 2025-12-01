@@ -5,7 +5,17 @@ import { apiClient } from '../../api';
 import { FaTimes, FaCalendarAlt } from 'react-icons/fa';
 import { localInputToUTC } from '../../utils/prayerUtils';
 
-const CreatePrayerModal = ({ isOpen, onClose, onSuccess, editMode = false, initialData = null, editPrayerId = null }) => {
+const CreatePrayerModal = ({ 
+  isOpen, 
+  onClose, 
+  onSuccess, 
+  editMode = false, 
+  initialData = null, 
+  editPrayerId = null,
+  communityMode = false,
+  communityId = null,
+  community = null
+}) => {
   const user = useSelector(selectUser);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -77,6 +87,21 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess, editMode = false, initi
   };
 
   const createPayload = () => {
+    if (communityMode && communityId) {
+      // Community prayer payload
+      return {
+        user: user._id,
+        community: communityId,
+        userProfile: user._id,
+        content: formData.content.trim(),
+        urgency: formData.urgency,
+        anonymous: formData.anonymous,
+        moodEmoji: formData.moodEmoji,
+        tags: formData.tags
+      };
+    }
+    
+    // Regular prayer payload
     return {
       user: user._id,
       communities: ["68ff93765db352ca01d2a16b", "68ff93765db352ca01d2a16b"],
@@ -194,7 +219,15 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess, editMode = false, initi
       } else {
         // Create new prayer
         const payload = createPayload();
-        const response = await apiClient.post('/prayers/create', payload);
+        let response;
+        
+        if (communityMode && communityId) {
+          // Use community-specific endpoint
+          response = await apiClient.post(`/communities/${communityId}/prayers`, payload);
+        } else {
+          // Use regular prayer endpoint
+          response = await apiClient.post('/prayers/create', payload);
+        }
         
         if (response.data.success) {
           console.log('Prayer created successfully:', response.data.data);
@@ -247,7 +280,9 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess, editMode = false, initi
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800">{editMode ? 'Publish Prayer' : 'Prayer Request'}</h2>
+          <h2 className="text-lg font-semibold text-gray-800">
+            {editMode ? 'Publish Prayer' : (communityMode ? `Share Prayer in ${community?.name || 'Community'}` : 'Prayer Request')}
+          </h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
@@ -463,7 +498,7 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess, editMode = false, initi
           {/* Full-width sections */}
           <div className="mt-6 space-y-6">
             {/* Schedule Entry */}
-            {showScheduler && (
+            {!communityMode && showScheduler && (
               <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
                 <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                   <FaCalendarAlt className="w-4 h-4" />
@@ -489,7 +524,7 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess, editMode = false, initi
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 pt-4">
-              {!showScheduler && (
+              {!communityMode && !showScheduler && (
                 <button
                   type="button"
                   onClick={() => setShowScheduler(true)}
@@ -501,7 +536,7 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess, editMode = false, initi
                 </button>
               )}
 
-              {showScheduler && (
+              {!communityMode && showScheduler && (
                 <button
                   type="button"
                   onClick={() => setShowScheduler(false)}
@@ -513,7 +548,7 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess, editMode = false, initi
               )}
 
               <div className="flex gap-3">
-                {!editMode && (
+                {!editMode && !communityMode && (
                   <button
                     type="button"
                     onClick={handleSaveAsDraft}
@@ -525,10 +560,10 @@ const CreatePrayerModal = ({ isOpen, onClose, onSuccess, editMode = false, initi
                 )}
                 <button
                   type="submit"
-                  disabled={loading || !formData.content.trim() || (showScheduler && !scheduledDate)}
-                  className={`${editMode ? 'w-full' : 'flex-1'} py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50`}
+                  disabled={loading || !formData.content.trim() || (!communityMode && showScheduler && !scheduledDate)}
+                  className={`${editMode || communityMode ? 'w-full' : 'flex-1'} py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50`}
                 >
-                  {loading ? (editMode ? 'Publishing...' : 'Creating...') : (editMode ? 'Publish Prayer' : (showScheduler ? 'Share Prayer Request' : 'Share Prayer Request'))}
+                  {loading ? (editMode ? 'Publishing...' : 'Creating...') : (editMode ? 'Publish Prayer' : (communityMode ? 'Share Prayer' : (showScheduler ? 'Share Prayer Request' : 'Share Prayer Request')))}
                 </button>
               </div>
             </div>

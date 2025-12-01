@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../store/userSlice";
+import { useStableMasonry } from "../../hooks/useStableMasonry";
+import PrayerCard from "../../components/ui/PrayerCard";
 import { IoPersonOutline, IoArrowBackOutline } from "react-icons/io5";
 import { PiChatText , PiBellLight} from "react-icons/pi";
 import { FaRegHeart } from "react-icons/fa";
 import { IoShareSocialOutline } from "react-icons/io5";
 import { fetchCommunityById } from "../../api";
-import { About, Members } from "./subcomponents";
+import toast from 'react-hot-toast';
+import { About, Members, ModeratorQueue } from "./subcomponents";
+import CreatePrayerModal from "../../components/ui/CreatePrayerModal";
 
 const CommunityDetails = () => {
   const { id } = useParams();
@@ -18,6 +22,8 @@ const CommunityDetails = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("Feed");
   const [copied, setCopied] = useState(false);
+  const [isCreatePrayerModalOpen, setIsCreatePrayerModalOpen] = useState(false);
+  const [expandedCards, setExpandedCards] = useState(new Set());
 
   useEffect(() => {
     fetchCommunityDetails();
@@ -44,6 +50,84 @@ const CommunityDetails = () => {
 
   const handleBackClick = () => {
     navigate("/communities");
+  };
+
+  // Check if user is owner or moderator
+  const isOwnerOrModerator = community?.isOwner || 
+    (community?.moderators && community.moderators.some(mod => mod.id === user?.id));
+
+  const handleCreatePost = () => {
+    setIsCreatePrayerModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsCreatePrayerModalOpen(false);
+  };
+
+  const handlePrayerCreated = (newPrayer) => {
+    console.log('Prayer created successfully:', newPrayer);
+    setIsCreatePrayerModalOpen(false);
+    // Only refresh when new content is created
+    fetchCommunityDetails();
+    toast.success('Prayer posted successfully!'); 
+  };
+
+  const handleToggleExpand = (cardId) => {
+    setExpandedCards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(cardId)) {
+        newSet.delete(cardId);
+      } else {
+        newSet.add(cardId);
+      }
+      return newSet;
+    });
+  };
+
+  // Helper function to calculate time ago - memoized to prevent recreation
+  const getTimeAgo = useMemo(() => {
+    return (dateString) => {
+      const now = new Date();
+      const createdAt = new Date(dateString);
+      const diffInMinutes = Math.floor((now - createdAt) / (1000 * 60));
+      
+      if (diffInMinutes < 1) return 'Just now';
+      if (diffInMinutes < 60) return `${diffInMinutes} min`;
+      if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
+      if (diffInMinutes < 10080) return `${Math.floor(diffInMinutes / 1440)}d`;
+      return `${Math.floor(diffInMinutes / 10080)}w`;
+    };
+  }, []); 
+
+  // Get feed prayers - memoized to prevent unnecessary re-renders
+  const feedPrayers = useMemo(() => {
+    return community?.feed?.map(feedItem => ({
+      ...feedItem.prayer,
+      feedItemId: feedItem._id,
+      addedBy: feedItem.addedBy,
+      addedAt: feedItem.addedAt
+    })) || [];
+  }, [community?.feed]);
+
+  // Apply masonry layout - hook must be called at top level
+  const masonryColumns = useStableMasonry(feedPrayers, 2);
+
+  // Prayer interaction handlers - these are callback functions that PrayerCard expects
+  // PrayerCard handles all the actual API calls and state management internally
+  const handlePray = (prayerId, currentState) => {
+    console.log('Prayer action:', prayerId, !currentState);
+  };
+
+  const handleBookmark = (prayerId, currentState) => {
+    console.log('Bookmark action:', prayerId, !currentState);
+  };
+
+  const handleShare = (prayerId, currentState) => {
+    console.log('Share action:', prayerId, !currentState);
+  };
+
+  const handleComment = (prayerId) => {
+    console.log('Comment action:', prayerId);
   };
 
   const handleInviteClick = async () => {
@@ -90,6 +174,7 @@ const CommunityDetails = () => {
       <div className="min-h-screen light-background flex items-center justify-center">
         <div className="text-red-600 text-center">
           <p className="mb-2">{error || "Community not found"}</p>
+          {toast.error(error || "Community not found")}
           <button 
             onClick={handleBackClick}
             className="text-blue-600 underline hover:no-underline"
@@ -252,10 +337,25 @@ const CommunityDetails = () => {
             >
               About
             </button>
+            {isOwnerOrModerator && (
+              <button
+                onClick={() => setActiveTab("Moderator Queue")}
+                className={`px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 ${
+                  activeTab === "Moderator Queue"
+                    ? "btn-blue-gradient text-white shadow-lg"
+                    : "text-gray-700 hover:bg-white/30"
+                }`}
+              >
+                Moderator Queue
+              </button>
+            )}
           </div>
 
           {/* Create New Post Button */}
-          <button className="btn-blue-gradient text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg">
+          <button 
+            onClick={handleCreatePost}
+            className="btn-blue-gradient text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg"
+          >
             <span className="hidden sm:inline">Create New Post</span>
             <span className="inline sm:hidden">Post</span>
             <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
@@ -268,9 +368,119 @@ const CommunityDetails = () => {
       {/* Content Area */}
       <div className="px-4 pb-24">
         {activeTab === "Feed" && (
-          <div className="text-center py-12 text-gray-500">
-            <p>No posts available yet</p>
-            <p className="text-sm mt-2">Be the first to share something with the community!</p>
+          <div className="space-y-4">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading feed...</p>
+                </div>
+              </div>
+            ) : feedPrayers.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <p>No posts available yet</p>
+                <p className="text-sm mt-2">Be the first to share something with the community!</p>
+              </div>
+            ) : (
+              <div className="stable-masonry-container">
+                {masonryColumns.map((columnItems, columnIndex) => (
+                  <div key={columnIndex} className="masonry-column">
+                    {columnItems.map((prayer) => {
+                      // Process isPrayed array to get count and check if current user has prayed
+                      const prayerCount = prayer.isPrayed ? prayer.isPrayed.length : 0;
+                      const userHasPrayed = prayer.isPrayed?.some(prayedUser => {
+                        const userId = prayedUser.user?._id || prayedUser._id || prayedUser;
+                        return userId === user?._id;
+                      }) || false;
+
+                      // Process shares array to get count and check if current user has shared
+                      const shareCount = prayer.shares ? prayer.shares.length : 0;
+                      const userHasShared = prayer.shares?.some(share => {
+                        const userId = share.user?._id || share._id || share;
+                        return userId === user?._id;
+                      }) || false;
+
+                      // Process bookmarks
+                      const isBookmarked = prayer.bookmarks?.some(bookmark => {
+                        const userId = bookmark.user?._id || bookmark._id || bookmark;
+                        return userId === user?._id;
+                      }) || false;
+
+                      return (
+                        <div key={prayer._id || prayer.id} className="masonry-item">
+                          <PrayerCard
+                            prayer={prayer}
+                            prayerId={prayer._id || prayer.id}
+                            user={prayer.anonymous ? { name: "Anonymous" } : { 
+                              name: `${prayer.user?.firstname || ''} ${prayer.user?.lastname || ''}`.trim() || 
+                                     prayer.user?.username || "User" 
+                            }}
+                            timeAgo={prayer.createdAt ? getTimeAgo(prayer.createdAt) : "Unknown"}
+                            urgency={prayer.urgency}
+                            prayerText={prayer.content}
+                            status={prayer.status}
+                            communities={[community.name]}
+                            mood={prayer.moodEmoji}
+                            comments={prayer.comments ? prayer.comments.map(comment => {
+                              const reactionsCount = {};
+                              let userReaction = null;
+                              
+                              if (comment.reactions && Array.isArray(comment.reactions)) {
+                                comment.reactions.forEach(reaction => {
+                                  const emoji = reaction.emoji || reaction.type;
+                                  reactionsCount[emoji] = (reactionsCount[emoji] || 0) + 1;
+                                  if (reaction.user === user?._id) {
+                                    userReaction = emoji;
+                                  }
+                                });
+                              }
+
+                              return {
+                                _id: comment._id,
+                                user: comment.user?.firstname || comment.user?.username || "Community Member",
+                                text: comment.commentText || comment.text,
+                                time: comment.createdAt ? getTimeAgo(comment.createdAt) : comment.time,
+                                reactions: reactionsCount,
+                                userReaction: userReaction,
+                                userId: comment.user?._id
+                              };
+                            }) : []}
+                            tags={prayer.tags}
+                            isExpanded={expandedCards.has(prayer._id || prayer.id)}
+                            isPrayed={userHasPrayed}
+                            prayerCount={prayerCount}
+                            isShared={userHasShared}
+                            shareCount={shareCount}
+                            isBookmarked={isBookmarked}
+                            onToggleExpand={() => handleToggleExpand(prayer._id || prayer.id)}
+                            onPray={() => handlePray(prayer._id || prayer.id, userHasPrayed)}
+                            onBookmark={() => handleBookmark(prayer._id || prayer.id, isBookmarked)}
+                            onComment={() => handleComment(prayer._id || prayer.id)}
+                            onShare={() => handleShare(prayer._id || prayer.id, userHasShared)}
+                            onMore={() => {
+                              console.log("More clicked", prayer._id || prayer.id);
+                              // You can implement the more options functionality here
+                            }}
+                            onPrayedStateChange={(newState) => {
+                              // PrayerCard handles the state internally
+                            }}
+                            onSharedStateChange={(newState) => {
+                              // PrayerCard handles the state internally
+                            }}
+                            onCommentsUpdate={(updatedComments) => {
+                              // PrayerCard handles the state internally
+                            }}
+                            onBookmarkStateChange={(newState) => {
+                              // PrayerCard handles the state internally
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -287,7 +497,21 @@ const CommunityDetails = () => {
         {activeTab === "About" && (
           <About community={community} />
         )}
+
+        {activeTab === "Moderator Queue" && isOwnerOrModerator && (
+          <ModeratorQueue community={community} currentUser={user} />
+        )}
       </div>
+      
+      {/* Create Prayer Modal */}
+      <CreatePrayerModal
+        isOpen={isCreatePrayerModalOpen}
+        onClose={handleCloseModal}
+        onSuccess={handlePrayerCreated}
+        communityMode={true}
+        communityId={id}
+        community={community}
+      />
     </div>
   );
 };
