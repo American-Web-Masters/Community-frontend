@@ -72,6 +72,13 @@ const CommunityDetails = () => {
     toast.success('Prayer posted successfully!'); 
   };
 
+  const handleCommunityUpdate = (updatedCommunity) => {
+    setCommunity(prevCommunity => ({
+      ...prevCommunity,
+      ...updatedCommunity
+    }));
+  };
+
   const handleToggleExpand = (cardId) => {
     setExpandedCards(prev => {
       const newSet = new Set(prev);
@@ -352,7 +359,8 @@ const CommunityDetails = () => {
           </div>
 
           {/* Create New Post Button */}
-          <button 
+          {activeTab === "Feed" && (
+            <button 
             onClick={handleCreatePost}
             className="btn-blue-gradient text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg"
           >
@@ -362,6 +370,7 @@ const CommunityDetails = () => {
               <span className="text-blue-600 text-lg font-bold relative -top-0.5">+</span>
             </div>
           </button>
+          )}
         </div>
       </div>
 
@@ -496,7 +505,7 @@ const CommunityDetails = () => {
         )}
 
         {activeTab === "About" && (
-          <About community={community} />
+          <About community={community} onCommunityUpdate={handleCommunityUpdate} />
         )}
 
         {activeTab === "Moderator Queue" && isOwnerOrModerator && (
