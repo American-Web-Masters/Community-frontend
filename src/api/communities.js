@@ -234,3 +234,52 @@ export const updateCommunityDetails = async (communityId, updateData) => {
     };
   }
 };
+
+/**
+ * Fetch reported prayers for a community
+ * @param {string} communityId - Community ID to fetch reported prayers for
+ * @returns {Promise<Object>} Response containing reported prayers data
+ */
+export const fetchReportedPrayers = async (communityId) => {
+  try {
+    const response = await apiClient.get(`/communities/${communityId}/reported-prayers`);
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (err) {
+    console.error('Error fetching reported prayers:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to fetch reported prayers. Please try again.'
+    };
+  }
+};
+
+/**
+ * Handle reported prayer (accept or reject)
+ * @param {string} communityId - Community ID
+ * @param {string} reportId - Report ID to handle
+ * @param {string} action - Action to take ('accept' or 'reject')
+ * @returns {Promise<Object>} Response from the API
+ */
+export const handleReportedPrayer = async (communityId, reportId, action) => {
+  try {
+    const response = await apiClient.post('/communities/handle-reported-prayer', {
+      communityId,
+      reportId,
+      action
+    });
+    return {
+      success: true,
+      data: response.data.data,
+      message: response.data.message
+    };
+  } catch (err) {
+    console.error('Error handling reported prayer:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to handle reported prayer. Please try again.'
+    };
+  }
+};

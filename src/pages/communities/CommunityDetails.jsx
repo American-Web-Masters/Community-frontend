@@ -4,14 +4,16 @@ import { useSelector } from "react-redux";
 import { selectUser } from "../../store/userSlice";
 import { useStableMasonry } from "../../hooks/useStableMasonry";
 import PrayerCard from "../../components/ui/PrayerCard";
-import { IoPersonOutline, IoArrowBackOutline } from "react-icons/io5";
+import { IoPersonOutline, IoArrowBackOutline, IoFlagOutline } from "react-icons/io5";
 import { PiChatText , PiBellLight} from "react-icons/pi";
 import { FaRegHeart } from "react-icons/fa";
 import { IoShareSocialOutline } from "react-icons/io5";
 import { fetchCommunityById } from "../../api";
+import { flagPrayer } from "../../api/prayer";
 import toast from 'react-hot-toast';
 import { About, Members, ModeratorQueue } from "./subcomponents";
 import CreatePrayerModal from "../../components/ui/CreatePrayerModal";
+import FlagModal from "../../components/ui/FlagModal";
 
 const CommunityDetails = () => {
   const { id } = useParams();
@@ -24,6 +26,10 @@ const CommunityDetails = () => {
   const [copied, setCopied] = useState(false);
   const [isCreatePrayerModalOpen, setIsCreatePrayerModalOpen] = useState(false);
   const [expandedCards, setExpandedCards] = useState(new Set());
+  const [flagModalOpen, setFlagModalOpen] = useState(false);
+  const [selectedPrayerToFlag, setSelectedPrayerToFlag] = useState(null);
+  const [flagReason, setFlagReason] = useState('');
+  const [flagDescription, setFlagDescription] = useState('');
 
   useEffect(() => {
     fetchCommunityDetails();
@@ -50,6 +56,41 @@ const CommunityDetails = () => {
 
   const handleBackClick = () => {
     navigate("/communities");
+  };
+
+  // Flag handlers
+  const handleFlagPrayer = (prayer) => {
+    setSelectedPrayerToFlag(prayer);
+    setFlagModalOpen(true);
+  };
+
+  const handleSubmitFlag = async () => {
+    if (!flagReason.trim()) {
+      toast.error('Please select a reason for flagging');
+      return;
+    }
+    
+    try {
+      const response = await flagPrayer(selectedPrayerToFlag._id, {
+        reason: flagReason,
+        userId: user._id
+      }, community._id);
+      
+      toast.success('Prayer has been flagged for review');
+      setFlagModalOpen(false);
+      setFlagReason('');
+      setSelectedPrayerToFlag(null);
+    } catch (error) {
+      console.error('Error flagging prayer:', error);
+      toast.error(error?.response?.data?.message || 'Failed to flag prayer. Please try again.');
+    }
+  };
+
+  const handleCloseFlagModal = () => {
+    setFlagModalOpen(false);
+    setFlagReason('');
+    setFlagDescription('');
+    setSelectedPrayerToFlag(null);
   };
 
   // Check if user is owner or moderator
@@ -417,36 +458,37 @@ const CommunityDetails = () => {
 
                       return (
                         <div key={prayer._id || prayer.id} className="masonry-item">
-                          <PrayerCard
-                            prayer={prayer}
-                            prayerId={prayer._id || prayer.id}
-                            user={prayer.anonymous ? { name: "Anonymous" } : { 
-                              name: `${prayer.addedBy?.firstname || ''} ${prayer.addedBy?.lastname || ''}`.trim() || 
-                                     prayer.addedBy?.username || "User" 
-                            }}
-                            timeAgo={prayer.createdAt ? getTimeAgo(prayer.createdAt) : "Unknown"}
-                            urgency={prayer.urgency}
-                            prayerText={prayer.content}
-                            status={prayer.status}
-                            communities={prayer.communities}
-                            mood={prayer.moodEmoji}
-                            comments={prayer.comments ? prayer.comments.map(comment => {
-                              const reactionsCount = {};
-                              let userReaction = null;
-                              
-                              if (comment.reactions && Array.isArray(comment.reactions)) {
-                                comment.reactions.forEach(reaction => {
-                                  const emoji = reaction.emoji || reaction.type;
-                                  reactionsCount[emoji] = (reactionsCount[emoji] || 0) + 1;
-                                  if (reaction.user === user?._id) {
-                                    userReaction = emoji;
-                                  }
-                                });
-                              }
+                          <div className="relative">
+                            <PrayerCard
+                              prayer={prayer}
+                              prayerId={prayer._id || prayer.id}
+                              user={prayer.anonymous ? { name: "Anonymous" } : { 
+                                name: `${prayer.addedBy?.firstname || ''} ${prayer.addedBy?.lastname || ''}`.trim() || 
+                                       prayer.addedBy?.username || "User" 
+                              }}
+                              timeAgo={prayer.createdAt ? getTimeAgo(prayer.createdAt) : "Unknown"}
+                              urgency={prayer.urgency}
+                              prayerText={prayer.content}
+                              status={prayer.status}
+                              communities={prayer.communities}
+                              mood={prayer.moodEmoji}
+                              comments={prayer.comments ? prayer.comments.map(comment => {
+                                const reactionsCount = {};
+                                let userReaction = null;
+                                
+                                if (comment.reactions && Array.isArray(comment.reactions)) {
+                                  comment.reactions.forEach(reaction => {
+                                    const emoji = reaction.emoji || reaction.type;
+                                    reactionsCount[emoji] = (reactionsCount[emoji] || 0) + 1;
+                                    if (reaction.user === user?._id) {
+                                      userReaction = emoji;
+                                    }
+                                  });
+                                }
 
-                              return {
-                                _id: comment._id,
-                                user: comment.user?.firstname || comment.user?.username || "Community Member",
+                                return {
+                                  _id: comment._id,
+                                  user: comment.user?.firstname || comment.user?.username || "Community Member",
                                 text: comment.commentText || comment.text,
                                 time: comment.createdAt ? getTimeAgo(comment.createdAt) : comment.time,
                                 reactions: reactionsCount,
@@ -483,6 +525,19 @@ const CommunityDetails = () => {
                               // PrayerCard handles the state internally
                             }}
                           />
+                          
+                          {/* Flag button - positioned at bottom right */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFlagPrayer(prayer);
+                            }}
+                            className="absolute bottom-3 right-3 p-2 bg-white rounded-full cursor-pointer border border-gray-200  transition-all duration-200 group z-10"
+                            title="Flag this prayer"
+                          >
+                            <IoFlagOutline className="w-4 h-4 text-gray-500 group-hover:text-red-500 transition-colors duration-200" />
+                          </button>
+                          </div>
                         </div>
                       );
                     })}
@@ -520,6 +575,18 @@ const CommunityDetails = () => {
         communityMode={true}
         communityId={id}
         community={community}
+      />
+      
+      {/* Flag Prayer Modal */}
+      <FlagModal
+        isOpen={flagModalOpen}
+        onClose={handleCloseFlagModal}
+        onSubmit={handleSubmitFlag}
+        flagReason={flagReason}
+        setFlagReason={setFlagReason}
+        flagDescription={flagDescription}
+        setFlagDescription={setFlagDescription}
+        selectedPrayerToFlag={selectedPrayerToFlag}
       />
     </div>
   );

@@ -4,6 +4,7 @@ import { fetchPendingPosts, handlePendingPost } from "../../../api/communities";
 import { formatTimestamp , getFilteredItems} from "../../../utils/communityUtils";
 import { mockModeratorQueue, mockPrayerCards } from "../../../data/mockData";
 import PrayerCard from "../../../components/ui/PrayerCard";
+import FlaggedPosts from "./FlaggedPosts";
 
 const ModeratorQueue = ({ community, currentUser }) => {
   const [activeTab, setActiveTab] = useState("All");
@@ -243,7 +244,12 @@ const ModeratorQueue = ({ community, currentUser }) => {
 
         {/* Queue Items */}
         <div className="max-h-96 overflow-y-auto">
-          {loading ? (
+          {activeTab === "Flagged Posts" ? (
+            /* Render FlaggedPosts component for flagged posts tab */
+            <div className="p-4">
+              <FlaggedPosts community={community} currentUser={currentUser} />
+            </div>
+          ) : loading ? (
             <div className="text-center py-8 text-gray-500">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
               <p className="text-sm">Loading moderator queue...</p>
