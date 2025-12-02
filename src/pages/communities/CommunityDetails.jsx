@@ -408,7 +408,6 @@ const CommunityDetails = () => {
 
                       return (
                         <div key={prayer._id || prayer.id} className="masonry-item">
-                          {console.log("Rendering PrayerCard for prayer:", prayer)}
                           <PrayerCard
                             prayer={prayer}
                             prayerId={prayer._id || prayer.id}
