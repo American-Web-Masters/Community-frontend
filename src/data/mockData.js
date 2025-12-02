@@ -323,7 +323,7 @@
         type: "joinRequest",
         user: {
           name: "David Park",
-          avatar: "/api/placeholder/40/40",
+          avatar: "https://tse1.mm.bing.net/th/id/OIP.glUdKwiLcOglx0z1nN3eLQHaLG?pid=Api&P=0&h=220",
           role: "Member"
         },
         requestType: "Request to join",
@@ -335,7 +335,7 @@
         type: "joinRequest", 
         user: {
           name: "David Park",
-          avatar: "/api/placeholder/40/40",
+          avatar: "https://tse1.mm.bing.net/th/id/OIP.glUdKwiLcOglx0z1nN3eLQHaLG?pid=Api&P=0&h=220",
           role: "Member"
         },
         requestType: "Request to join",
@@ -347,7 +347,7 @@
         type: "joinRequest",
         user: {
           name: "David Park", 
-          avatar: "/api/placeholder/40/40",
+          avatar: "https://tse1.mm.bing.net/th/id/OIP.glUdKwiLcOglx0z1nN3eLQHaLG?pid=Api&P=0&h=220",
           role: "Member"
         },
         requestType: "Request to join", 

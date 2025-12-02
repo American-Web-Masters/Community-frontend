@@ -195,7 +195,7 @@ const ModeratorQueue = ({ community, currentUser }) => {
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 py-2 px-3 rounded-md text-xs font-medium transition-all duration-200 ${
                   activeTab === tab
-                    ? "bg-blue-600 text-white shadow-sm"
+                    ? "btn-blue-gradient text-white shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
                 }`}
               >
@@ -208,7 +208,7 @@ const ModeratorQueue = ({ community, currentUser }) => {
         {/* Bulk Actions */}
         {filteredItems.length > 0 && (
           <div className="px-4 py-3 border-b border-gray-200">
-            <div className="flex items-center justify-between bg-blue-600 text-white p-3 rounded-lg">
+            <div className="flex items-center justify-between btn-blue-gradient text-white p-1 py-2 rounded-lg">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -225,14 +225,14 @@ const ModeratorQueue = ({ community, currentUser }) => {
                 <button
                   onClick={() => handleApprove()}
                   disabled={selectedItems.length === 0}
-                  className="bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
+                  className="bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-1 rounded-3xl text-xs font-medium transition-colors"
                 >
                   Approve
                 </button>
                 <button
                   onClick={() => handleReject()}
                   disabled={selectedItems.length === 0}
-                  className="bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
+                  className="bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-1 rounded-3xl text-xs font-medium transition-colors"
                 >
                   Reject
                 </button>
@@ -301,53 +301,55 @@ const ModeratorQueue = ({ community, currentUser }) => {
                     </div>
                   </div>
                 ) : (
-                  /* Post Item (Pending/Flagged) */
-                  <div className="space-y-2">
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedItems.includes(item.id)}
-                        onChange={() => handleItemSelect(item.id)}
-                        className="w-4 h-4 mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
-                      />
-                      <img 
-                        src={item.author.avatar} 
-                        alt={item.author.name}
-                        className="w-8 h-8 rounded-full flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            item.type === "flagged" ? "bg-red-500 text-white" : "bg-blue-500 text-white"
-                          }`}>
-                            {item.type === "flagged" ? "Flagged" : "Pending"}
-                          </span>
-                          <span className="text-xs text-gray-500">{item.timestamp}</span>
-                        </div>
-                        <p className="font-medium text-gray-900 text-sm">{item.title}</p>
-                        <p className="text-xs text-gray-600 mb-1">by {item.author.name}</p>
-                        {item.type === "flagged" && (
-                          <p className="text-xs text-red-600 mb-2">
-                            Reason: {item.reason} • {item.flags} Flags
-                          </p>
-                        )}
-                        
-                        {item.content && (
-                          <p className="text-xs text-gray-700 mb-2 line-clamp-2">{item.content}</p>
-                        )}
-                      </div>
+                  /* Post Item (Pending/Flagged) - Card Design */
+                  <div className={`rounded-2xl p-4 border border-blue-100 ${
+                        item.type === "flagged" ? "bg-red-50" : "bg-blue-50 "
+                      }`}>
+                    {/* Header with badge and timestamp */}
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        item.type === "flagged" ? "bg-red-600 text-white" : "bg-[#03045E] text-white"
+                      }`}>
+                        {item.type === "flagged" ? "Flagged" : "Pending"}
+                      </span>
+                      <span className="text-sm text-gray-600">{item.timestamp}</span>
                     </div>
-                    
-                    <div className="flex gap-2 ml-11">
+
+                    {/* Title */}
+                    <h3 className="font-bold text-gray-900 mb-1">
+                      {item.title || "New Post"}
+                    </h3>
+
+                    {/* Author */}
+                    <p className="text-sm text-gray-700 mb-2">
+                      by {item.author.name}
+                    </p>
+
+                    {/* Content */}
+                    {item.content && (
+                      <p className="text-gray-800 text-sm mb-2 leading-relaxed">
+                        {item.content}
+                      </p>
+                    )}
+
+                    {/* Flagged post additional info */}
+                    {item.type === "flagged" && (
+                      <p className="text-sm text-red-600 mb-4">
+                        Reason: {item.reason} • {item.flags} Flags
+                      </p>
+                    )}
+
+                    {/* Action buttons */}
+                    <div className="flex gap-3">
                       <button
                         onClick={() => handleApprove(item.id)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded-3xl text-xs font-medium transition-colors"
                       >
                         Approve
                       </button>
                       <button
                         onClick={() => handleReject(item.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-3xl text-xs font-medium transition-colors"
                       >
                         Reject
                       </button>
