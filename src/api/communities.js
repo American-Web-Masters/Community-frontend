@@ -185,3 +185,52 @@ export const handlePendingPost = async (communityId, postId, action, reason = nu
     };
   }
 };
+
+/**
+ * Update community details (About Us, Rules, Tags)
+ * @param {string} communityId - The ID of the community to update
+ * @param {Object} updateData - Object containing description, rules, and tags
+ * @returns {Promise<Object>} Response containing success status
+ */
+export const updateCommunityDetails = async (communityId, updateData) => {
+  try {
+    const formData = new FormData();
+    
+    if (updateData.description) {
+      formData.append('description', updateData.description);
+    }
+    
+    if (updateData.rules && Array.isArray(updateData.rules)) {
+      formData.append('communityRules', updateData.rules.join(','));
+    }
+    
+    if (updateData.tags && Array.isArray(updateData.tags)) {
+      formData.append('tags', updateData.tags.join(','));
+    }
+    
+    const response = await apiClient.patch(`/communities/${communityId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message || 'Community updated successfully!'
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.message || 'Failed to update community.'
+      };
+    }
+  } catch (err) {
+    console.error('Error updating community:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to update community. Please try again.'
+    };
+  }
+};
