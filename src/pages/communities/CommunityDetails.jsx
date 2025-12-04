@@ -6,9 +6,10 @@ import { useStableMasonry } from "../../hooks/useStableMasonry";
 import PrayerCard from "../../components/ui/PrayerCard";
 import { IoPersonOutline, IoArrowBackOutline, IoFlagOutline } from "react-icons/io5";
 import { PiChatText , PiBellLight} from "react-icons/pi";
-import { FaRegHeart } from "react-icons/fa";
+import { FaRegHeart, FaEdit } from "react-icons/fa";
+import { MdCheck, MdClose, MdCameraAlt } from 'react-icons/md';
 import { IoShareSocialOutline } from "react-icons/io5";
-import { fetchCommunityById } from "../../api";
+import { fetchCommunityById, updateCommunityDetails } from "../../api";
 import { flagPrayer } from "../../api/prayer";
 import toast from 'react-hot-toast';
 import { About, Members, ModeratorQueue } from "./subcomponents";
@@ -30,6 +31,17 @@ const CommunityDetails = () => {
   const [selectedPrayerToFlag, setSelectedPrayerToFlag] = useState(null);
   const [flagReason, setFlagReason] = useState('');
   const [flagDescription, setFlagDescription] = useState('');
+  
+  // Header editing states
+  const [isEditingHeader, setIsEditingHeader] = useState(false);
+  const [headerLoading, setHeaderLoading] = useState(false);
+  const [editHeaderData, setEditHeaderData] = useState({
+    name: '',
+    affiliatedOrganization: '',
+    welcomeMessage: '',
+    coverPhoto: null,
+    coverPhotoPreview: null
+  });
 
   useEffect(() => {
     fetchCommunityDetails();
@@ -118,6 +130,107 @@ const CommunityDetails = () => {
       ...prevCommunity,
       ...updatedCommunity
     }));
+  };
+
+  // Header editing functions
+  const handleEditHeader = () => {
+    setEditHeaderData({
+      name: community.name || '',
+      affiliatedOrganization: community.affiliatedOrganization || '',
+      welcomeMessage: community.welcomeMessage || '',
+      coverPhoto: null,
+      coverPhotoPreview: community.coverPhoto || null
+    });
+    setIsEditingHeader(true);
+  };
+
+  const handleCancelHeaderEdit = () => {
+    setIsEditingHeader(false);
+    setEditHeaderData({
+      name: '',
+      affiliatedOrganization: '',
+      welcomeMessage: '',
+      coverPhoto: null,
+      coverPhotoPreview: null
+    });
+  };
+
+  const handleHeaderImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+      
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+
+      const previewUrl = URL.createObjectURL(file);
+      setEditHeaderData(prev => ({
+        ...prev,
+        coverPhoto: file,
+        coverPhotoPreview: previewUrl
+      }));
+    }
+  };
+
+  const handleSaveHeader = async () => {
+    setHeaderLoading(true);
+    try {
+      const updateData = {};
+      
+      if (editHeaderData.name.trim() !== community.name) {
+        updateData.name = editHeaderData.name.trim();
+      }
+      
+      if (editHeaderData.affiliatedOrganization.trim() !== community.affiliatedOrganization) {
+        updateData.affiliatedOrganization = editHeaderData.affiliatedOrganization.trim();
+      }
+      
+      if (editHeaderData.welcomeMessage.trim() !== community.welcomeMessage) {
+        updateData.welcomeMessage = editHeaderData.welcomeMessage.trim();
+      }
+      
+      if (editHeaderData.coverPhoto) {
+        updateData.coverPhoto = editHeaderData.coverPhoto;
+      }
+
+      // Only make API call if there are changes
+      if (Object.keys(updateData).length === 0) {
+        toast.info('No changes to save');
+        setIsEditingHeader(false);
+        return;
+      }
+
+      const response = await updateCommunityDetails(community._id, updateData);
+      
+      if (response.success) {
+        toast.success(response.message || 'Community updated successfully!');
+        
+        // Update the community state with the new data
+        setCommunity(prevCommunity => ({
+          ...prevCommunity,
+          name: updateData.name || prevCommunity.name,
+          affiliatedOrganization: updateData.affiliatedOrganization || prevCommunity.affiliatedOrganization,
+          welcomeMessage: updateData.welcomeMessage || prevCommunity.welcomeMessage,
+          coverPhoto: editHeaderData.coverPhotoPreview || prevCommunity.coverPhoto
+        }));
+        
+        setIsEditingHeader(false);
+      } else {
+        toast.error(response.error || 'Failed to update community');
+      }
+    } catch (error) {
+      console.error('Error updating community header:', error);
+      toast.error('Failed to update community. Please try again.');
+    } finally {
+      setHeaderLoading(false);
+    }
   };
 
   const handleToggleExpand = (cardId) => {
@@ -249,96 +362,231 @@ const CommunityDetails = () => {
 
       {/* Community Header */}
       <div className="px-6 py-6 w-[96%] mx-auto bg-white/60 backdrop-blur-sm border-b border-white/50 mb-4 rounded-3xl">
-        <div className="flex items-center space-x-4">
-        
-          {/* Community Avatar */}
-          <div className="w-36 h-36 rounded-full overflow-hidden flex-shrink-0">
-            {community.coverPhoto ? (
-              <img 
-                src={community.coverPhoto} 
-                alt={community.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                <span className="text-white font-bold text-2xl">
-                  {community.name && community.name.charAt(0).toUpperCase()}
-                </span>
+        {isEditingHeader ? (
+          // Edit Mode
+          <div className="relative space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-blue-900">Edit Community Details</h2>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleSaveHeader}
+                  disabled={headerLoading}
+                  className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 disabled:opacity-50 flex items-center space-x-1"
+                  title="Save changes"
+                >
+                  {headerLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <MdCheck size={18} />
+                  )}
+                </button>
+                <button
+                  onClick={handleCancelHeaderEdit}
+                  disabled={headerLoading}
+                  className="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 disabled:opacity-50"
+                  title="Cancel editing"
+                >
+                  <MdClose size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-6">
+              {/* Edit Community Avatar */}
+              <div className="relative">
+                <div className="w-36 h-36 rounded-full overflow-hidden flex-shrink-0 border-2 border-dashed border-gray-300">
+                  {editHeaderData.coverPhotoPreview ? (
+                    <img 
+                      src={editHeaderData.coverPhotoPreview} 
+                      alt="Community preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                      <span className="text-white font-bold text-2xl">
+                        {editHeaderData.name && editHeaderData.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <label 
+                  htmlFor="headerImageInput"
+                  className={`absolute bottom-0 right-0 p-2 bg-blue-600 text-white rounded-full cursor-pointer hover:bg-blue-700 transition-colors duration-200 shadow-lg ${
+                    headerLoading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  <MdCameraAlt size={16} />
+                </label>
+                <input
+                  id="headerImageInput"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleHeaderImageChange}
+                  disabled={headerLoading}
+                  className="hidden"
+                />
+              </div>
+
+              {/* Edit Community Info */}
+              <div className="flex-1 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Community Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editHeaderData.name}
+                    onChange={(e) => setEditHeaderData(prev => ({ ...prev, name: e.target.value }))}
+                    disabled={headerLoading}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="Enter community name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Affiliated Organization
+                  </label>
+                  <input
+                    type="text"
+                    value={editHeaderData.affiliatedOrganization}
+                    onChange={(e) => setEditHeaderData(prev => ({ ...prev, affiliatedOrganization: e.target.value }))}
+                    disabled={headerLoading}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="Enter affiliated organization"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Welcome Message
+                  </label>
+                  <textarea
+                    value={editHeaderData.welcomeMessage}
+                    onChange={(e) => setEditHeaderData(prev => ({ ...prev, welcomeMessage: e.target.value }))}
+                    disabled={headerLoading}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    rows={3}
+                    placeholder="Enter welcome message for new members"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Loading Overlay for Edit Mode */}
+            {headerLoading && (
+              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-3xl flex items-center justify-center z-10">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600 font-medium">Updating community details...</p>
+                  <p className="text-sm text-gray-500 mt-1">Please wait while we upload your changes</p>
+                </div>
               </div>
             )}
           </div>
-
-          {/* Community Info */}
-          <div className="flex-1">
-            <h1 className="text-xl font-medium text-gray-900">
-              {community.name}
-            </h1>
-            <p className="text-gray-900 text-sm mb-1">{community.affiliatedOrganization}</p>
-            <p className="text-gray-500 mb-1">
-              {community.description}
-            </p>
-
-            {/* Member count and tags */}
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="flex items-center space-x-1 text-sm text-gray-600">
-                <IoPersonOutline className="w-4 h-4" />
-                <span>{community.memberCount} members</span>
-              </div>
-              {community.tags && community.tags.length > 0 && (
-                <div className="flex items-center">
-                  {community.tags.slice(0, 1).map((tag, index) => (
-                    <span 
-                      key={index}
-                      className="px-3 py-1 bg-[#007FD4] text-white text-xs font-medium rounded-full"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                        {community.tags.length > 1 && ( 
-                        <span className="px-1.5 py-1 relative right-[10px] bg-[#007FD4] text-white text-xs rounded-full">
-                      +{community.tags.length - 1}
-                    </span>
-                  )}
+        ) : (
+          // View Mode
+          <div className="flex items-center space-x-4">
+            {/* Community Avatar */}
+            <div className="w-36 h-36 rounded-full overflow-hidden flex-shrink-0">
+              {community.coverPhoto ? (
+                <img 
+                  src={community.coverPhoto} 
+                  alt={community.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-2xl">
+                    {community.name && community.name.charAt(0).toUpperCase()}
+                  </span>
                 </div>
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex md:items-center space-x-3">
-              <button className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2">
-                <span><PiChatText className="w-4 h-4" /></span>
-                <span>Chat</span>
-              </button>
-              <button className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2">
-                <span><FaRegHeart className="w-4 h-4" /></span>
-                <span>Support</span>
-              </button>
-              <button className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2">
-                <span><PiBellLight className="w-4 h-4" /></span>
-                <span>Notifications</span>
-              </button>
-              <button 
-                onClick={handleInviteClick}
-                className={`px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 transition-all duration-200 ${
-                  copied 
-                    ? 'bg-green-500 text-white' 
-                    : 'btn-blue-gradient hover:opacity-90'
-                }`}
-              >
-                <span>
-                  {copied ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  ) : (
-                    <IoShareSocialOutline className="w-4 h-4" />
-                  )}
-                </span>
-                <span>{copied ? 'Copied!' : 'Invite'}</span>
-              </button>
+            {/* Community Info */}
+            <div className="flex-1">
+              <div className="flex items-center justify-between ">
+                <h1 className="text-xl font-medium text-gray-900">
+                  {community.name}
+                </h1>
+                {isOwnerOrModerator && (
+                  <button
+                    onClick={handleEditHeader}
+                    className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors duration-200"
+                    title="Edit Community Details"
+                  >
+                    <FaEdit size={20} />
+                  </button>
+                )}
+              </div>
+              <p className="text-gray-900 text-sm mb-1">{community.affiliatedOrganization}</p>
+              <p className="text-gray-500 mb-1">
+                {community.welcomeMessage}
+              </p>
+
+              {/* Member count and tags */}
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="flex items-center space-x-1 text-sm text-gray-600">
+                  <IoPersonOutline className="w-4 h-4" />
+                  <span>{community.memberCount} members</span>
+                </div>
+                {community.tags && community.tags.length > 0 && (
+                  <div className="flex items-center">
+                    {community.tags.slice(0, 1).map((tag, index) => (
+                      <span 
+                        key={index}
+                        className="px-3 py-1 bg-[#007FD4] text-white text-xs font-medium rounded-full"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                          {community.tags.length > 1 && ( 
+                          <span className="px-1.5 py-1 relative right-[10px] bg-[#007FD4] text-white text-xs rounded-full">
+                        +{community.tags.length - 1}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex md:items-center space-x-3">
+                <button className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2">
+                  <span><PiChatText className="w-4 h-4" /></span>
+                  <span>Chat</span>
+                </button>
+                <button className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2">
+                  <span><FaRegHeart className="w-4 h-4" /></span>
+                  <span>Support</span>
+                </button>
+                <button className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2">
+                  <span><PiBellLight className="w-4 h-4" /></span>
+                  <span>Notifications</span>
+                </button>
+                <button 
+                  onClick={handleInviteClick}
+                  className={`px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 transition-all duration-200 ${
+                    copied 
+                      ? 'bg-green-500 text-white' 
+                      : 'btn-blue-gradient hover:opacity-90'
+                  }`}
+                >
+                  <span>
+                    {copied ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <IoShareSocialOutline className="w-4 h-4" />
+                    )}
+                  </span>
+                  <span>{copied ? 'Copied!' : 'Invite'}</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Tab Navigation */}

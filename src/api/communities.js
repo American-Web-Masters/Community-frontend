@@ -187,9 +187,9 @@ export const handlePendingPost = async (communityId, postId, action, reason = nu
 };
 
 /**
- * Update community details (About Us, Rules, Tags)
+ * Update community details (About Us, Rules, Tags, Name, Organization, Cover Photo, Welcome Message)
  * @param {string} communityId - The ID of the community to update
- * @param {Object} updateData - Object containing description, rules, and tags
+ * @param {Object} updateData - Object containing description, rules, tags, name, affiliatedOrganization, coverPhoto, and welcomeMessage
  * @returns {Promise<Object>} Response containing success status
  */
 export const updateCommunityDetails = async (communityId, updateData) => {
@@ -206,6 +206,22 @@ export const updateCommunityDetails = async (communityId, updateData) => {
     
     if (updateData.tags && Array.isArray(updateData.tags)) {
       formData.append('tags', updateData.tags.join(','));
+    }
+    
+    if (updateData.name) {
+      formData.append('name', updateData.name);
+    }
+    
+    if (updateData.affiliatedOrganization) {
+      formData.append('affiliatedOrganization', updateData.affiliatedOrganization);
+    }
+    
+    if (updateData.welcomeMessage) {
+      formData.append('welcomeMessage', updateData.welcomeMessage);
+    }
+    
+    if (updateData.coverPhoto instanceof File) {
+      formData.append('coverPhoto', updateData.coverPhoto);
     }
     
     const response = await apiClient.patch(`/communities/${communityId}`, formData, {
