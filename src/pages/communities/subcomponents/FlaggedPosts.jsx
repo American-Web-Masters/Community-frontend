@@ -47,18 +47,17 @@ const FlaggedPosts = ({ community, currentUser }) => {
     
     setProcessingItems(prev => new Set(prev).add(itemId));
     try {
-      const response = await handleReportedPrayer(community._id, itemId, 'accept');
+      const response = await handleReportedPrayer(community._id, itemId, 'approve');
       
       if (response.success) {
-        toast.success('Prayer has been approved');
+        toast.success('Request has been accepted and prayer is removed');
         // Remove the item from the list after successful approval
         setReportedPrayers(prev => prev.filter(item => item._id !== itemId));
       } else {
-        toast.error(response.error || 'Failed to approve prayer');
+        toast.error(response.error || 'Failed to approve request');
       }
     } catch (error) {
-      console.error('Error approving prayer:', error);
-      toast.error('Failed to approve prayer. Please try again.');
+      toast.error('Failed to approve request. Please try again.');
     } finally {
       setProcessingItems(prev => {
         const newSet = new Set(prev);
@@ -76,15 +75,14 @@ const FlaggedPosts = ({ community, currentUser }) => {
       const response = await handleReportedPrayer(community._id, itemId, 'reject');
       
       if (response.success) {
-        toast.success('Prayer has been rejected and removed');
+        toast.success('Request for prayer removal has been rejected');
         // Remove the item from the list after successful rejection
         setReportedPrayers(prev => prev.filter(item => item._id !== itemId));
       } else {
-        toast.error(response.error || 'Failed to reject prayer');
+        toast.error(response.error || 'Failed to reject request');
       }
     } catch (error) {
-      console.error('Error rejecting prayer:', error);
-      toast.error('Failed to reject prayer. Please try again.');
+      toast.error('Failed to reject request. Please try again.');
     } finally {
       setProcessingItems(prev => {
         const newSet = new Set(prev);
