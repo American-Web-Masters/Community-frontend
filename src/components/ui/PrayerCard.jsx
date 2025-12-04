@@ -166,7 +166,7 @@ const PrayerCard = ({
     setIsSubmittingBookmark(true);
     try {
       if (previousState) {
-        await unbookmarkPrayer(prayerId, currentUser._id);
+        await bookmarkPrayer(prayerId, currentUser._id);
       } else {
         await bookmarkPrayer(prayerId, currentUser._id);
       }
@@ -647,7 +647,7 @@ const PrayerCard = ({
             disabled={!currentUser?._id || isSubmittingPrayer}
             className={`flex items-center space-x-1 transition-all duration-200 ${
               isPrayedState 
-                ? 'text-white bg-blue-400 px-1 py-1 rounded-full shadow-sm hover:bg-blue-700' 
+                ? 'text-blue-600 bg-blue-50 px-2 py-1 rounded-full' 
                 : 'text-gray-600 hover:text-blue-500 px-2 py-1'
             } disabled:opacity-50 disabled:cursor-not-allowed ${
               isSubmittingPrayer ? 'animate-pulse' : ''
@@ -678,7 +678,7 @@ const PrayerCard = ({
             <IoBookmarkOutline className={`w-5 h-5 ${
               isSubmittingBookmark ? 'animate-pulse' : ''
             }`} />
-            {isBookmarkedState && <span className="text-xs">Saved</span>}
+            {/* {isBookmarkedState && <span className="text-xs">Saved</span>} */}
           </button>
 
           <button
@@ -693,10 +693,10 @@ const PrayerCard = ({
 
           <button
             onClick={handleShareClick}
-            disabled={!currentUser?._id || isSubmittingShare}
+            disabled={!currentUser?._id || isSubmittingShare || isSharedState}
             className={`flex items-center space-x-1 transition-all duration-200 ${
               isSharedState 
-                ? 'text-blue-600 border border-blue-600 rounded-full px-2 py-1' 
+                ? 'cursor-not-allowed text-blue-600 bg-blue-50 px-2 py-1 rounded-full' 
                 : 'text-gray-600 hover:text-blue-600 px-2 py-1'
             } disabled:opacity-50 disabled:cursor-not-allowed ${
               isSubmittingShare ? 'animate-pulse' : ''

@@ -273,8 +273,174 @@ const CommunityDetails = () => {
   // Apply masonry layout - hook must be called at top level
   const masonryColumns = useStableMasonry(feedPrayers, 2);
 
-  // Prayer interaction handlers - these are callback functions that PrayerCard expects
-  // PrayerCard handles all the actual API calls and state management internally
+  // Prayer interaction handlers - these update local state to persist changes
+  const handlePrayedStateChange = (prayerId, newState) => {
+    setCommunity(prevCommunity => {
+      if (!prevCommunity?.feed) return prevCommunity;
+      
+      const updatedFeed = prevCommunity.feed.map(feedItem => {
+        if (feedItem.prayer._id === prayerId) {
+          const updatedPrayer = { ...feedItem.prayer };
+          
+          if (newState) {
+            // Add user to isPrayed array if not already present
+            const userInPrayed = updatedPrayer.isPrayed?.some(prayedUser => {
+              const userId = prayedUser.user?._id || prayedUser._id || prayedUser;
+              return userId === user?._id;
+            });
+            
+            if (!userInPrayed) {
+              updatedPrayer.isPrayed = [
+                ...(updatedPrayer.isPrayed || []),
+                { user: { _id: user._id }, prayedAt: new Date().toISOString() }
+              ];
+            }
+          } else {
+            // Remove user from isPrayed array
+            updatedPrayer.isPrayed = (updatedPrayer.isPrayed || []).filter(prayedUser => {
+              const userId = prayedUser.user?._id || prayedUser._id || prayedUser;
+              return userId !== user?._id;
+            });
+          }
+          
+          return {
+            ...feedItem,
+            prayer: updatedPrayer
+          };
+        }
+        return feedItem;
+      });
+      
+      return {
+        ...prevCommunity,
+        feed: updatedFeed
+      };
+    });
+  };
+
+  const handleSharedStateChange = (prayerId, newState) => {
+    setCommunity(prevCommunity => {
+      if (!prevCommunity?.feed) return prevCommunity;
+      
+      const updatedFeed = prevCommunity.feed.map(feedItem => {
+        if (feedItem.prayer._id === prayerId) {
+          const updatedPrayer = { ...feedItem.prayer };
+          
+          if (newState) {
+            // Add user to shares array if not already present
+            const userInShares = updatedPrayer.shares?.some(share => {
+              const userId = share.user?._id || share._id || share;
+              return userId === user?._id;
+            });
+            
+            if (!userInShares) {
+              updatedPrayer.shares = [
+                ...(updatedPrayer.shares || []),
+                { user: { _id: user._id }, sharedAt: new Date().toISOString() }
+              ];
+            }
+          } else {
+            // Remove user from shares array
+            updatedPrayer.shares = (updatedPrayer.shares || []).filter(share => {
+              const userId = share.user?._id || share._id || share;
+              return userId !== user?._id;
+            });
+          }
+          
+          return {
+            ...feedItem,
+            prayer: updatedPrayer
+          };
+        }
+        return feedItem;
+      });
+      
+      return {
+        ...prevCommunity,
+        feed: updatedFeed
+      };
+    });
+  };
+
+  const handleBookmarkStateChange = (prayerId, newState) => {
+    setCommunity(prevCommunity => {
+      if (!prevCommunity?.feed) return prevCommunity;
+      
+      const updatedFeed = prevCommunity.feed.map(feedItem => {
+        if (feedItem.prayer._id === prayerId) {
+          const updatedPrayer = { ...feedItem.prayer };
+          
+          if (newState) {
+            // Add user to bookmarks array if not already present
+            const userInBookmarks = updatedPrayer.bookmarks?.some(bookmark => {
+              const userId = bookmark.user?._id || bookmark._id || bookmark;
+              return userId === user?._id;
+            });
+            
+            if (!userInBookmarks) {
+              updatedPrayer.bookmarks = [
+                ...(updatedPrayer.bookmarks || []),
+                { user: { _id: user._id }, bookmarkedAt: new Date().toISOString() }
+              ];
+            }
+          } else {
+            // Remove user from bookmarks array
+            updatedPrayer.bookmarks = (updatedPrayer.bookmarks || []).filter(bookmark => {
+              const userId = bookmark.user?._id || bookmark._id || bookmark;
+              return userId !== user?._id;
+            });
+          }
+          
+          return {
+            ...feedItem,
+            prayer: updatedPrayer
+          };
+        }
+        return feedItem;
+      });
+      
+      return {
+        ...prevCommunity,
+        feed: updatedFeed
+      };
+    });
+  };
+
+  const handleCommentsUpdate = (prayerId, updatedComments) => {
+    setCommunity(prevCommunity => {
+      if (!prevCommunity?.feed) return prevCommunity;
+      
+      const updatedFeed = prevCommunity.feed.map(feedItem => {
+        if (feedItem.prayer._id === prayerId) {
+          return {
+            ...feedItem,
+            prayer: {
+              ...feedItem.prayer,
+              comments: updatedComments.map(comment => ({
+                ...comment,
+                _id: comment._id,
+                user: {
+                  _id: comment.userId,
+                  firstname: comment.user,
+                  username: comment.user
+                },
+                commentText: comment.text,
+                createdAt: comment.time
+              }))
+            }
+          };
+        }
+        return feedItem;
+      });
+      
+      return {
+        ...prevCommunity,
+        feed: updatedFeed
+      };
+    });
+  };
+
+  // Simple console log handlers for direct button clicks (PrayerCard handles the real logic)
   const handlePray = (prayerId, currentState) => {
     console.log('Prayer action:', prayerId, !currentState);
   };
@@ -761,16 +927,16 @@ const CommunityDetails = () => {
                               // You can implement the more options functionality here
                             }}
                             onPrayedStateChange={(newState) => {
-                              // PrayerCard handles the state internally
+                              handlePrayedStateChange(prayer._id || prayer.id, newState);
                             }}
                             onSharedStateChange={(newState) => {
-                              // PrayerCard handles the state internally
+                              handleSharedStateChange(prayer._id || prayer.id, newState);
                             }}
                             onCommentsUpdate={(updatedComments) => {
-                              // PrayerCard handles the state internally
+                              handleCommentsUpdate(prayer._id || prayer.id, updatedComments);
                             }}
                             onBookmarkStateChange={(newState) => {
-                              // PrayerCard handles the state internally
+                              handleBookmarkStateChange(prayer._id || prayer.id, newState);
                             }}
                           />
                           
