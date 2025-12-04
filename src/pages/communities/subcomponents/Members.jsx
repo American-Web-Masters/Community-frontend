@@ -1,4 +1,4 @@
-import React from 'react';
+import { PiDotsThreeOutlineFill } from "react-icons/pi";
 
 const Members = ({ community, currentUser }) => {
   const members = community?.members || [];
@@ -48,7 +48,7 @@ const Members = ({ community, currentUser }) => {
         Members ({members.length})
       </h3>
       
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {/* Show owner first if they exist */}
         {community?.createdBy && (
           <div className="flex items-center justify-between p-3 bg-white/60 rounded-xl border border-white/40">
@@ -69,12 +69,9 @@ const Members = ({ community, currentUser }) => {
                 </div>
               </div>
             </div>
-            
             {canManageMembers && (
               <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zM12 13a1 1 0 110-2 1 1 0 010 2zM12 20a1 1 0 110-2 1 1 0 010 2z" />
-                </svg>
+                <PiDotsThreeOutlineFill size={28} fill="#00127a"/>
               </button>
             )}
           </div>
@@ -100,7 +97,7 @@ const Members = ({ community, currentUser }) => {
                     {member.user.firstname} {member.user.lastname}
                   </h4>
                   <div className="flex items-center space-x-2 mt-1">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeColor(member.role)}`}>
+                    <span className={`py-1 text-xs font-medium text-gray-500`}>
                       {member.role}
                     </span>
                     <span className="text-xs text-gray-500">
@@ -110,13 +107,11 @@ const Members = ({ community, currentUser }) => {
                 </div>
               </div>
               
-              {canManageMembers && (
-                <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zM12 13a1 1 0 110-2 1 1 0 010 2zM12 20a1 1 0 110-2 1 1 0 010 2z" />
-                  </svg>
-                </button>
-              )}
+            {canManageMembers && (
+              <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                <PiDotsThreeOutlineFill size={28} fill="#00127a"/>
+              </button>
+            )}
             </div>
           );
         })}

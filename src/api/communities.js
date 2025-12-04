@@ -115,3 +115,187 @@ export const joinCommunity = async (communityId) => {
     };
   }
 };
+
+/**
+ * Fetch pending posts for a community (moderator queue)
+ * @param {string} communityId - The ID of the community
+ * @returns {Promise<Object>} Response containing pending posts data
+ */
+export const fetchPendingPosts = async (communityId) => {
+  try {
+    const response = await apiClient.get(`/communities/${communityId}/pending-posts`);
+    console.log('Pending posts response:', response.data);
+    if (response.data?.success) {
+      return {
+        success: true,
+        data: response.data.data
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.message || 'Failed to load pending posts.'
+      };
+    }
+  } catch (err) {
+    console.error('Error fetching pending posts:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to load pending posts. Please try again.'
+    };
+  }
+};
+
+/**
+ * Handle pending post approval/rejection
+ * @param {string} postId - The ID of the post to handle
+ * @param {string} action - 'approve' or 'reject'
+ * @param {string} [reason] - Optional reason for rejection
+ * @returns {Promise<Object>} Response containing success status
+ */
+export const handlePendingPost = async (communityId, postId, action, reason = null) => {
+  try {
+    const payload = {
+      communityId: communityId,
+      postId,
+      action
+    };
+    
+    if (action === 'reject' && reason) {
+      payload.reason = reason;
+    }
+    
+    const response = await apiClient.post('/communities/handle-pending-post', payload);
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message || `Post ${action}d successfully!`
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.message || `Failed to ${action} post.`
+      };
+    }
+  } catch (err) {
+    console.error(`Error ${action}ing post:`, err);
+    return {
+      success: false,
+      error: err.response?.data?.message || `Failed to ${action} post. Please try again.`
+    };
+  }
+};
+
+/**
+ * Update community details (About Us, Rules, Tags, Name, Organization, Cover Photo, Welcome Message)
+ * @param {string} communityId - The ID of the community to update
+ * @param {Object} updateData - Object containing description, rules, tags, name, affiliatedOrganization, coverPhoto, and welcomeMessage
+ * @returns {Promise<Object>} Response containing success status
+ */
+export const updateCommunityDetails = async (communityId, updateData) => {
+  try {
+    const formData = new FormData();
+    
+    if (updateData.description) {
+      formData.append('description', updateData.description);
+    }
+    
+    if (updateData.rules && Array.isArray(updateData.rules)) {
+      formData.append('communityRules', updateData.rules.join(','));
+    }
+    
+    if (updateData.tags && Array.isArray(updateData.tags)) {
+      formData.append('tags', updateData.tags.join(','));
+    }
+    
+    if (updateData.name) {
+      formData.append('name', updateData.name);
+    }
+    
+    if (updateData.affiliatedOrganization) {
+      formData.append('affiliatedOrganization', updateData.affiliatedOrganization);
+    }
+    
+    if (updateData.welcomeMessage) {
+      formData.append('welcomeMessage', updateData.welcomeMessage);
+    }
+    
+    if (updateData.coverPhoto instanceof File) {
+      formData.append('coverPhoto', updateData.coverPhoto);
+    }
+    
+    const response = await apiClient.patch(`/communities/${communityId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message || 'Community updated successfully!'
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.message || 'Failed to update community.'
+      };
+    }
+  } catch (err) {
+    console.error('Error updating community:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to update community. Please try again.'
+    };
+  }
+};
+
+/**
+ * Fetch reported prayers for a community
+ * @param {string} communityId - Community ID to fetch reported prayers for
+ * @returns {Promise<Object>} Response containing reported prayers data
+ */
+export const fetchReportedPrayers = async (communityId) => {
+  try {
+    const response = await apiClient.get(`/communities/${communityId}/reported-prayers`);
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (err) {
+    console.error('Error fetching reported prayers:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to fetch reported prayers. Please try again.'
+    };
+  }
+};
+
+/**
+ * Handle reported prayer (accept or reject)
+ * @param {string} communityId - Community ID
+ * @param {string} reportId - Report ID to handle
+ * @param {string} action - Action to take ('accept' or 'reject')
+ * @returns {Promise<Object>} Response from the API
+ */
+export const handleReportedPrayer = async (communityId, reportId, action) => {
+  try {
+    const response = await apiClient.post('/communities/handle-reported-prayer', {
+      communityId,
+      reportId,
+      action
+    });
+    return {
+      success: true,
+      data: response.data.data,
+      message: response.data.message
+    };
+  } catch (err) {
+    console.error('Error handling reported prayer:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to handle reported prayer. Please try again.'
+    };
+  }
+};

@@ -258,3 +258,101 @@
       ]
     }
   ];
+
+  // Mock data for moderator queue
+  export const mockModeratorQueue = {
+    pendingPosts: [
+      {
+        id: 1,
+        type: "post",
+        author: {
+          name: "Alex Johnson",
+          avatar: "/api/placeholder/32/32"
+        },
+        title: "New Post",
+        content: "Awaiting approval for community event",
+        timestamp: "3 hours ago",
+        status: "pending"
+      },
+      {
+        id: 2,
+        type: "post", 
+        author: {
+          name: "Alex Johnson",
+          avatar: "/api/placeholder/32/32"
+        },
+        title: "New Post",
+        content: "Awaiting approval for community event",
+        timestamp: "3 hours ago",
+        status: "pending"
+      }
+    ],
+    flaggedPosts: [
+      {
+        id: 3,
+        type: "flagged",
+        author: {
+          name: "Alex Johnson",
+          avatar: "/api/placeholder/32/32"
+        },
+        title: "Controversial Discussion Topic",
+        content: "Inappropriate content",
+        reason: "Inappropriate content",
+        flags: 3,
+        timestamp: "3 hours ago",
+        status: "flagged"
+      },
+      {
+        id: 4,
+        type: "flagged",
+        author: {
+          name: "Alex Johnson", 
+          avatar: "/api/placeholder/32/32"
+        },
+        title: "Controversial Discussion Topic",
+        content: "Inappropriate content",
+        reason: "Inappropriate content",
+        flags: 3,
+        timestamp: "3 hours ago", 
+        status: "flagged"
+      }
+    ],
+    joinRequests: [
+      {
+        id: 5,
+        type: "joinRequest",
+        user: {
+          name: "David Park",
+          avatar: "https://tse1.mm.bing.net/th/id/OIP.glUdKwiLcOglx0z1nN3eLQHaLG?pid=Api&P=0&h=220",
+          role: "Member"
+        },
+        requestType: "Request to join",
+        timestamp: "Recently",
+        status: "pending"
+      },
+      {
+        id: 6,
+        type: "joinRequest", 
+        user: {
+          name: "David Park",
+          avatar: "https://tse1.mm.bing.net/th/id/OIP.glUdKwiLcOglx0z1nN3eLQHaLG?pid=Api&P=0&h=220",
+          role: "Member"
+        },
+        requestType: "Request to join",
+        timestamp: "Recently",
+        status: "pending"
+      },
+      {
+        id: 7,
+        type: "joinRequest",
+        user: {
+          name: "David Park", 
+          avatar: "https://tse1.mm.bing.net/th/id/OIP.glUdKwiLcOglx0z1nN3eLQHaLG?pid=Api&P=0&h=220",
+          role: "Member"
+        },
+        requestType: "Request to join", 
+        timestamp: "Recently",
+        status: "pending"
+      }
+    ]
+  };

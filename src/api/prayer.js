@@ -155,3 +155,29 @@ export const isSharedByUser = (prayer, userId) => {
     return shareUserId === userId;
   });
 };
+
+/**
+ * Flag prayer for moderation
+ */
+export const flagPrayer = async (prayerId, flagData, communityId) => {
+  try {
+    const response = await apiClient.post(`/communities/${communityId}/prayers/${prayerId}/report`, flagData);
+    return response.data;
+  } catch (error) {
+    console.error('Error flagging prayer:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get reported prayers for a community
+ */
+export const getReportedPrayers = async (communityId) => {
+  try {
+    const response = await apiClient.get(`/communities/${communityId}/reported-prayers`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching reported prayers:', error);
+    throw error;
+  }
+};

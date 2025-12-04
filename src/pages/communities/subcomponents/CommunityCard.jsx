@@ -12,25 +12,10 @@ const CommunityCard = ({
   avatar = null,
   isJoined = false,
   isLoading = false,
-  badgeText = null,
-  badgeColor = "blue",
+  privacyLevel = null,
   onJoinClick,
   onViewClick
 }) => {
-  const getBadgeColorClasses = (color) => {
-    switch (color) {
-      case 'blue':
-        return 'bg-blue-500 text-white';
-      case 'green':
-        return 'bg-green-500 text-white';
-      case 'red':
-        return 'bg-red-500 text-white';
-      case 'purple':
-        return 'bg-purple-500 text-white';
-      default:
-        return 'bg-blue-500 text-white';
-    }
-  };
 
   // Handle both array and string for category/tags
   const parseCategory = (categoryInput) => {
@@ -53,7 +38,6 @@ const CommunityCard = ({
   return (
     <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-white/50 hover:shadow-lg transition-all duration-200 relative">
       {/* Badge positioned absolutely in top right */}
-      {console.log(badgeText)}
       {wallAssociation && (
         <span className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium btn-blue-gradient`}>
           {wallAssociation}
@@ -103,9 +87,14 @@ const CommunityCard = ({
       </div>
 
       {/* Member count */}
-      <div className="flex items-center space-x-1 text-xs text-gray-600 mb-4">
+      <div className="flex items-center justify-between text-xs text-gray-600 mb-4">
+      <div className='flex space-x-1'>
         <IoPersonOutline className="w-4 h-4" />
         <span>{members} members</span>
+      </div>
+        {privacyLevel === "private" && (
+          <span className='text-white bg-gray-500 px-2 py-1 rounded-full'>Private</span>
+        )}
       </div>
 
       {/* Action button */}

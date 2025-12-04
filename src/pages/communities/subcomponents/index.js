@@ -4,3 +4,5 @@ export { default as AboutUs } from './AboutUs';
 export { default as Rules } from './Rules';
 export { default as Tags } from './Tags';
 export { default as Members } from './Members';
+export { default as ModeratorQueue } from './ModeratorQueue';
+export { default as FlaggedPosts } from './FlaggedPosts';
