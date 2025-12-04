@@ -154,9 +154,8 @@ const FlaggedPosts = ({ community, currentUser }) => {
 
             {/* Author */}
             <p className="text-sm text-gray-700 mb-2">
-              by {item.prayer?.user?.firstname || "User"} 
+              by {item.prayer?.user?.firstname + " " + (item.prayer?.user?.lastname || "") || "User"} 
             </p>
-
             {/* Content */}
             <p className="text-gray-800 text-sm mb-2 leading-relaxed">
               {item.prayer.content}

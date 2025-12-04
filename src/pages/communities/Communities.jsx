@@ -8,6 +8,7 @@ import BottomNavBar from "../../components/ui/BottomNavBar";
 import CreateCommunityModal from "../../components/ui/CreateCommunityModal";
 import { CommunityCard } from "./subcomponents";
 import { fetchCommunities as apiFetchCommunities, joinCommunity as apiJoinCommunity } from "../../api";
+import DivineLoader from '../../components/ui/PlusLoader';
 
 const Communities = () => {
   const user = useSelector(selectUser);
@@ -170,7 +171,7 @@ const Communities = () => {
           {/* Content based on active tab */}
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-pulse text-gray-600">Loading communities...</div>
+              <DivineLoader />
             </div>
           ) : activeTab === "My Communities" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

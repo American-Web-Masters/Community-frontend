@@ -15,6 +15,7 @@ import toast from 'react-hot-toast';
 import { About, Members, ModeratorQueue } from "./subcomponents";
 import CreatePrayerModal from "../../components/ui/CreatePrayerModal";
 import FlagModal from "../../components/ui/FlagModal";
+import DivineLoader from '../../components/ui/PlusLoader';
 
 const CommunityDetails = () => {
   const { id } = useParams();
@@ -491,7 +492,7 @@ const CommunityDetails = () => {
   if (loading) {
     return (
       <div className="min-h-screen light-background flex items-center justify-center">
-        <div className="animate-pulse text-gray-600">Loading community...</div>
+        <DivineLoader />
       </div>
     );
   }
@@ -902,7 +903,7 @@ const CommunityDetails = () => {
 
                                 return {
                                   _id: comment._id,
-                                  user: comment.user?.firstname || comment.user?.username || "Community Member",
+                                  user: comment.user?.firstname + " " + (comment.user?.lastname || "") || "Community Member",
                                 text: comment.commentText || comment.text,
                                 time: comment.createdAt ? getTimeAgo(comment.createdAt) : comment.time,
                                 reactions: reactionsCount,
