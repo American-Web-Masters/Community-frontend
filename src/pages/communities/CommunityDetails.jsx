@@ -964,7 +964,11 @@ const CommunityDetails = () => {
         )}
 
         {activeTab === "Members" && (
-          <Members community={community} currentUser={user} />
+          <Members 
+            community={community} 
+            currentUser={user} 
+            onCommunityUpdate={fetchCommunityDetails}
+          />
         )}
 
         {activeTab === "Event" && (

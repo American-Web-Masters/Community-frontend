@@ -299,3 +299,57 @@ export const handleReportedPrayer = async (communityId, reportId, action) => {
     };
   }
 };
+
+/**
+ * Kick a member from a community
+ * @param {string} communityId - Community ID
+ * @param {string} memberId - Member ID to kick
+ * @returns {Promise<Object>} Response from the API
+ */
+export const kickMember = async (communityId, memberId) => {
+  try {
+    const response = await apiClient.post('/communities/kick-member', {
+      communityId,
+      memberId
+    });
+    return {
+      success: true,
+      data: response.data.data,
+      message: response.data.message || 'Member kicked successfully'
+    };
+  } catch (err) {
+    console.error('Error kicking member:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to kick member. Please try again.'
+    };
+  }
+};
+
+/**
+ * Change a member's role in a community
+ * @param {string} communityId - Community ID
+ * @param {string} memberId - Member ID to change role for
+ * @param {string} newRole - New role to assign ('moderator' or 'member')
+ * @returns {Promise<Object>} Response from the API
+ */
+export const changeMemberRole = async (communityId, memberId, newRole) => {
+  try {
+    const response = await apiClient.post('/communities/change-member-role', {
+      communityId,
+      memberId,
+      newRole
+    });
+    return {
+      success: true,
+      data: response.data.data,
+      message: response.data.message || 'Member role updated successfully'
+    };
+  } catch (err) {
+    console.error('Error changing member role:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to change member role. Please try again.'
+    };
+  }
+};
