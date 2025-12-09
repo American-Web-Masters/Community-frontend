@@ -353,3 +353,22 @@ export const changeMemberRole = async (communityId, memberId, newRole) => {
     };
   }
 };
+
+/**
+ * Toggle pin status for a prayer in a community
+ * @param {string} communityId - The ID of the community
+ * @param {string} prayerId - The ID of the prayer to pin/unpin
+ * @returns {Promise<Object>} Response containing updated prayer data
+ */
+export const togglePrayerPin = async (communityId, prayerId) => {
+  try {
+    const response = await apiClient.post('/communities/toggle-pin', {
+      communityId,
+      prayerId
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling prayer pin:', error);
+    throw error;
+  }
+};

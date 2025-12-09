@@ -267,7 +267,10 @@ const CommunityDetails = () => {
       ...feedItem.prayer,
       feedItemId: feedItem._id,
       addedBy: feedItem.addedBy,
-      addedAt: feedItem.addedAt
+      addedAt: feedItem.addedAt,
+      isCommunityPinned: feedItem.isCommunityPinned,
+      communityPinnedAt: feedItem.communityPinnedAt,
+      communityPinnedBy: feedItem.communityPinnedBy
     })) || [];
   }, [community?.feed]);
 
@@ -395,6 +398,29 @@ const CommunityDetails = () => {
           return {
             ...feedItem,
             prayer: updatedPrayer
+          };
+        }
+        return feedItem;
+      });
+      
+      return {
+        ...prevCommunity,
+        feed: updatedFeed
+      };
+    });
+  };
+
+  const handlePinStateChange = (prayerId, newState) => {
+    setCommunity(prevCommunity => {
+      if (!prevCommunity?.feed) return prevCommunity;
+      
+      const updatedFeed = prevCommunity.feed.map(feedItem => {
+        if (feedItem.prayer._id === prayerId) {
+          return {
+            ...feedItem,
+            isCommunityPinned: newState,
+            communityPinnedAt: newState ? new Date().toISOString() : null,
+            communityPinnedBy: newState ? user?._id : null
           };
         }
         return feedItem;
@@ -875,6 +901,8 @@ const CommunityDetails = () => {
                         <div key={prayer._id || prayer.id} className="masonry-item">
                           <div className="relative">
                             <PrayerCard
+                              isCommunityPrayer={true}
+                              isOwnerOrModerator={isOwnerOrModerator}
                               prayer={prayer}
                               prayerId={prayer._id || prayer.id}
                               user={prayer.anonymous ? { name: "Anonymous" } : { 
@@ -938,6 +966,12 @@ const CommunityDetails = () => {
                             }}
                             onBookmarkStateChange={(newState) => {
                               handleBookmarkStateChange(prayer._id || prayer.id, newState);
+                            }}
+                            isPinned={prayer.isCommunityPinned || false}
+                            feedItemId={prayer.feedItemId}
+                            communityId={id}
+                            onPinStateChange={(newState) => {
+                              handlePinStateChange(prayer._id || prayer.id, newState);
                             }}
                           />
                           

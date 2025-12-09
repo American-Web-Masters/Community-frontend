@@ -3,6 +3,8 @@ import {
   IoChatbubbleOutline,
   IoShareOutline,
 } from "react-icons/io5";
+import { BsThreeDots } from "react-icons/bs";
+import { TbPin, TbPinFilled } from "react-icons/tb";
 import {
   PiHandsPrayingThin,
   PiBookBookmarkLight,
@@ -24,6 +26,7 @@ import {
   isBookmarkedByUser,
   isSharedByUser,
 } from "../../api/prayer";
+import { togglePrayerPin } from "../../api/communities";
 import { getUrgencyMeter, getTimelineUserName, getStatusPillStyle, getTimelineActivityText, getTimelineActivityIcon, formatTimelineTime } from "../../utils/prayerUtils";
 
 const PrayerCard = ({
@@ -52,6 +55,8 @@ const PrayerCard = ({
   onComment,
   onShare,
   onMore,
+  isCommunityPrayer = false,
+  isOwnerOrModerator = false,
   isPrayed = false,
   prayerCount = 0,
   isShared = false,
@@ -63,6 +68,10 @@ const PrayerCard = ({
   showStatusPill = false,
   onPublishDraft = null, // New callback for publishing draft prayers
   isDraft = false, // Flag to show if this is a draft prayer
+  isPinned = false, // Flag to show if prayer is pinned
+  communityId = null, // Community ID for pin/unpin functionality
+  onPinStateChange = null, // Callback for pin state changes
+  feedItemId = null, // Feed item ID for pin/unpin functionality
 }) => {
   const currentUser = useSelector(selectUser);
   const [showComments, setShowComments] = useState(false);
@@ -77,6 +86,8 @@ const PrayerCard = ({
   const [isSubmittingPrayer, setIsSubmittingPrayer] = useState(false);
   const [isSubmittingShare, setIsSubmittingShare] = useState(false);
   const [isSubmittingBookmark, setIsSubmittingBookmark] = useState(false);
+  const [isSubmittingPin, setIsSubmittingPin] = useState(false);
+  const [isPinnedState, setIsPinnedState] = useState(isPinned);
   const [error, setError] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [showTimelineModal, setShowTimelineModal] = useState(false);
@@ -179,6 +190,54 @@ const PrayerCard = ({
       setTimeout(() => setError(null), 3000);
     } finally {
       setIsSubmittingBookmark(false);
+    }
+  };
+
+  // Handle pin/unpin toggle with optimistic update
+  const handleTogglePin = async () => {
+    if (!currentUser?._id || !communityId || isSubmittingPin) return;
+
+    // Use feedItemId for community pin operations, fallback to prayerId if not available
+    const idToUse = feedItemId || prayer?.feedItemId || prayerId;
+
+    console.log('Pin/Unpin Debug:', {
+      communityId,
+      prayerId,
+      feedItemId,
+      idToUse,
+      currentUser: currentUser._id,
+      prayerObject: {
+        id: prayer?._id,
+        feedItemId: prayer?.feedItemId,
+        communities: prayer?.communities
+      }
+    });
+
+    // Optimistic UI update
+    const previousState = isPinnedState;
+    const newState = !previousState;
+    setIsPinnedState(newState);
+    if (onPinStateChange) onPinStateChange(newState);
+
+    setIsSubmittingPin(true);
+    try {
+      await togglePrayerPin(communityId, idToUse);
+      console.log('Pin/Unpin success');
+    } catch (error) {
+      console.error("Error toggling pin state:", error);
+      console.error("Error details:", {
+        status: error?.response?.status,
+        data: error?.response?.data,
+        message: error?.message
+      });
+      
+      // Revert optimistic update on error
+      setIsPinnedState(previousState);
+      if (onPinStateChange) onPinStateChange(previousState);
+      setError(error?.response?.data?.message || "Failed to update pin status. Please try again.");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsSubmittingPin(false);
     }
   };
 
@@ -382,6 +441,24 @@ const PrayerCard = ({
                 {status}
               </span>
             )}
+            {(isCommunityPrayer && isOwnerOrModerator) ? (
+              <button
+                onClick={handleTogglePin}
+                disabled={isSubmittingPin}
+                className={`p-2 rounded-full transition-colors duration-200 focus:outline-none ${
+                  isPinnedState 
+                    ? 'text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100' 
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                } ${isSubmittingPin ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={isPinnedState ? 'Unpin this prayer' : 'Pin this prayer'}
+              >
+                {isPinnedState ? (
+                  <TbPinFilled className="w-5 h-5" />
+                ) : (
+                  <TbPin className="w-5 h-5" />
+                )}
+              </button>
+            ) : (
             <svg
               width="18"
               height="25"
@@ -396,6 +473,7 @@ const PrayerCard = ({
                 fill="#03045E"
               />
             </svg>
+            )}
           </div>
         </div>
       </div>
