@@ -783,7 +783,8 @@ const CommunityDetails = () => {
                   <span><PiBellLight className="w-4 h-4" /></span>
                   <span>Notifications</span>
                 </button>
-                <button 
+                {isOwnerOrModerator && (
+                                  <button 
                   onClick={handleInviteClick}
                   className={`px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 transition-all duration-200 ${
                     copied 
@@ -802,6 +803,7 @@ const CommunityDetails = () => {
                   </span>
                   {loading2 ? (<span>Loading...</span>) : <span>{copied ? 'Copied!' : 'Invite'}</span>}
                 </button>
+                )}
               </div>
             </div>
           </div>
