@@ -507,14 +507,14 @@ const CommunityDetails = () => {
   };
 
   const handleInviteClick = async () => {
-    if (!community?.inviteLink) {
-      console.error('No invite link available');
-      return;
+    const response = await apiClient.post('/invites/generate',{communityId: community._id});
+    console.log('Invite link response:', response);
+    if (response.data.status == "success") {  
+      toast.success('Invite link generated successfully!');
     }
-
     try {
       // Create the full invite URL (you might need to adjust the domain based on your app's URL structure)
-      const inviteUrl = `${window.location.origin}/invite/${community.inviteLink}`;
+      const inviteUrl = response.data?.data?.inviteUrl
       
       await navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
@@ -900,9 +900,6 @@ const CommunityDetails = () => {
                   ></div>
                 </label>
               </div>
-              <span className="text-xs text-gray-500">
-                {postApprovalEnabled ? 'Enabled' : 'Disabled'}
-              </span>
             </div>
           )}
         </div>
