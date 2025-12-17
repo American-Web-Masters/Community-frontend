@@ -65,8 +65,19 @@ const Login = () => {
         
         console.log('User data saved to Redux and localStorage');
         
-        // Navigate to home page
-        navigate('/');
+        // Check for pending invite
+        const pendingInvite = localStorage.getItem('pendingInvite');
+        console.log('Checking for pending invite:', pendingInvite);
+        
+        if (pendingInvite) {
+          console.log('Found pending invite, navigating to:', `/invite/${pendingInvite}`);
+          // Navigate back to invite page
+          navigate(`/invite/${pendingInvite}`);
+        } else {
+          console.log('No pending invite found, navigating to home');
+          // Navigate to home page
+          navigate('/');
+        }
         
       } else {
         throw new Error(response.data?.message || 'Login failed');

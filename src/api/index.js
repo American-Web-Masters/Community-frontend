@@ -6,3 +6,6 @@ export * from './prayer.js';
 
 // Export communities API functions
 export * from './communities.js';
+
+// Export invite API functions
+export * from './invites.js';
