@@ -34,7 +34,7 @@ const CommunityDetails = () => {
   const [flagReason, setFlagReason] = useState('');
   const [flagDescription, setFlagDescription] = useState('');
   const [postApprovalEnabled, setPostApprovalEnabled] = useState(false);
-  
+  const [loading2, setLoading2] = useState(false);
   // Header editing states
   const [isEditingHeader, setIsEditingHeader] = useState(false);
   const [headerLoading, setHeaderLoading] = useState(false);
@@ -507,10 +507,11 @@ const CommunityDetails = () => {
   };
 
   const handleInviteClick = async () => {
+    setLoading2(true);
     const response = await apiClient.post('/invites/generate',{communityId: community._id});
-    console.log('Invite link response:', response);
     if (response.data.status == "success") {  
       toast.success('Invite link generated successfully!');
+      setLoading2(false);
     }
     try {
       // Create the full invite URL (you might need to adjust the domain based on your app's URL structure)
@@ -534,6 +535,9 @@ const CommunityDetails = () => {
       
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+    finally {
+      setLoading2(false);
     }
   };
 
@@ -796,7 +800,7 @@ const CommunityDetails = () => {
                       <IoShareSocialOutline className="w-4 h-4" />
                     )}
                   </span>
-                  <span>{copied ? 'Copied!' : 'Invite'}</span>
+                  {loading2 ? (<span>Loading...</span>) : <span>{copied ? 'Copied!' : 'Invite'}</span>}
                 </button>
               </div>
             </div>
