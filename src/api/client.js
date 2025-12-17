@@ -22,8 +22,6 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Clear user data from localStorage (cookies are handled by browser)
-      localStorage.removeItem('authenticatedUser');
-      
       // Redirect to login page
       window.location.href = '/login';
     }

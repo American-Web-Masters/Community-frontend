@@ -11,6 +11,7 @@ import { MdCheck, MdClose, MdCameraAlt } from 'react-icons/md';
 import { IoShareSocialOutline } from "react-icons/io5";
 import { fetchCommunityById, updateCommunityDetails } from "../../api";
 import { flagPrayer } from "../../api/prayer";
+import apiClient  from "../../api/client";
 import toast from 'react-hot-toast';
 import { About, Members, ModeratorQueue } from "./subcomponents";
 import CreatePrayerModal from "../../components/ui/CreatePrayerModal";
@@ -32,6 +33,7 @@ const CommunityDetails = () => {
   const [selectedPrayerToFlag, setSelectedPrayerToFlag] = useState(null);
   const [flagReason, setFlagReason] = useState('');
   const [flagDescription, setFlagDescription] = useState('');
+  const [postApprovalEnabled, setPostApprovalEnabled] = useState(false);
   
   // Header editing states
   const [isEditingHeader, setIsEditingHeader] = useState(false);
@@ -55,6 +57,8 @@ const CommunityDetails = () => {
       
       if (response.success) {
         setCommunity(response?.data);
+        setPostApprovalEnabled(response?.data?.requirePostApproval || false);
+        console.log('Post approval enabled:', response?.data?.requirePostApproval);
         setError(null);
       } else {
         setError(response.error);
@@ -104,6 +108,24 @@ const CommunityDetails = () => {
     setFlagReason('');
     setFlagDescription('');
     setSelectedPrayerToFlag(null);
+  };
+
+  const handleTogglePostApproval = async () => {
+    try {
+      const response = await apiClient.post('/communities/toggle-post-approval', {
+        communityId: community._id
+      });
+      
+      if (response.data.success) {
+        setPostApprovalEnabled(!postApprovalEnabled);
+        toast.success(response.data.data.message || 'Post approval settings updated successfully!');
+      } else {
+        toast.error(response.data.data.error || 'Failed to update post approval settings');
+      }
+    } catch (error) {
+      console.error('Error toggling post approval:', error);
+      toast.error(error?.response?.data?.message || 'Failed to update post approval settings. Please try again.');
+    }
   };
 
   // Check if user is owner or moderator
@@ -852,6 +874,36 @@ const CommunityDetails = () => {
               <span className="text-blue-600 text-lg font-bold relative -top-0.5">+</span>
             </div>
           </button>
+          )}
+
+          {activeTab === "Moderator Queue" && (
+            <div className="flex items-center space-x-3">
+              <span className="text-sm font-medium text-gray-700">Post Approval</span>
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  id="post-approval-toggle"
+                  className="sr-only"
+                  checked={postApprovalEnabled}
+                  onChange={handleTogglePostApproval}
+                />
+                <label
+                  htmlFor="post-approval-toggle"
+                  className={`block w-12 h-6 rounded-full cursor-pointer transition-all duration-200 ${
+                    postApprovalEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
+                      postApprovalEnabled ? 'transform translate-x-6' : ''
+                    }`}
+                  ></div>
+                </label>
+              </div>
+              <span className="text-xs text-gray-500">
+                {postApprovalEnabled ? 'Enabled' : 'Disabled'}
+              </span>
+            </div>
           )}
         </div>
       </div>
