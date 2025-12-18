@@ -355,6 +355,35 @@ export const changeMemberRole = async (communityId, memberId, newRole) => {
 };
 
 /**
+ * Fetch approved communities for a specific user
+ * @param {string} userId - The ID of the user to fetch communities for
+ * @returns {Promise<Object>} Response containing user's approved communities
+ */
+export const fetchApprovedCommunitiesForUser = async (userId) => {
+  try {
+    const response = await apiClient.get(`/communities/approved-community/${userId}`);
+    
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data || []
+      };
+    } else {
+      return {
+        success: false,
+        error: 'Failed to load communities.'
+      };
+    }
+  } catch (err) {
+    console.error('Error fetching user communities:', err);
+    return {
+      success: false,
+      error: 'Failed to load communities. Please try again.'
+    };
+  }
+};
+
+/**
  * Toggle pin status for a prayer in a community
  * @param {string} communityId - The ID of the community
  * @param {string} prayerId - The ID of the prayer to pin/unpin
