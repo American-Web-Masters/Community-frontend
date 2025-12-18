@@ -200,18 +200,6 @@ const PrayerCard = ({
     // Use feedItemId for community pin operations, fallback to prayerId if not available
     const idToUse = feedItemId || prayer?.feedItemId || prayerId;
 
-    console.log('Pin/Unpin Debug:', {
-      communityId,
-      prayerId,
-      feedItemId,
-      idToUse,
-      currentUser: currentUser._id,
-      prayerObject: {
-        id: prayer?._id,
-        feedItemId: prayer?.feedItemId,
-        communities: prayer?.communities
-      }
-    });
 
     // Optimistic UI update
     const previousState = isPinnedState;

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../../store/userSlice';
 import { apiClient } from '../../../api';
+import { fetchApprovedCommunitiesForUser } from '../../../api/communities';
 import { FaTimes, FaCalendarAlt } from 'react-icons/fa';
 import { localInputToUTC } from '../../../utils/prayerUtils';
 
@@ -11,6 +12,9 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
   const [error, setError] = useState('');
   const [showScheduler, setShowScheduler] = useState(false);
   const [scheduledDate, setScheduledDate] = useState('');
+  const [availableCommunities, setAvailableCommunities] = useState([]);
+  const [selectedCommunities, setSelectedCommunities] = useState([]);
+  const [loadingCommunities, setLoadingCommunities] = useState(false);
   
   const [formData, setFormData] = useState({
     content: '',
@@ -23,6 +27,29 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
   const [newTag, setNewTag] = useState('');
 
   const moodOptions = ['😊', '🙂', '😐', '😔', '😢'];
+
+  // Fetch user's communities on component mount
+  React.useEffect(() => {
+    const fetchUserCommunities = async () => {
+      if (user?._id) {
+        setLoadingCommunities(true);
+        try {
+          const result = await fetchApprovedCommunitiesForUser(user._id);
+          if (result.success) {
+            setAvailableCommunities(result.data?.communities || []);
+          } else {
+            console.error('Failed to fetch communities:', result.error);
+          }
+        } catch (error) {
+          console.error('Error fetching communities:', error);
+        } finally {
+          setLoadingCommunities(false);
+        }
+      }
+    };
+
+    fetchUserCommunities();
+  }, [user?._id]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -56,7 +83,7 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
   const createPrayerPayload = () => {
     return {
       user: user._id,
-      communities: ["68ff93765db352ca01d2a16b", "68ff93765db352ca01d2a16b"],
+      communities: selectedCommunities,
       userProfile: user._id,
       content: formData.content.trim(),
       urgency: formData.urgency,
@@ -149,8 +176,11 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
       moodEmoji: '😊',
       tags: []
     });
+    setNewTag('');
     setScheduledDate('');
     setShowScheduler(false);
+    setSelectedCommunities([]);
+    setError('');
   };
 
   const getMinDate = () => {
@@ -358,6 +388,44 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
               </button>
             </div>
           </div>
+
+          {/* Community Selection - Only for normal prayer requests */}
+          {!showScheduler && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Communities (Optional)</h3>
+              {loadingCommunities ? (
+                <div className="text-sm text-gray-500">Loading communities...</div>
+              ) : availableCommunities.length > 0 ? (
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {availableCommunities.map((community) => (
+                    <label
+                      key={community.communityId || community._id}
+                      className="flex items-center gap-3 p-3 bg-white rounded-xl hover:bg-gray-50 cursor-pointer transition-colors border border-gray-200"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCommunities.includes(community.communityId || community._id)}
+                        onChange={(e) => {
+                          const communityId = community.communityId || community._id;
+                          if (e.target.checked) {
+                            setSelectedCommunities(prev => [...prev, communityId]);
+                          } else {
+                            setSelectedCommunities(prev => prev.filter(id => id !== communityId));
+                          }
+                        }}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                      />
+                      <span className="text-sm font-medium text-gray-800">
+                        {community.name}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500">No communities available</div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
