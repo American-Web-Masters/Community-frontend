@@ -25,7 +25,6 @@ const AuthMonitor = () => {
         const isValid = await validateAuthenticationState();
         
         if (!isValid) {
-          console.log('Authentication monitor detected invalid session, clearing user data');
           dispatch(clearUser());
         }
       } catch (error) {

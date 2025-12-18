@@ -53,22 +53,18 @@ apiClient.interceptors.response.use(
         });
       }
       
-      console.log('Received 401 error, attempting to verify authentication...');
-      
       // Mark this request as retried to prevent infinite loops
       originalRequest._retry = true;
       isRetrying = true;
       
       try {
         // Try to verify authentication with a simple endpoint
-        console.log('Checking authentication status...');
         const authCheckResponse = await axios.get(`${API_BASE_URL}/users/auth-check`, {
           withCredentials: true,
           headers: { 'Content-Type': 'application/json' }
         });
         
         if (authCheckResponse.data?.status === 'success') {
-          console.log('Authentication is valid, retrying failed requests...');
           isRetrying = false;
           processQueue(null);
           
@@ -78,14 +74,12 @@ apiClient.interceptors.response.use(
           throw new Error('Authentication check failed');
         }
       } catch (authError) {
-        console.log('Authentication verification failed:', authError.response?.status || authError.message);
         
         isRetrying = false;
         processQueue(authError);
         
         // Only logout if this is a definitive auth failure (not network error)
         if (authError.response?.status === 401 || authError.response?.status === 403) {
-          console.log('Definitive authentication failure, clearing user session...');
           
           // Clear user data from localStorage
           localStorage.removeItem('authenticatedUser');
@@ -99,7 +93,6 @@ apiClient.interceptors.response.use(
           if (!window.location.pathname.includes('/login') && 
               !window.location.pathname.includes('/signup') &&
               !window.location.pathname.includes('/landing')) {
-            console.log('Redirecting to login page...');
             setTimeout(() => {
               window.location.href = '/login';
             }, 100); // Small delay to prevent immediate redirect
