@@ -8,4 +8,7 @@ const store = configureStore({
   },
 });
 
+// Make store globally accessible for API client error handling
+window.__REDUX_STORE__ = store;
+
 export default store;

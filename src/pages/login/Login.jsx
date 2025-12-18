@@ -1,17 +1,18 @@
 
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import Input from '../../components/ui/Input';
 import { FaUser, FaLock, FaChevronLeft, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { FaApple } from 'react-icons/fa';
 import { apiClient } from '../../api';
-import { setUser } from '../../store/userSlice';
+import { setUser, selectIsLoggedIn } from '../../store/userSlice';
 
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const isLoggedIn = useSelector(selectIsLoggedIn);
   
   const [formData, setFormData] = useState({
     username: '',
@@ -20,6 +21,14 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isLoggedIn) {
+      console.log('User is already logged in, redirecting to home');
+      navigate('/', { replace: true });
+    }
+  }, [isLoggedIn, navigate]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -65,15 +74,35 @@ const Login = () => {
         
         console.log('User data saved to Redux and localStorage');
         
-        // Navigate to home page
-        navigate('/');
+        // Check for pending invite
+        const pendingInvite = localStorage.getItem('pendingInvite');
+        console.log('Checking for pending invite:', pendingInvite);
+        
+        if (pendingInvite) {
+          console.log('Found pending invite, navigating to:', `/invite/${pendingInvite}`);
+          // Navigate back to invite page
+          navigate(`/invite/${pendingInvite}`);
+        } else {
+          console.log('No pending invite found, navigating to home');
+          // Navigate to home page
+          navigate('/');
+        }
         
       } else {
         throw new Error(response.data?.message || 'Login failed');
       }
     } catch (err) {
       console.error('Login error:', err);
-      const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (err.response?.status === 401) {
+        errorMessage = 'Invalid username or password.';
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
       setErrors({ submit: errorMessage });
     } finally {
       setLoading(false);

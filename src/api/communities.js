@@ -299,3 +299,105 @@ export const handleReportedPrayer = async (communityId, reportId, action) => {
     };
   }
 };
+
+/**
+ * Kick a member from a community
+ * @param {string} communityId - Community ID
+ * @param {string} memberId - Member ID to kick
+ * @returns {Promise<Object>} Response from the API
+ */
+export const kickMember = async (communityId, memberId) => {
+  try {
+    const response = await apiClient.post('/communities/kick-member', {
+      communityId,
+      memberId
+    });
+    return {
+      success: true,
+      data: response.data.data,
+      message: response.data.message || 'Member kicked successfully'
+    };
+  } catch (err) {
+    console.error('Error kicking member:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to kick member. Please try again.'
+    };
+  }
+};
+
+/**
+ * Change a member's role in a community
+ * @param {string} communityId - Community ID
+ * @param {string} memberId - Member ID to change role for
+ * @param {string} newRole - New role to assign ('moderator' or 'member')
+ * @returns {Promise<Object>} Response from the API
+ */
+export const changeMemberRole = async (communityId, memberId, newRole) => {
+  try {
+    const response = await apiClient.post('/communities/change-member-role', {
+      communityId,
+      memberId,
+      newRole
+    });
+    return {
+      success: true,
+      data: response.data.data,
+      message: response.data.message || 'Member role updated successfully'
+    };
+  } catch (err) {
+    console.error('Error changing member role:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to change member role. Please try again.'
+    };
+  }
+};
+
+/**
+ * Fetch approved communities for a specific user
+ * @param {string} userId - The ID of the user to fetch communities for
+ * @returns {Promise<Object>} Response containing user's approved communities
+ */
+export const fetchApprovedCommunitiesForUser = async (userId) => {
+  try {
+    const response = await apiClient.get(`/communities/approved-community/${userId}`);
+    
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data || []
+      };
+    } else {
+      return {
+        success: false,
+        error: 'Failed to load communities.'
+      };
+    }
+  } catch (err) {
+    console.error('Error fetching user communities:', err);
+    return {
+      success: false,
+      error: 'Failed to load communities. Please try again.'
+    };
+  }
+};
+
+/**
+ * Toggle pin status for a prayer in a community
+ * @param {string} communityId - The ID of the community
+ * @param {string} prayerId - The ID of the prayer to pin/unpin
+ * @returns {Promise<Object>} Response containing updated prayer data
+ */
+export const togglePrayerPin = async (communityId, prayerId) => {
+  try {
+    const response = await apiClient.post('/communities/toggle-pin', {
+      communityId,
+      prayerId
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling prayer pin:', error);
+    throw error;
+  }
+};

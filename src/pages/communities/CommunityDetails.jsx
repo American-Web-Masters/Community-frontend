@@ -11,6 +11,7 @@ import { MdCheck, MdClose, MdCameraAlt } from 'react-icons/md';
 import { IoShareSocialOutline } from "react-icons/io5";
 import { fetchCommunityById, updateCommunityDetails } from "../../api";
 import { flagPrayer } from "../../api/prayer";
+import apiClient  from "../../api/client";
 import toast from 'react-hot-toast';
 import { About, Members, ModeratorQueue } from "./subcomponents";
 import CreatePrayerModal from "../../components/ui/CreatePrayerModal";
@@ -32,7 +33,8 @@ const CommunityDetails = () => {
   const [selectedPrayerToFlag, setSelectedPrayerToFlag] = useState(null);
   const [flagReason, setFlagReason] = useState('');
   const [flagDescription, setFlagDescription] = useState('');
-  
+  const [postApprovalEnabled, setPostApprovalEnabled] = useState(false);
+  const [loading2, setLoading2] = useState(false);
   // Header editing states
   const [isEditingHeader, setIsEditingHeader] = useState(false);
   const [headerLoading, setHeaderLoading] = useState(false);
@@ -55,6 +57,8 @@ const CommunityDetails = () => {
       
       if (response.success) {
         setCommunity(response?.data);
+        setPostApprovalEnabled(response?.data?.requirePostApproval || false);
+        console.log('Post approval enabled:', response?.data?.requirePostApproval);
         setError(null);
       } else {
         setError(response.error);
@@ -104,6 +108,24 @@ const CommunityDetails = () => {
     setFlagReason('');
     setFlagDescription('');
     setSelectedPrayerToFlag(null);
+  };
+
+  const handleTogglePostApproval = async () => {
+    try {
+      const response = await apiClient.post('/communities/toggle-post-approval', {
+        communityId: community._id
+      });
+      
+      if (response.data.success) {
+        setPostApprovalEnabled(!postApprovalEnabled);
+        toast.success(response.data.data.message || 'Post approval settings updated successfully!');
+      } else {
+        toast.error(response.data.data.error || 'Failed to update post approval settings');
+      }
+    } catch (error) {
+      console.error('Error toggling post approval:', error);
+      toast.error(error?.response?.data?.message || 'Failed to update post approval settings. Please try again.');
+    }
   };
 
   // Check if user is owner or moderator
@@ -267,7 +289,10 @@ const CommunityDetails = () => {
       ...feedItem.prayer,
       feedItemId: feedItem._id,
       addedBy: feedItem.addedBy,
-      addedAt: feedItem.addedAt
+      addedAt: feedItem.addedAt,
+      isCommunityPinned: feedItem.isCommunityPinned,
+      communityPinnedAt: feedItem.communityPinnedAt,
+      communityPinnedBy: feedItem.communityPinnedBy
     })) || [];
   }, [community?.feed]);
 
@@ -407,6 +432,29 @@ const CommunityDetails = () => {
     });
   };
 
+  const handlePinStateChange = (prayerId, newState) => {
+    setCommunity(prevCommunity => {
+      if (!prevCommunity?.feed) return prevCommunity;
+      
+      const updatedFeed = prevCommunity.feed.map(feedItem => {
+        if (feedItem.prayer._id === prayerId) {
+          return {
+            ...feedItem,
+            isCommunityPinned: newState,
+            communityPinnedAt: newState ? new Date().toISOString() : null,
+            communityPinnedBy: newState ? user?._id : null
+          };
+        }
+        return feedItem;
+      });
+      
+      return {
+        ...prevCommunity,
+        feed: updatedFeed
+      };
+    });
+  };
+
   const handleCommentsUpdate = (prayerId, updatedComments) => {
     setCommunity(prevCommunity => {
       if (!prevCommunity?.feed) return prevCommunity;
@@ -459,14 +507,15 @@ const CommunityDetails = () => {
   };
 
   const handleInviteClick = async () => {
-    if (!community?.inviteLink) {
-      console.error('No invite link available');
-      return;
+    setLoading2(true);
+    const response = await apiClient.post('/invites/generate',{communityId: community._id});
+    if (response.data.status == "success") {  
+      toast.success('Invite link generated successfully!');
+      setLoading2(false);
     }
-
     try {
       // Create the full invite URL (you might need to adjust the domain based on your app's URL structure)
-      const inviteUrl = `${window.location.origin}/invite/${community.inviteLink}`;
+      const inviteUrl = response.data?.data?.inviteUrl
       
       await navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
@@ -486,6 +535,9 @@ const CommunityDetails = () => {
       
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+    finally {
+      setLoading2(false);
     }
   };
 
@@ -731,7 +783,8 @@ const CommunityDetails = () => {
                   <span><PiBellLight className="w-4 h-4" /></span>
                   <span>Notifications</span>
                 </button>
-                <button 
+                {isOwnerOrModerator && (
+                                  <button 
                   onClick={handleInviteClick}
                   className={`px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 transition-all duration-200 ${
                     copied 
@@ -748,8 +801,9 @@ const CommunityDetails = () => {
                       <IoShareSocialOutline className="w-4 h-4" />
                     )}
                   </span>
-                  <span>{copied ? 'Copied!' : 'Invite'}</span>
+                  {loading2 ? (<span>Loading...</span>) : <span>{copied ? 'Copied!' : 'Invite'}</span>}
                 </button>
+                )}
               </div>
             </div>
           </div>
@@ -827,6 +881,33 @@ const CommunityDetails = () => {
             </div>
           </button>
           )}
+
+          {activeTab === "Moderator Queue" && (
+            <div className="flex items-center space-x-3">
+              <span className="text-sm font-medium text-gray-700">Post Approval</span>
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  id="post-approval-toggle"
+                  className="sr-only"
+                  checked={postApprovalEnabled}
+                  onChange={handleTogglePostApproval}
+                />
+                <label
+                  htmlFor="post-approval-toggle"
+                  className={`block w-12 h-6 rounded-full cursor-pointer transition-all duration-200 ${
+                    postApprovalEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
+                      postApprovalEnabled ? 'transform translate-x-6' : ''
+                    }`}
+                  ></div>
+                </label>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -875,6 +956,8 @@ const CommunityDetails = () => {
                         <div key={prayer._id || prayer.id} className="masonry-item">
                           <div className="relative">
                             <PrayerCard
+                              isCommunityPrayer={true}
+                              isOwnerOrModerator={isOwnerOrModerator}
                               prayer={prayer}
                               prayerId={prayer._id || prayer.id}
                               user={prayer.anonymous ? { name: "Anonymous" } : { 
@@ -939,6 +1022,12 @@ const CommunityDetails = () => {
                             onBookmarkStateChange={(newState) => {
                               handleBookmarkStateChange(prayer._id || prayer.id, newState);
                             }}
+                            isPinned={prayer.isCommunityPinned || false}
+                            feedItemId={prayer.feedItemId}
+                            communityId={id}
+                            onPinStateChange={(newState) => {
+                              handlePinStateChange(prayer._id || prayer.id, newState);
+                            }}
                           />
                           
                           {/* Flag button - positioned at bottom right */}
@@ -964,7 +1053,11 @@ const CommunityDetails = () => {
         )}
 
         {activeTab === "Members" && (
-          <Members community={community} currentUser={user} />
+          <Members 
+            community={community} 
+            currentUser={user} 
+            onCommunityUpdate={fetchCommunityDetails}
+          />
         )}
 
         {activeTab === "Event" && (

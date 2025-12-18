@@ -15,6 +15,7 @@ import Tour from "../pages/Splash Pages/Tour";
 import MyPrayers from "../pages/my_prayers/MyPrayers";
 import UpdatePrayers from "../pages/update_prayers/UpdatePrayers";
 import AnsweredPrayers from "../pages/answered_prayer/AnsweredPrayers";
+import InviteValidation from "../pages/invite/InviteValidation";
 
 const Routes = () =>{
     return(
@@ -130,6 +131,12 @@ const Routes = () =>{
                 <ProtectedRoute>
                     <AnsweredPrayers/>
                 </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/invite/:token"
+            element={
+                <InviteValidation/>
             }
             />
         </AppRoutes>
