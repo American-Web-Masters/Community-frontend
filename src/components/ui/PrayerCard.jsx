@@ -405,11 +405,16 @@ const PrayerCard = ({
               {/* Community Pills - Show only in collapsed view */}
               {!isExpanded && (
                 <div className="flex items-center space-x-1">
-                  {communities.map((community, index) => (
-                  <span key={index} className="bg-blue-400 text-white px-2 py-1 rounded-full text-xs">
-                    {community?.name?.slice(0,5)}
+                  {communities[0] &&(
+                    <span className="bg-blue-400 text-white px-2 py-1 rounded-full text-xs">
+                    {communities[0]?.name?.length > 8 ? communities[0]?.name?.slice(0,7) + "..." : communities[0]?.name}
                   </span>
-                  ))}
+                  )}
+                  {communities[1] && (
+                  <span className="bg-blue-400 text-white px-2 py-1 rounded-full text-xs">
+                    {communities[1]?.name?.length > 8 ? communities[1]?.name?.slice(0,7) + "..." : communities[1]?.name}
+                  </span>
+                  )}
                   {communities.length > 2 && (
                     <span className="bg-gray-400 text-white px-2 py-1 rounded-full text-xs">
                       +{communities.length - 2} more

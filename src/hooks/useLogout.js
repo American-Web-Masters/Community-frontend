@@ -10,9 +10,7 @@ export const useLogout = () => {
   const dispatch = useDispatch();
 
   const logout = async () => {
-    try {
-      console.log('Initiating logout process...');
-      
+    try {   
       // Use the utility function that handles server logout and cleanup
       await performLogout();
       
