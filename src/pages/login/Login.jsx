@@ -1,17 +1,18 @@
 
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import Input from '../../components/ui/Input';
 import { FaUser, FaLock, FaChevronLeft, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { FaApple } from 'react-icons/fa';
 import { apiClient } from '../../api';
-import { setUser } from '../../store/userSlice';
+import { setUser, selectIsLoggedIn } from '../../store/userSlice';
 
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const isLoggedIn = useSelector(selectIsLoggedIn);
   
   const [formData, setFormData] = useState({
     username: '',
@@ -20,6 +21,14 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isLoggedIn) {
+      console.log('User is already logged in, redirecting to home');
+      navigate('/', { replace: true });
+    }
+  }, [isLoggedIn, navigate]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -84,7 +93,16 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (err.response?.status === 401) {
+        errorMessage = 'Invalid username or password.';
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
       setErrors({ submit: errorMessage });
     } finally {
       setLoading(false);

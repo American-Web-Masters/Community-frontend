@@ -87,5 +87,14 @@ export const selectUser = (state) => state.user.user;
 export const selectIsLoggedIn = (state) => state.user.isLoggedIn;
 export const selectUserId = (state) => state.user.user?._id;
 
+// Helper function to clear authentication from outside Redux
+export const clearAuthenticationState = () => {
+  clearUserFromStorage();
+  // If Redux store is available, dispatch clearUser action
+  if (window.__REDUX_STORE__) {
+    window.__REDUX_STORE__.dispatch(clearUser());
+  }
+};
+
 // Export reducer
 export default userSlice.reducer;

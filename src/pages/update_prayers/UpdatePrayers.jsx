@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
+import { useSelector } from "react-redux";
+import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
 import { NotificationCard, PrayerModal } from "./subcomponents";
 import { apiClient } from "../../api";
 import PrayerPageLayout from "../../components/ui/PrayerPageLayout";
+import { useLogout } from "../../hooks/useLogout";
 
 const UpdatePrayers = () => {
   const user = useSelector(selectUser);
   const isLoggedIn = useSelector(selectIsLoggedIn);
-  const dispatch = useDispatch();
+  const { logout } = useLogout();
   const [activities, setActivities] = useState({ comments: [], prayed: [], shares: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,7 +17,7 @@ const UpdatePrayers = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleLogout = () => {
-    dispatch(clearUser());
+    logout();
   };
 
   // Function to fetch prayer updates from API
