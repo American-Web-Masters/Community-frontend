@@ -78,7 +78,7 @@ const CommentsModal = ({
                 <div className="flex items-center space-x-1">
                   <button 
                     onClick={() => handleEmojiReaction(index, "🙏")}
-                    className={`text-lg hover:scale-110 transition-transform ${
+                    className={`text-lg cursor-pointer hover:scale-110 transition-transform ${
                       comment.userReaction === "🙏" ? 'bg-blue-200 rounded-full p-1' : ''
                     } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
                     disabled={!currentUser?._id || comment.isOptimistic}
@@ -90,7 +90,7 @@ const CommentsModal = ({
                 <div className="flex items-center space-x-1">
                   <button 
                     onClick={() => handleEmojiReaction(index, "♥️")}
-                    className={`text-lg hover:scale-110 transition-transform ${
+                    className={`text-lg cursor-pointer hover:scale-110 transition-transform ${
                       comment.userReaction === "♥️" ? 'bg-blue-200 rounded-full p-1' : ''
                     } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
                     disabled={!currentUser?._id || comment.isOptimistic}
@@ -102,7 +102,7 @@ const CommentsModal = ({
                 <div className="flex items-center space-x-1">
                   <button 
                     onClick={() => handleEmojiReaction(index, "😇")}
-                    className={`text-lg hover:scale-110 transition-transform ${
+                    className={`text-lg cursor-pointer hover:scale-110 transition-transform ${
                       comment.userReaction === "😇" ? 'bg-blue-200 rounded-full p-1' : ''
                     } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
                     disabled={!currentUser?._id || comment.isOptimistic}
@@ -114,7 +114,7 @@ const CommentsModal = ({
                 <div className="flex items-center space-x-1">
                   <button 
                     onClick={() => handleEmojiReaction(index, "😢")}
-                    className={`text-lg hover:scale-110 transition-transform ${
+                    className={`text-lg cursor-pointer hover:scale-110 transition-transform ${
                       comment.userReaction === "😢" ? 'bg-blue-200 rounded-full p-1' : ''
                     } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
                     disabled={!currentUser?._id || comment.isOptimistic}
@@ -126,7 +126,7 @@ const CommentsModal = ({
                 <div className="flex items-center space-x-1">
                   <button 
                     onClick={() => handleEmojiReaction(index, "🎉")}
-                    className={`text-lg hover:scale-110 transition-transform ${
+                    className={`text-lg cursor-pointer hover:scale-110 transition-transform ${
                       comment.userReaction === "🎉" ? 'bg-blue-200 rounded-full p-1' : ''
                     } ${comment.isOptimistic ? 'pointer-events-none opacity-50' : ''}`}
                     disabled={!currentUser?._id || comment.isOptimistic}

@@ -448,9 +448,9 @@ const PrayerCard = ({
                 title={isPinnedState ? 'Unpin this prayer' : 'Pin this prayer'}
               >
                 {isPinnedState ? (
-                  <TbPinFilled className="w-5 h-5" />
+                  <TbPinFilled className="w-5 h-5 cursor-pointer" />
                 ) : (
-                  <TbPin className="w-5 h-5" />
+                  <TbPin className="w-5 h-5 cursor-pointer" />
                 )}
               </button>
             ) : (
@@ -537,7 +537,7 @@ const PrayerCard = ({
                 {timelineData.length > 2 && (
                   <button 
                     onClick={() => setShowTimelineModal(true)}
-                    className="text-xs text-blue-600 hover:underline"
+                    className="text-xs cursor-pointer text-blue-600 hover:underline"
                   >
                     View full timeline →
                   </button>
@@ -565,7 +565,7 @@ const PrayerCard = ({
                 {timelineData.length > 2 && (
                   <button 
                     onClick={() => setShowTimelineModal(true)}
-                    className="text-xs text-blue-600 hover:underline mt-1"
+                    className="text-xs cursor-pointer text-blue-600 hover:underline mt-1"
                   >
                     View {timelineData.length - 2} more activities
                   </button>
@@ -577,7 +577,7 @@ const PrayerCard = ({
             
             <button 
               onClick={handleToggleExpand}
-              className="text-[#03045E] text-sm font-medium hover:underline transition-all duration-300 hover:text-blue-600"
+              className="text-[#03045E] cursor-pointer text-sm font-medium hover:underline transition-all duration-300 hover:text-blue-600"
             >
               Show less
             </button>
@@ -589,7 +589,7 @@ const PrayerCard = ({
             </p>
             <button 
               onClick={handleToggleExpand}
-              className="absolute bottom-0 right-0 text-[#03045E] text-sm font-medium hover:underline bg-gradient-to-l from-blue-100 to-transparent pl-4 transition-all duration-300 hover:text-blue-600"
+              className="absolute bottom-0 cursor-pointer right-0 text-[#03045E] text-sm font-medium hover:underline bg-gradient-to-l from-blue-100 to-transparent pl-4 transition-all duration-300 hover:text-blue-600"
             >
               Read more
             </button>
@@ -620,7 +620,7 @@ const PrayerCard = ({
                 <div className="flex items-center space-x-1">
                   <button 
                     onClick={() => handleEmojiReaction(index, "🙏")}
-                    className={`text-lg hover:scale-110 transition-transform ${
+                    className={`text-lg cursor-pointer hover:scale-110 transition-transform ${
                       comment.userReaction === "🙏" ? 'bg-blue-200 rounded-full p-1' : ''
                     } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
                     disabled={!currentUser?._id || comment.isOptimistic}
@@ -632,7 +632,7 @@ const PrayerCard = ({
                 <div className="flex items-center space-x-1">
                   <button 
                     onClick={() => handleEmojiReaction(index, "♥️")}
-                    className={`text-lg hover:scale-110 transition-transform ${
+                    className={`text-lg cursor-pointer hover:scale-110 transition-transform ${
                       comment.userReaction === "♥️" ? 'bg-blue-200 rounded-full p-1' : ''
                     } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
                     disabled={!currentUser?._id || comment.isOptimistic}
@@ -644,7 +644,7 @@ const PrayerCard = ({
                 <div className="flex items-center space-x-1">
                   <button 
                     onClick={() => handleEmojiReaction(index, "😇")}
-                    className={`text-lg hover:scale-110 transition-transform ${
+                    className={`text-lg cursor-pointer hover:scale-110 transition-transform ${
                       comment.userReaction === "😇" ? 'bg-blue-200 rounded-full p-1' : ''
                     } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
                     disabled={!currentUser?._id || comment.isOptimistic}
@@ -656,7 +656,7 @@ const PrayerCard = ({
                 <div className="flex items-center space-x-1">
                   <button 
                     onClick={() => handleEmojiReaction(index, "😢")}
-                    className={`text-lg hover:scale-110 transition-transform ${
+                    className={`text-lg cursor-pointer hover:scale-110 transition-transform ${
                       comment.userReaction === "😢" ? 'bg-blue-200 rounded-full p-1' : ''
                     } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
                     disabled={!currentUser?._id || comment.isOptimistic}
@@ -668,7 +668,7 @@ const PrayerCard = ({
                 <div className="flex items-center space-x-1">
                   <button 
                     onClick={() => handleEmojiReaction(index, "🎉")}
-                    className={`text-lg hover:scale-110 transition-transform ${
+                    className={`text-lg cursor-pointer hover:scale-110 transition-transform ${
                       comment.userReaction === "🎉" ? 'bg-blue-200 rounded-full p-1' : ''
                     } ${comment.isOptimistic ? 'pointer-events-none' : ''}`}
                     disabled={!currentUser?._id || comment.isOptimistic}
@@ -718,7 +718,7 @@ const PrayerCard = ({
           <button
             onClick={handlePrayClick}
             disabled={!currentUser?._id || isSubmittingPrayer}
-            className={`flex items-center space-x-1 transition-all duration-200 ${
+            className={`flex cursor-pointer items-center space-x-1 transition-all duration-200 ${
               isPrayedState 
                 ? 'text-blue-600 bg-blue-50 px-2 py-1 rounded-full' 
                 : 'text-gray-600 hover:text-blue-500 px-2 py-1'
@@ -726,7 +726,7 @@ const PrayerCard = ({
               isSubmittingPrayer ? 'animate-pulse' : ''
             }`}
           >
-            <PiHandsPrayingThin className={`w-5 h-5 ${
+            <PiHandsPrayingThin className={`w-5 h-5 cursor-pointer ${
               isSubmittingPrayer ? 'animate-pulse' : ''
             }`} />
             {prayerCount > 0 && (
@@ -740,7 +740,7 @@ const PrayerCard = ({
           <button
             onClick={handleBookmarkClick}
             disabled={!currentUser?._id || isSubmittingBookmark}
-            className={`flex items-center space-x-1 transition-all duration-200 ${
+            className={`flex items-center cursor-pointer space-x-1 transition-all duration-200 ${
               isBookmarkedState 
                 ? 'text-blue-600 bg-blue-50 px-2 py-1 rounded-full' 
                 : 'text-gray-600 hover:text-blue-600'
@@ -748,7 +748,7 @@ const PrayerCard = ({
               isSubmittingBookmark ? 'animate-pulse' : ''
             }`}
           >
-            <IoBookmarkOutline className={`w-5 h-5 ${
+            <IoBookmarkOutline className={`w-5 h-5 cursor-pointer ${
               isSubmittingBookmark ? 'animate-pulse' : ''
             }`} />
             {/* {isBookmarkedState && <span className="text-xs">Saved</span>} */}
@@ -756,9 +756,9 @@ const PrayerCard = ({
 
           <button
             onClick={() => setShowComments(!showComments)}
-            className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors duration-200"
+            className="flex items-center cursor-pointer space-x-1 text-gray-600 hover:text-blue-600 transition-colors duration-200"
           >
-            <IoChatbubbleOutline className="w-5 h-5" />
+            <IoChatbubbleOutline className="w-5 h-5 cursor-pointer" />
             {commentsState.length > 0 && (
               <span className="text-xs">{commentsState.length}</span>
             )}
@@ -767,7 +767,7 @@ const PrayerCard = ({
           <button
             onClick={handleShareClick}
             disabled={!currentUser?._id || isSubmittingShare || isSharedState}
-            className={`flex items-center space-x-1 transition-all duration-200 ${
+            className={`flex items-center space-x-1 cursor-pointer transition-all duration-200 ${
               isSharedState 
                 ? 'cursor-not-allowed text-blue-600 bg-blue-50 px-2 py-1 rounded-full' 
                 : 'text-gray-600 hover:text-blue-600 px-2 py-1'
@@ -775,7 +775,7 @@ const PrayerCard = ({
               isSubmittingShare ? 'animate-pulse' : ''
             }`}
           >
-            <BsSend className={`w-5 h-5 ${
+            <BsSend className={`w-5 h-5 cursor-pointer ${
               isSubmittingShare ? 'animate-pulse' : ''
             }`} />
             {shareCount > 0 && (

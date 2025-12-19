@@ -352,7 +352,7 @@ const PrayerPageLayout = ({
             {/* Add Prayer Button */}
             <button 
               onClick={handleCreatePrayerClick}
-              className="btn-blue-gradient text-white w-10 h-10 rounded-full flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 pb-1"
+              className="btn-blue-gradient cursor-pointer text-white w-10 h-10 rounded-full flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 pb-1"
             >
               <span className="text-2xl">+</span>
             </button>
@@ -365,7 +365,7 @@ const PrayerPageLayout = ({
           {/* Prayer Wall Button */}
           <button 
             onClick={() => navigate('/')}
-            className={`${config.activeButton === 0 ? 'btn-blue-gradient text-white' : 'bg-white/10 text-gray-700 border border-[#03045E33]'} px-3 md:px-6 h-full rounded-full text-sm font-medium flex items-center space-x-2 md:space-x-3 shadow-sm whitespace-nowrap hover:opacity-90 transition-opacity`}>
+            className={`${config.activeButton === 0 ? 'btn-blue-gradient text-white' : 'bg-white/10 text-gray-700 border border-[#03045E33]'} px-3 md:px-6 h-full rounded-full text-sm font-medium flex items-center space-x-2 md:space-x-3 shadow-sm whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer`}>
             <svg width="32" height="32" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M25.0013 20.8333C29.6037 20.8333 33.3346 17.1024 33.3346 12.5C33.3346 7.89762 29.6037 4.16666 25.0013 4.16666C20.3989 4.16666 16.668 7.89762 16.668 12.5C16.668 17.1024 20.3989 20.8333 25.0013 20.8333Z" stroke={config.activeButton === 0 ? "#ffffff" : "#03045E"} strokeWidth="3"/>
               <path d="M41.6673 36.4583C41.6673 41.6354 41.6673 45.8333 25.0007 45.8333C8.33398 45.8333 8.33398 41.6354 8.33398 36.4583C8.33398 31.2812 15.7965 27.0833 25.0007 27.0833C34.2048 27.0833 41.6673 31.2812 41.6673 36.4583Z" stroke={config.activeButton === 0 ? "#ffffff" : "#03045E"} strokeWidth="3"/>
@@ -379,7 +379,7 @@ const PrayerPageLayout = ({
           {/* My Prayers Button */}
           <button 
             onClick={() => navigate('/my-prayers')}
-            className={`${config.activeButton === 1 ? 'btn-blue-gradient text-white' : 'bg-white/10 text-gray-700 border border-[#03045E33]'} px-3 md:px-6 h-full rounded-full text-sm font-medium flex items-center space-x-2 md:space-x-3 shadow-sm whitespace-nowrap hover:opacity-90 transition-opacity`}>
+            className={`${config.activeButton === 1 ? 'btn-blue-gradient text-white' : 'bg-white/10 text-gray-700 border border-[#03045E33]'} px-3 md:px-6 h-full rounded-full text-sm font-medium flex items-center space-x-2 md:space-x-3 shadow-sm whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer`}>
             <svg width="32" height="32" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M25.0013 20.8333C29.6037 20.8333 33.3346 17.1024 33.3346 12.5C33.3346 7.89762 29.6037 4.16666 25.0013 4.16666C20.3989 4.16666 16.668 7.89762 16.668 12.5C16.668 17.1024 20.3989 20.8333 25.0013 20.8333Z" stroke={config.activeButton === 1 ? "#ffffff" : "#03045E"} strokeWidth="3"/>
               <path d="M41.6673 36.4583C41.6673 41.6354 41.6673 45.8333 25.0007 45.8333C8.33398 45.8333 8.33398 41.6354 8.33398 36.4583C8.33398 31.2812 15.7965 27.0833 25.0007 27.0833C34.2048 27.0833 41.6673 31.2812 41.6673 36.4583Z" stroke={config.activeButton === 1 ? "#ffffff" : "#03045E"} strokeWidth="3"/>
@@ -393,7 +393,7 @@ const PrayerPageLayout = ({
           {/* Updates Button */}
           <button 
             onClick={() => navigate('/updates')}
-            className={`${config.activeButton === 2 ? 'btn-blue-gradient text-white' : 'bg-white/10 text-gray-700 border border-[#03045E33]'} px-3 md:px-6 h-full rounded-full text-sm font-medium flex items-center space-x-2 md:space-x-3 shadow-sm whitespace-nowrap hover:opacity-90 transition-opacity`}>
+            className={`${config.activeButton === 2 ? 'btn-blue-gradient text-white' : 'bg-white/10 text-gray-700 border border-[#03045E33]'} px-3 md:px-6 h-full rounded-full text-sm font-medium flex items-center space-x-2 md:space-x-3 shadow-sm whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer`}>
             <svg width="32" height="32" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M11.7649 20.7792L15.9378 18.3688C16.0563 18.2993 16.1874 18.2539 16.3235 18.2353C16.4596 18.2167 16.5981 18.2252 16.7309 18.2603C16.8637 18.2954 16.9883 18.3565 17.0974 18.4399C17.2065 18.5234 17.2981 18.6276 17.3668 18.7465C17.4354 18.8655 17.4799 18.9969 17.4976 19.1331C17.5153 19.2693 17.5059 19.4077 17.4699 19.5403C17.4339 19.6729 17.3721 19.797 17.2879 19.9056C17.2037 20.0142 17.0989 20.105 16.9795 20.1729L10.667 23.8188C10.5484 23.8875 10.4175 23.9321 10.2817 23.9502C10.1458 23.9682 10.0078 23.9592 9.87539 23.9238C9.74301 23.8884 9.61893 23.8272 9.51024 23.7438C9.40155 23.6603 9.3104 23.5562 9.242 23.4375L5.59616 17.1229C5.52669 17.0044 5.48134 16.8733 5.46273 16.7372C5.44412 16.6011 5.45261 16.4627 5.48773 16.3299C5.52284 16.197 5.58388 16.0725 5.66732 15.9634C5.75077 15.8542 5.85498 15.7627 5.97395 15.694C6.09292 15.6253 6.2243 15.5808 6.36053 15.5631C6.49676 15.5454 6.63514 15.5548 6.76772 15.5908C6.90029 15.6268 7.02444 15.6887 7.13301 15.7729C7.24158 15.857 7.33243 15.9618 7.40033 16.0813L9.77116 20.1792C10.8343 16.4182 13.1117 13.1146 16.2485 10.7833C19.3853 8.45189 23.2053 7.22374 27.113 7.29022C31.0208 7.35671 34.7967 8.71409 37.8524 11.1508C40.9081 13.5875 43.0719 16.9667 44.0064 20.7616C44.941 24.5566 44.5938 28.554 43.0191 32.1311C41.4443 35.7081 38.7305 38.6637 35.3005 40.5372C31.8705 42.4106 27.917 43.0968 24.0563 42.4886C20.1956 41.8805 16.6445 40.0122 13.9566 37.175C13.7665 36.9744 13.6639 36.7066 13.6713 36.4303C13.6787 36.1541 13.7956 35.8922 13.9962 35.7021C14.1967 35.512 14.4646 35.4094 14.7408 35.4168C15.017 35.4243 15.279 35.5411 15.4691 35.7417C17.8418 38.2463 20.9767 39.8952 24.3848 40.4311C27.7929 40.9671 31.2826 40.3601 34.3096 38.7047C37.3365 37.0492 39.7304 34.4386 41.1179 31.2799C42.5054 28.1212 42.8085 24.592 41.9799 21.243C41.1513 17.894 39.2375 14.9134 36.5372 12.7661C33.8368 10.6188 30.5017 9.42565 27.0521 9.37269C23.6025 9.31973 20.2324 10.41 17.4674 12.4733C14.7024 14.5367 12.696 17.4572 11.7649 20.7792Z" fill={config.activeButton === 2 ? "#ffffff" : "#03045E"}/>
               <path d="M26.8112 15.625C27.0875 15.625 27.3524 15.7347 27.5478 15.9301C27.7431 16.1254 27.8529 16.3904 27.8529 16.6667V24.5688L31.7154 28.4292C31.911 28.6245 32.021 28.8895 32.0212 29.1659C32.0213 29.4424 31.9117 29.7075 31.7164 29.9031C31.5211 30.0987 31.2561 30.2087 30.9796 30.2089C30.7032 30.2091 30.438 30.0995 30.2424 29.9042L26.0758 25.7375C25.9787 25.6408 25.9017 25.5258 25.8492 25.3993C25.7966 25.2727 25.7696 25.137 25.7695 25V16.6667C25.7695 16.3904 25.8793 16.1254 26.0746 15.9301C26.27 15.7347 26.5349 15.625 26.8112 15.625Z" fill={config.activeButton === 2 ? "#ffffff" : "#03045E"}/>
@@ -407,7 +407,7 @@ const PrayerPageLayout = ({
           {/* Answered Button */}
           <button 
             onClick={() => navigate('/answered')}
-            className={`${config.activeButton === 3 ? 'btn-blue-gradient text-white' : 'bg-white/10 text-gray-700 border border-[#03045E33]'} px-3 md:px-6 h-full rounded-full text-sm font-medium flex items-center space-x-2 md:space-x-3 shadow-sm whitespace-nowrap hover:opacity-90 transition-opacity`}>
+            className={`${config.activeButton === 3 ? 'btn-blue-gradient text-white' : 'bg-white/10 text-gray-700 border border-[#03045E33]'} px-3 md:px-6 h-full rounded-full text-sm font-medium flex items-center space-x-2 md:space-x-3 shadow-sm whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer`}>
             <IoMdCheckmarkCircleOutline className={`w-3 h-3 md:w-8 md:h-8 ${config.activeButton === 3 ? 'text-white' : 'text-gray-600'}`} />
             <div className="flex flex-col items-start">
               <span className="text-xs md:text-sm">Answered</span>
@@ -426,7 +426,7 @@ const PrayerPageLayout = ({
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex-1 px-4 py-2 text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
+                  className={`flex-1 px-4 py-2 cursor-pointer text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
                     activeTab === tab
                       ? "btn-blue-gradient text-white rounded-full shadow-sm"
                       : "text-gray-600 hover:bg-white/30 rounded-full"

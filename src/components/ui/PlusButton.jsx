@@ -77,7 +77,7 @@ const PlusButton = ({ isOpen, onClose }) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 md:px-8 lf:px-12 py-2 text-sm font-medium transition-all duration-200 rounded-full ${
+                className={`px-4 md:px-8 cursor-pointer lf:px-12 py-2 text-sm font-medium transition-all duration-200 rounded-full ${
                   activeTab === tab.id
                     ? 'btn-blue-gradient shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
