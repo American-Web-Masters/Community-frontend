@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
  * @returns {Object} - Hook state and functions
  */
 const useInfiniteScroll = (fetchFunction, options = {}) => {
-  const { limit = 10, enabledCondition = true } = options;
+  const { limit = 20, enabledCondition = true } = options;
   
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);

@@ -117,6 +117,100 @@ export const joinCommunity = async (communityId) => {
 };
 
 /**
+ * Send a join request for a private community
+ * @param {string} communityId - The ID of the community to request to join
+ * @returns {Promise<Object>} Response containing success status
+ */
+export const sendJoinRequest = async (communityId) => {
+  try {
+    const response = await apiClient.post(`/communities/${communityId}/join-request`);
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message || 'Join request sent successfully!'
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.message || 'Failed to send join request.'
+      };
+    }
+  } catch (err) {
+    console.error('Error sending join request:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to send join request. Please try again.'
+    };
+  }
+};
+
+/**
+ * Fetch join requests for a private community
+ * @param {string} communityId - The ID of the community
+ * @returns {Promise<Object>} Response containing join requests data
+ */
+export const fetchJoinRequests = async (communityId) => {
+  try {
+    const response = await apiClient.get(`/communities/${communityId}/join-requests`);
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data,
+        joinRequests: response.data.data.joinRequests || response.data.data
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.message || 'Failed to fetch join requests.'
+      };
+    }
+  } catch (err) {
+    console.error('Error fetching join requests:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to fetch join requests. Please try again.'
+    };
+  }
+};
+
+/**
+ * Handle join request (approve or reject)
+ * @param {string} communityId - The ID of the community
+ * @param {string} userId - The ID of the user who made the request
+ * @param {string} action - The action to take ("approve" or "reject")
+ * @returns {Promise<Object>} Response containing success status
+ */
+export const handleJoinRequest = async (communityId, userId, action) => {
+  try {
+    const response = await apiClient.post('/communities/handle-join-request', {
+      communityId,
+      userId,
+      action
+    });
+    
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message || `Join request ${action}ed successfully!`
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.message || `Failed to ${action} join request.`
+      };
+    }
+  } catch (err) {
+    console.error(`Error ${action}ing join request:`, err);
+    return {
+      success: false,
+      error: err.response?.data?.message || `Failed to ${action} join request. Please try again.`
+    };
+  }
+};
+
+/**
  * Fetch pending posts for a community (moderator queue)
  * @param {string} communityId - The ID of the community
  * @returns {Promise<Object>} Response containing pending posts data

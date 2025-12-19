@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, act } from "react";
 import { toast } from "react-hot-toast";
-import { fetchPendingPosts, handlePendingPost } from "../../../api/communities";
+import { fetchPendingPosts, handlePendingPost, fetchJoinRequests, handleJoinRequest } from "../../../api/communities";
 import { formatTimestamp , getFilteredItems} from "../../../utils/communityUtils";
 import { mockModeratorQueue, mockPrayerCards } from "../../../data/mockData";
 import PrayerCard from "../../../components/ui/PrayerCard";
@@ -10,6 +10,7 @@ const ModeratorQueue = ({ community, currentUser }) => {
   const [activeTab, setActiveTab] = useState("All");
   const [selectedItems, setSelectedItems] = useState([]);
   const [pendingPosts, setPendingPosts] = useState([]);
+  const [joinRequests, setJoinRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -17,10 +18,11 @@ const ModeratorQueue = ({ community, currentUser }) => {
   const isOwnerOrModerator = community?.isOwner || 
     (community?.moderators && community.moderators.some(mod => mod.id === currentUser?.id));
 
-  // Fetch pending posts on component mount and when community changes
+  // Fetch pending posts and join requests on component mount and when community changes
   useEffect(() => {
     if (community?._id && isOwnerOrModerator) {
       loadPendingPosts();
+      loadJoinRequests();
     }
   }, [community?._id, isOwnerOrModerator]);
 
@@ -49,6 +51,37 @@ const ModeratorQueue = ({ community, currentUser }) => {
     }
   };
 
+  const loadJoinRequests = async () => {
+    try {
+      setError(null);
+      const response = await fetchJoinRequests(community._id);
+      if (response.success && response.data) {
+        const transformedJoinRequests = response.data?.joinRequests.map((request, index) => ({
+          id: `join_request_${request._id}_${index}`, // Unique ID for the request item in UI
+          type: "joinRequest",         
+          userId: request._id, // This is the user ID of the person requesting to join
+          user: {
+            name: (request?.firstname && request?.lastname) 
+              ? `${request.firstname} ${request.lastname}` 
+              : "Unknown User",
+            avatar: community?.coverPhoto || "/api/placeholder/32/32",
+            role: "Member"
+          },
+          requestType: "Join Request",
+          timestamp: formatTimestamp(request.createdAt),
+          status: request.status || "pending"
+        }));
+        setJoinRequests(transformedJoinRequests);
+        console.log('Loaded join requests:', transformedJoinRequests);
+      } else {
+        setJoinRequests([]);
+      }
+    } catch (err) {
+      console.error('Failed to load join requests:', err);
+      setJoinRequests([]);
+    }
+  };
+
   if (!isOwnerOrModerator) {
     return null;
   }
@@ -56,11 +89,11 @@ const ModeratorQueue = ({ community, currentUser }) => {
   const allItems = useMemo(() => [
     ...pendingPosts,
     ...mockModeratorQueue.flaggedPosts, 
-    ...mockModeratorQueue.joinRequests
-  ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)), [pendingPosts]);
+    ...joinRequests
+  ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)), [pendingPosts, joinRequests]);
 
 
-  const filteredItems = getFilteredItems(activeTab, mockModeratorQueue, pendingPosts, allItems);
+  const filteredItems = getFilteredItems(activeTab, mockModeratorQueue, pendingPosts, joinRequests, allItems);
   const pendingCount = allItems.length;
 
   // Handle item selection
@@ -93,8 +126,8 @@ const ModeratorQueue = ({ community, currentUser }) => {
       for (const id of itemsToApprove) {
         const item = allItems.find(item => item.id === id);
         
-        // Only handle pending posts with API, others are mock data
         if (item && item.type === 'pending') {
+          // Handle pending posts with existing API
           const response = await handlePendingPost(community._id, id, 'approve');
           
           if (response.success) {
@@ -104,8 +137,19 @@ const ModeratorQueue = ({ community, currentUser }) => {
           } else {
             toast.error(response.error);
           }
+        } else if (item && item.type === 'joinRequest') {
+          // Handle join requests with new API
+          const response = await handleJoinRequest(community._id, item.userId, 'approve');
+          
+          if (response.success) {
+            // Remove from join requests
+            setJoinRequests(prev => prev.filter(request => request.id !== id));
+            toast.success(`Join request approved successfully!`);
+          } else {
+            toast.error(response.error);
+          }
         } else if (item) {
-          // For mock data items, just log for now
+          // For other mock data items, just log for now
           console.log(`Approved ${item.type} item ${id}`);
         }
       }
@@ -130,8 +174,8 @@ const ModeratorQueue = ({ community, currentUser }) => {
       for (const id of itemsToReject) {
         const item = allItems.find(item => item.id === id);
         
-        // Only handle pending posts with API, others are mock data
         if (item && item.type === 'pending') {
+          // Handle pending posts with existing API
           const response = await handlePendingPost(community._id, id, 'reject');
           
           if (response.success) {
@@ -141,8 +185,19 @@ const ModeratorQueue = ({ community, currentUser }) => {
           } else {
             toast.error(response.error);
           }
+        } else if (item && item.type === 'joinRequest') {
+          // Handle join requests with new API
+          const response = await handleJoinRequest(community._id, item.userId, 'reject');
+          
+          if (response.success) {
+            // Remove from join requests
+            setJoinRequests(prev => prev.filter(request => request.id !== id));
+            toast.success(`Join request rejected successfully!`);
+          } else {
+            toast.error(response.error);
+          }
         } else if (item) {
-          // For mock data items, just log for now
+          // For other mock data items, just log for now
           console.log(`Rejected ${item.type} item ${id}`);
         }
       }
@@ -207,7 +262,7 @@ const ModeratorQueue = ({ community, currentUser }) => {
         </div>
 
         {/* Bulk Actions */}
-        {filteredItems.length > 0 && (
+        {/* {filteredItems.length > 0 && (
           <div className="px-4 py-3 border-b border-gray-200">
             <div className="flex items-center justify-between btn-blue-gradient text-white p-1 py-2 rounded-lg">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -240,7 +295,7 @@ const ModeratorQueue = ({ community, currentUser }) => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Queue Items */}
         <div className="max-h-96 overflow-y-auto">
@@ -290,6 +345,9 @@ const ModeratorQueue = ({ community, currentUser }) => {
                         {item.user.name} • {item.requestType}
                       </p>
                       <p className="text-xs text-gray-500">{item.user.role}</p>
+                      <p className="text-xs text-gray-700 mt-1">
+                        Requested at: {item.timestamp}
+                      </p>
                     </div>
                     <div className="flex gap-1 flex-shrink-0">
                       <button
