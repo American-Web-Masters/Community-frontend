@@ -146,6 +146,35 @@ export const sendJoinRequest = async (communityId) => {
 };
 
 /**
+ * Fetch join requests for a private community
+ * @param {string} communityId - The ID of the community
+ * @returns {Promise<Object>} Response containing join requests data
+ */
+export const fetchJoinRequests = async (communityId) => {
+  try {
+    const response = await apiClient.get(`/communities/${communityId}/join-requests`);
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data,
+        joinRequests: response.data.data.joinRequests || response.data.data
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.message || 'Failed to fetch join requests.'
+      };
+    }
+  } catch (err) {
+    console.error('Error fetching join requests:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to fetch join requests. Please try again.'
+    };
+  }
+};
+
+/**
  * Fetch pending posts for a community (moderator queue)
  * @param {string} communityId - The ID of the community
  * @returns {Promise<Object>} Response containing pending posts data

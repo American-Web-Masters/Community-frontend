@@ -15,14 +15,14 @@
   };
 
 
-   export const getFilteredItems = (activeTab, mockModeratorQueue, pendingPosts, allItems) => {
+   export const getFilteredItems = (activeTab, mockModeratorQueue, pendingPosts, joinRequests, allItems) => {
     switch (activeTab) {
       case "Flagged Posts":
         return mockModeratorQueue.flaggedPosts;
       case "Pending Posts":
         return pendingPosts;
       case "Join Request":
-        return mockModeratorQueue.joinRequests;
+        return joinRequests;
       default:
         return allItems;
     }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, act } from "react";
 import { toast } from "react-hot-toast";
-import { fetchPendingPosts, handlePendingPost } from "../../../api/communities";
+import { fetchPendingPosts, handlePendingPost, fetchJoinRequests } from "../../../api/communities";
 import { formatTimestamp , getFilteredItems} from "../../../utils/communityUtils";
 import { mockModeratorQueue, mockPrayerCards } from "../../../data/mockData";
 import PrayerCard from "../../../components/ui/PrayerCard";
@@ -10,6 +10,7 @@ const ModeratorQueue = ({ community, currentUser }) => {
   const [activeTab, setActiveTab] = useState("All");
   const [selectedItems, setSelectedItems] = useState([]);
   const [pendingPosts, setPendingPosts] = useState([]);
+  const [joinRequests, setJoinRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -17,10 +18,11 @@ const ModeratorQueue = ({ community, currentUser }) => {
   const isOwnerOrModerator = community?.isOwner || 
     (community?.moderators && community.moderators.some(mod => mod.id === currentUser?.id));
 
-  // Fetch pending posts on component mount and when community changes
+  // Fetch pending posts and join requests on component mount and when community changes
   useEffect(() => {
     if (community?._id && isOwnerOrModerator) {
       loadPendingPosts();
+      loadJoinRequests();
     }
   }, [community?._id, isOwnerOrModerator]);
 
@@ -49,6 +51,34 @@ const ModeratorQueue = ({ community, currentUser }) => {
     }
   };
 
+  const loadJoinRequests = async () => {
+    try {
+      setError(null);
+      const response = await fetchJoinRequests(community._id);
+      if (response.success && response.data) {
+        const transformedJoinRequests = response.data?.joinRequests.map(request => ({
+          id: request._id,
+          type: "joinRequest",
+          user: {
+            name: request?.firstname + " " + request?.lastname ||"Unknown User",
+            avatar: community?.coverPhoto || "/api/placeholder/32/32",
+            role: "Member"
+          },
+          requestType: "Join Request",
+          timestamp: formatTimestamp(request.createdAt),
+          status: request.status || "pending"
+        }));
+        setJoinRequests(transformedJoinRequests);
+        console.log('Loaded join requests:', transformedJoinRequests);
+      } else {
+        setJoinRequests([]);
+      }
+    } catch (err) {
+      console.error('Failed to load join requests:', err);
+      setJoinRequests([]);
+    }
+  };
+
   if (!isOwnerOrModerator) {
     return null;
   }
@@ -56,11 +86,11 @@ const ModeratorQueue = ({ community, currentUser }) => {
   const allItems = useMemo(() => [
     ...pendingPosts,
     ...mockModeratorQueue.flaggedPosts, 
-    ...mockModeratorQueue.joinRequests
-  ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)), [pendingPosts]);
+    ...joinRequests
+  ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)), [pendingPosts, joinRequests]);
 
 
-  const filteredItems = getFilteredItems(activeTab, mockModeratorQueue, pendingPosts, allItems);
+  const filteredItems = getFilteredItems(activeTab, mockModeratorQueue, pendingPosts, joinRequests, allItems);
   const pendingCount = allItems.length;
 
   // Handle item selection
@@ -207,7 +237,7 @@ const ModeratorQueue = ({ community, currentUser }) => {
         </div>
 
         {/* Bulk Actions */}
-        {filteredItems.length > 0 && (
+        {/* {filteredItems.length > 0 && (
           <div className="px-4 py-3 border-b border-gray-200">
             <div className="flex items-center justify-between btn-blue-gradient text-white p-1 py-2 rounded-lg">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -240,7 +270,7 @@ const ModeratorQueue = ({ community, currentUser }) => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Queue Items */}
         <div className="max-h-96 overflow-y-auto">
@@ -289,7 +319,7 @@ const ModeratorQueue = ({ community, currentUser }) => {
                       <p className="font-medium text-gray-900 text-sm truncate">
                         {item.user.name} • {item.requestType}
                       </p>
-                      <p className="text-xs text-gray-500">{item.user.role}</p>
+                      <p className="text-xs text-gray-500">{item.user.role + " " + item.timestamp}</p>
                     </div>
                     <div className="flex gap-1 flex-shrink-0">
                       <button
