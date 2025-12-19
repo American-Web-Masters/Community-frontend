@@ -117,6 +117,35 @@ export const joinCommunity = async (communityId) => {
 };
 
 /**
+ * Send a join request for a private community
+ * @param {string} communityId - The ID of the community to request to join
+ * @returns {Promise<Object>} Response containing success status
+ */
+export const sendJoinRequest = async (communityId) => {
+  try {
+    const response = await apiClient.post(`/communities/${communityId}/join-request`);
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message || 'Join request sent successfully!'
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.message || 'Failed to send join request.'
+      };
+    }
+  } catch (err) {
+    console.error('Error sending join request:', err);
+    return {
+      success: false,
+      error: err.response?.data?.message || 'Failed to send join request. Please try again.'
+    };
+  }
+};
+
+/**
  * Fetch pending posts for a community (moderator queue)
  * @param {string} communityId - The ID of the community
  * @returns {Promise<Object>} Response containing pending posts data

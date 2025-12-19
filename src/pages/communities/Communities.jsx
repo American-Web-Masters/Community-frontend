@@ -6,8 +6,9 @@ import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
 import Header from "../../components/ui/Header";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import CreateCommunityModal from "../../components/ui/CreateCommunityModal";
+import JoinRequestModal from "../../components/ui/JoinRequestModal";
 import { CommunityCard } from "./subcomponents";
-import { fetchCommunities as apiFetchCommunities, joinCommunity as apiJoinCommunity } from "../../api";
+import { fetchCommunities as apiFetchCommunities, joinCommunity as apiJoinCommunity, sendJoinRequest as apiSendJoinRequest } from "../../api";
 import DivineLoader from '../../components/ui/PlusLoader';
 
 const Communities = () => {
@@ -17,6 +18,8 @@ const Communities = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("My Communities");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isJoinRequestModalOpen, setIsJoinRequestModalOpen] = useState(false);
+  const [selectedCommunityName, setSelectedCommunityName] = useState("");
   const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -29,23 +32,42 @@ const Communities = () => {
   const handleJoinCommunity = async (communityId) => {
     try {
       setJoiningCommunityId(communityId);
-      const response = await apiJoinCommunity(communityId);
       
-      if (response.success) {
-        // Update the community in the local state to reflect the join
-        setCommunities(prevCommunities => 
-          prevCommunities.map(community => 
-            community._id === communityId || community.id === communityId
-              ? { ...community, isMember: true, memberCount: (community.memberCount || 0) + 1 }
-              : community
-          )
-        );
+      // Find the community to check if it's private
+      const community = communities.find(c => c._id === communityId || c.id === communityId);
+      
+      if (community && community.privacyLevel === 'private') {
+        // For private communities, send a join request
+        const response = await apiSendJoinRequest(communityId);
         
-        // Show success toast
-        toast.success(response.message || '🎉 Successfully joined community!');
+        if (response.success) {
+          // Show the join request modal
+          setSelectedCommunityName(community.name);
+          setIsJoinRequestModalOpen(true);
+        } else {
+          console.error('Failed to send join request:', response.error);
+          toast.error(response.error || 'Failed to send join request');
+        }
       } else {
-        console.error('Failed to join community:', response.error);
-        toast.error(response.error || 'Failed to join community');
+        // For public communities, join directly
+        const response = await apiJoinCommunity(communityId);
+        
+        if (response.success) {
+          // Update the community in the local state to reflect the join
+          setCommunities(prevCommunities => 
+            prevCommunities.map(community => 
+              community._id === communityId || community.id === communityId
+                ? { ...community, isMember: true, memberCount: (community.memberCount || 0) + 1 }
+                : community
+            )
+          );
+          
+          // Show success toast
+          toast.success(response.message || '🎉 Successfully joined community!');
+        } else {
+          console.error('Failed to join community:', response.error);
+          toast.error(response.error || 'Failed to join community');
+        }
       }
     } catch (err) {
       console.error('Error joining community:', err);
@@ -65,6 +87,11 @@ const Communities = () => {
 
   const handleCloseModal = () => {
     setIsCreateModalOpen(false);
+  };
+
+  const handleCloseJoinRequestModal = () => {
+    setIsJoinRequestModalOpen(false);
+    setSelectedCommunityName("");
   };
 
   const fetchCommunities = async () => {
@@ -246,6 +273,13 @@ const Communities = () => {
         isOpen={isCreateModalOpen}
         onClose={handleCloseModal}
         onSuccess={handleCommunityCreated}
+      />
+
+      {/* Join Request Modal */}
+      <JoinRequestModal
+        isOpen={isJoinRequestModalOpen}
+        onClose={handleCloseJoinRequestModal}
+        communityName={selectedCommunityName}
       />
     </div>
   );
