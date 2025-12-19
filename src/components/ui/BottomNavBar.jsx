@@ -36,7 +36,7 @@ const BottomNavBar = () => {
       <div className="btn-blue-gradient w-[350px] md:min-w-[450px] h-14 rounded-full flex items-center justify-center ml-6 fixed bottom-5 left-[45%] md:left-[48%] transform -translate-x-1/2 overflow-hidden">
         <button 
           onClick={() => navigate('/')}
-          className={`flex flex-col items-center justify-center flex-1 h-full text-white transition-colors duration-200 ${
+          className={`flex flex-col items-center cursor-pointer justify-center flex-1 h-full text-white transition-colors duration-200 ${
             activeTab === 'prayer-wall' ? 'bg-white/20' : 'hover:bg-white/10'
           }`}
         >
@@ -45,7 +45,7 @@ const BottomNavBar = () => {
         </button>
         <button 
           onClick={() => navigate('/communities')}
-          className={`flex flex-col items-center justify-center flex-1 h-full text-white transition-colors duration-200 ${
+          className={`flex flex-col items-center cursor-pointer justify-center flex-1 h-full text-white transition-colors duration-200 ${
             activeTab === 'communities' ? 'bg-white/20' : 'hover:bg-white/10'
           }`}
         >
@@ -54,7 +54,7 @@ const BottomNavBar = () => {
         </button>
         <button 
           onClick={() => setIsPlusButtonOpen(true)}
-          className={`flex flex-col items-center justify-center flex-1 h-full text-white transition-colors duration-200 relative hover:bg-white/10`}
+          className={`flex flex-col items-center cursor-pointer justify-center flex-1 h-full text-white transition-colors duration-200 relative hover:bg-white/10`}
         >
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-1">
             <PiCross className="w-5 h-5 md:w-8 md:h-8 mb-1 text-transparent stroke-primary-500 fill-primary-600 stroke-[2]" />
@@ -62,7 +62,7 @@ const BottomNavBar = () => {
         </button>
         <button 
           onClick={() => navigate('/messages')}
-          className={`flex flex-col items-center justify-center flex-1 h-full text-white transition-colors duration-200 ${
+          className={`flex flex-col items-center cursor-pointer justify-center flex-1 h-full text-white transition-colors duration-200 ${
             activeTab === 'messages' ? 'bg-white/20' : 'hover:bg-white/10'
           }`}
         >
@@ -71,7 +71,7 @@ const BottomNavBar = () => {
         </button>
         <button 
           onClick={() => navigate('/profile')}
-          className={`flex flex-col items-center justify-center flex-1 h-full text-white transition-colors duration-200 ${
+          className={`flex flex-col items-center cursor-pointer justify-center flex-1 h-full text-white transition-colors duration-200 ${
             activeTab === 'profile' ? 'bg-white/20' : 'hover:bg-white/10'
           }`}
         >

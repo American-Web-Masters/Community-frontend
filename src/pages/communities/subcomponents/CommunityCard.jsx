@@ -102,7 +102,7 @@ const CommunityCard = ({
         {isJoined ? (
           <button
             onClick={() => onViewClick && onViewClick(id)}
-            className="w-full py-2.5 bg-white text-black text-sm font-medium rounded-3xl hover:bg-gray-100 transition-colors duration-200 shadow-sm"
+            className="w-full py-2.5 cursor-pointer bg-white text-black text-sm font-medium rounded-3xl hover:bg-gray-100 transition-colors duration-200 shadow-sm"
           >
             View Community
           </button>
