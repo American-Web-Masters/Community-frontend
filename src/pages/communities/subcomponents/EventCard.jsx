@@ -74,7 +74,13 @@ function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEv
                     Interested
                   </button>
                   <button className="px-4 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors duration-200">
-                    Add to Calendar
+                    <a
+                        href={event.calendarLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >
+                        Add to Calendar
+                        </a>
                   </button>
                 </div>
               </div>

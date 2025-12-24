@@ -182,6 +182,16 @@ const CreateEventModal = ({
           </button>
         </div>
 
+        <div className="p-6">
+            <button className='py-1.5 px-2 btn-blue-gradient text-sm rounded-lg mb-2 mx-auto'
+                onClick={() => {
+                    window.location.href = `http://localhost:5000/auth/google`;
+                }}
+                >
+                Connect Google Calendar
+            </button>
+        </div>
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-6">
