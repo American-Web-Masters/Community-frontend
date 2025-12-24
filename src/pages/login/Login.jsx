@@ -217,19 +217,25 @@ const Login = () => {
                     </button>
                   </div>
                   
-                  {/* Sign Up Link */}
-                  <div className="text-center mt-4">
-                    <p className="text-gray-600 text-sm">
-                      Don't have an account?{' '}
-                      <button
-                        type="button"
-                        onClick={() => navigate('/signup')}
-                        className="text-primary-500 hover:text-primary-600 font-semibold transition-colors duration-200"
-                      >
-                        Sign up
-                      </button>
-                    </p>
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="text-sm">
+                      <button type="button" onClick={() => navigate('/forgot-password')} className="text-gray-800 hover:text-gray-900 hover:underline font-semibold">Forgot password?</button>
+                    </div>
+                    {/* Sign Up Link */}
+                    <div>
+                      <p className="text-gray-300 text-sm">
+                        Don't have an account?{' '}
+                        <button
+                          type="button"
+                          onClick={() => navigate('/signup')}
+                          className="text-gray-800 hover:text-gray-900 hover:underline font-semibold transition-colors duration-200"
+                        >
+                          Sign up
+                        </button>
+                      </p>
+                    </div>
                   </div>
+                  
                 </form>
               </div>
             </div>

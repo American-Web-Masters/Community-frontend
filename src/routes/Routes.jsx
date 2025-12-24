@@ -10,6 +10,8 @@ import Profile from "../pages/profile/Profile"
 import ProtectedRoute from "../components/ProtectedRoute"
 import PublicRoute from "../components/PublicRoute"
 import Login from "../pages/login/Login";
+import ForgotPassword from "../pages/login/ForgotPassword";
+import ResetPassword from "../pages/login/ResetPassword";
 import Survey from "../pages/Splash Pages/Survey";
 import Tour from "../pages/Splash Pages/Tour";
 import MyPrayers from "../pages/my_prayers/MyPrayers";
@@ -50,6 +52,22 @@ const Routes = () =>{
             element={
                 <PublicRoute>
                     <Login/>
+                </PublicRoute>
+            }
+            />
+            <Route
+            path="/forgot-password"
+            element={
+                <PublicRoute>
+                    <ForgotPassword />
+                </PublicRoute>
+            }
+            />
+            <Route
+            path="/reset-password/:token"
+            element={
+                <PublicRoute>
+                    <ResetPassword />
                 </PublicRoute>
             }
             />

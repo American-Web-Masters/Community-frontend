@@ -13,8 +13,9 @@ import { fetchCommunityById, updateCommunityDetails } from "../../api";
 import { flagPrayer } from "../../api/prayer";
 import apiClient  from "../../api/client";
 import toast from 'react-hot-toast';
-import { About, Members, ModeratorQueue } from "./subcomponents";
+import { About, Members, ModeratorQueue, Events } from "./subcomponents";
 import CreatePrayerModal from "../../components/ui/CreatePrayerModal";
+import CreateEventModal from "./subcomponents/CreateEventModal";
 import FlagModal from "../../components/ui/FlagModal";
 import DivineLoader from '../../components/ui/PlusLoader';
 
@@ -28,6 +29,7 @@ const CommunityDetails = () => {
   const [activeTab, setActiveTab] = useState("Feed");
   const [copied, setCopied] = useState(false);
   const [isCreatePrayerModalOpen, setIsCreatePrayerModalOpen] = useState(false);
+  const [isCreateEventModalOpen, setIsCreateEventModalOpen] = useState(false);
   const [expandedCards, setExpandedCards] = useState(new Set());
   const [flagModalOpen, setFlagModalOpen] = useState(false);
   const [selectedPrayerToFlag, setSelectedPrayerToFlag] = useState(null);
@@ -138,6 +140,20 @@ const CommunityDetails = () => {
 
   const handleCloseModal = () => {
     setIsCreatePrayerModalOpen(false);
+  };
+
+  const handleCreateEvent = () => {
+    setIsCreateEventModalOpen(true);
+  };
+
+  const handleCloseEventModal = () => {
+    setIsCreateEventModalOpen(false);
+  };
+
+  const handleEventCreated = (newEvent) => {
+    setIsCreateEventModalOpen(false);
+    fetchCommunityDetails();
+    toast.success('Event created successfully!');
   };
 
   const handlePrayerCreated = (newPrayer) => {
@@ -882,6 +898,21 @@ const CommunityDetails = () => {
           </button>
           )}
 
+
+          {activeTab === "Event" && (
+            <button 
+            onClick={handleCreateEvent}
+            className="btn-blue-gradient text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg"
+          >
+            <span className="hidden sm:inline">Create New Event</span>
+            <span className="inline sm:hidden">Post</span>
+            <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+              <span className="text-blue-600 text-lg font-bold relative -top-0.5">+</span>
+            </div>
+          </button>
+          )}
+
+
           {activeTab === "Moderator Queue" && (
             <div className="flex items-center space-x-3">
               <span className="text-sm font-medium text-gray-700">Post Approval</span>
@@ -1061,9 +1092,10 @@ const CommunityDetails = () => {
         )}
 
         {activeTab === "Event" && (
-          <div className="text-center py-12 text-gray-500">
-            <p>No events scheduled</p>
-          </div>
+          <Events 
+            community={community} 
+            isOwnerOrModerator={isOwnerOrModerator} 
+          />
         )}
 
         {activeTab === "About" && (
@@ -1082,6 +1114,14 @@ const CommunityDetails = () => {
         onSuccess={handlePrayerCreated}
         communityMode={true}
         communityId={id}
+        community={community}
+      />
+      
+      {/* Create Event Modal */}
+      <CreateEventModal
+        isOpen={isCreateEventModalOpen}
+        onClose={handleCloseEventModal}
+        onSuccess={handleEventCreated}
         community={community}
       />
       
