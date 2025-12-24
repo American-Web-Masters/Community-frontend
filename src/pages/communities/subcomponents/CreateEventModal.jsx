@@ -3,6 +3,13 @@ import { FaTimes, FaCalendarAlt, FaClock } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../../store/userSlice';
 import apiClient from '../../../api/client';
+import { 
+  getUserTimeZone, 
+  convertLocalToUTC, 
+  convertUTCToLocal, 
+  getMinDate,
+  parseBackendDateTime 
+} from '../../../utils/timezoneUtils';
 
 const CreateEventModal = ({ 
   isOpen, 
@@ -15,6 +22,7 @@ const CreateEventModal = ({
   const user = useSelector(selectUser);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [userTimeZone, setUserTimeZone] = useState('');
   
   const [formData, setFormData] = useState({
     eventName: '',
@@ -23,13 +31,27 @@ const CreateEventModal = ({
     description: ''
   });
 
+  // Get user timezone only once when component mounts
+  useEffect(() => {
+    const timeZone = getUserTimeZone();
+    setUserTimeZone(timeZone);
+  }, []);
+
   // Effect to populate form data when editing
   useEffect(() => {
-    if (editMode && initialData && isOpen) {
+    if (editMode && initialData && isOpen && userTimeZone) {
+      
+      // For editing, use the localEventDate and localEventTime which are already in local timezone
+      // These are prepared by Events.jsx and are ready for form display
+      const eventDate = initialData.localEventDate || initialData.eventDate || '';
+      const eventTime = initialData.localEventTime || initialData.eventTime || '';
+      
+      console.log('Using local values - Date:', eventDate, 'Time:', eventTime);
+      
       setFormData({
         eventName: initialData.eventName || '',
-        eventDate: initialData.eventDate || '',
-        eventTime: initialData.eventTime || '',
+        eventDate: eventDate,
+        eventTime: eventTime,
         description: initialData.description || ''
       });
     } else if (!editMode && isOpen) {
@@ -41,7 +63,7 @@ const CreateEventModal = ({
         description: ''
       });
     }
-  }, [editMode, initialData, isOpen]);
+  }, [editMode, initialData, isOpen, userTimeZone]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -76,12 +98,23 @@ const CreateEventModal = ({
     setError('');
 
     try {
+      // Convert local datetime to UTC before sending to server
+      const utcDateTime = convertLocalToUTC(
+        formData.eventDate, 
+        formData.eventTime, 
+        userTimeZone
+      );
+      
       const payload = {
         eventName: formData.eventName.trim(),
-        eventDate: formData.eventDate,
-        eventTime: formData.eventTime,
+        // Send the complete ISO datetime as the primary field
+        eventDateTime: utcDateTime.eventDateTime,
         description: formData.description.trim(),
-        communityId: community._id
+        communityId: community._id,
+        timezone: userTimeZone,
+        // Legacy support - keep individual fields for backward compatibility
+        eventDate: utcDateTime.utcDate,
+        eventTime: utcDateTime.utcTime
       };
 
       let response;
@@ -123,9 +156,8 @@ const CreateEventModal = ({
   };
 
   // Get minimum date (today) for date input
-  const getMinDate = () => {
-    const now = new Date();
-    return now.toISOString().split('T')[0];
+  const getMinDateForInput = () => {
+    return getMinDate(userTimeZone);
   };
 
   if (!isOpen) return null;
@@ -180,7 +212,7 @@ const CreateEventModal = ({
                   type="date"
                   value={formData.eventDate}
                   onChange={(e) => handleInputChange('eventDate', e.target.value)}
-                  min={getMinDate()}
+                  min={getMinDateForInput()}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   required
                 />
@@ -190,7 +222,7 @@ const CreateEventModal = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <FaClock className="inline w-4 h-4 mr-2" />
-                  Event Time *
+                  Event Time * {userTimeZone && <span className="text-xs text-gray-500">({userTimeZone})</span>}
                 </label>
                 <input
                   type="time"

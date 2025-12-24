@@ -1,9 +1,14 @@
 import { FaCalendarAlt, FaClock, FaBell, FaEdit, FaTrash } from 'react-icons/fa';
 
-function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEvent, formatDate, formatTime }) {
+function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEvent, formatDate, formatTime, userTimeZone }) {
   return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {events.map((event) => (
+          {events.map((event) => {
+            // Use local time values for display, fallback to original if not available
+            const displayDate = event.localEventDate || event.eventDate;
+            const displayTime = event.localEventTime || event.eventTime;
+            
+            return (
             <div 
               key={event._id}
               className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden border border-gray-100 flex flex-col"
@@ -22,7 +27,10 @@ function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEv
                   </h3>
                   <div className="flex items-center gap-1 text-gray-700 text-sm">
                     <FaClock className="w-3 h-3" />
-                    <span>{formatDate(event.eventDate)} • {formatTime(event.eventTime)}</span>
+                    <span>{formatDate(displayDate, displayTime)} • {formatTime(displayTime, displayDate)}</span>
+                    {userTimeZone && (
+                      <span className="text-xs text-gray-400 ml-1">({userTimeZone})</span>
+                    )}
                   </div>
                 </div>
                 
@@ -71,7 +79,8 @@ function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEv
                 </div>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
   )
 }
