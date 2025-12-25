@@ -557,6 +557,10 @@ const CommunityDetails = () => {
     }
   };
 
+  const handleSupportClick = () => {
+    navigate(`/communities/${id}/support`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen light-background flex items-center justify-center">
@@ -791,7 +795,10 @@ const CommunityDetails = () => {
                   <span><PiChatText className="w-4 h-4" /></span>
                   <span>Chat</span>
                 </button>
-                <button className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2">
+                <button 
+                  onClick={handleSupportClick}
+                  className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2"
+                >
                   <span><FaRegHeart className="w-4 h-4" /></span>
                   <span>Support</span>
                 </button>
