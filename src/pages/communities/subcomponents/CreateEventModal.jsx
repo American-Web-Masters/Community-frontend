@@ -98,23 +98,12 @@ const CreateEventModal = ({
     setError('');
 
     try {
-      // Convert local datetime to UTC before sending to server
-      const utcDateTime = convertLocalToUTC(
-        formData.eventDate, 
-        formData.eventTime, 
-        userTimeZone
-      );
-      
       const payload = {
         eventName: formData.eventName.trim(),
-        // Send the complete ISO datetime as the primary field
-        eventDateTime: utcDateTime.eventDateTime,
-        description: formData.description.trim(),
-        communityId: community._id,
+        eventDate: formData.eventDate,
+        eventTime: formData.eventTime,
         timezone: userTimeZone,
-        // Legacy support - keep individual fields for backward compatibility
-        eventDate: utcDateTime.utcDate,
-        eventTime: utcDateTime.utcTime
+        description: formData.description.trim()
       };
 
       let response;
