@@ -3,9 +3,11 @@ import {  FaCalendarAlt} from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../../store/userSlice';
 import CreateEventModal from './CreateEventModal';
+import DeleteEventModal from '../../../components/ui/DeleteEventModal';
 import apiClient from '../../../api/client';
 import EventCard from './EventCard';
 import toast from 'react-hot-toast';
+
 import { 
   getUserTimeZone, 
   convertUTCToLocal, 
@@ -22,6 +24,8 @@ const Events = ({ community, isOwnerOrModerator }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [userTimeZone, setUserTimeZone] = useState('');
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
 
   // Get user timezone
   useEffect(() => {
@@ -74,6 +78,7 @@ const Events = ({ community, isOwnerOrModerator }) => {
     ));
     setEditingEvent(null);
     toast.success('Event updated successfully!');
+    window.location.reload();
   };
 
   const handleEditEvent = (event) => {
@@ -119,18 +124,37 @@ const Events = ({ community, isOwnerOrModerator }) => {
   };
 
   const handleDeleteEvent = async (eventId) => {
-    if (!window.confirm('Are you sure you want to delete this event?')) {
-      return;
-    }
-
     try {
+      setLoading(true);
       const response = await apiClient.delete(`/events/community/${community._id}/${eventId}`);
-      if (response.data.success) {
+      if (response.status == 204) {
         setEvents(prev => prev.filter(event => event._id !== eventId));
+        toast.success('Event deleted successfully!');
       }
     } catch (error) {
+      setLoading(false);
       console.error('Error deleting event:', error);
+      toast.error('Failed to delete event. Please try again.');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleDeleteClick = (event) => {
+    setEventToDelete(event);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (eventToDelete) {
+      handleDeleteEvent(eventToDelete._id);
+      setEventToDelete(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalOpen(false);
+    setEventToDelete(null);
   };
 
   const formatDate = (dateString, timeString = null) => {
@@ -173,7 +197,7 @@ const Events = ({ community, isOwnerOrModerator }) => {
           events={events} 
           isOwnerOrModerator={isOwnerOrModerator} 
           handleEditEvent={handleEditEvent} 
-          handleDeleteEvent={handleDeleteEvent} 
+          handleDeleteEvent={handleDeleteClick} 
           formatDate={formatDate} 
           formatTime={formatTime}
           userTimeZone={userTimeZone}
@@ -188,6 +212,14 @@ const Events = ({ community, isOwnerOrModerator }) => {
         community={community}
         editMode={editingEvent !== null}
         initialData={editingEvent}
+      />
+
+      {/* Delete Event Modal */}
+      <DeleteEventModal
+        isOpen={deleteModalOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        eventName={eventToDelete?.eventName || ''}
       />
     </div>
   );

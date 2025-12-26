@@ -49,7 +49,7 @@ function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEv
                         <FaEdit className="w-4 h-4 text-gray-600" />
                       </button>
                       <button
-                        onClick={() => handleDeleteEvent(event._id)}
+                        onClick={() => handleDeleteEvent(event)}
                         className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                         title="Delete Event"
                       >
