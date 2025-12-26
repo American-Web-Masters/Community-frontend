@@ -9,3 +9,6 @@ export * from './communities.js';
 
 // Export invite API functions
 export * from './invites.js';
+
+// Export calendar API functions
+export * from './calendar.js';

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaCalendarAlt, FaClock } from 'react-icons/fa';
+import { FaTimes, FaCalendarAlt, FaClock, FaCheckCircle } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../../store/userSlice';
 import apiClient from '../../../api/client';
+import { checkCalendarConnection, connectCalendar } from '../../../api/calendar';
 import { 
   getUserTimeZone, 
   convertLocalToUTC, 
@@ -10,6 +11,7 @@ import {
   getMinDate,
   parseBackendDateTime 
 } from '../../../utils/timezoneUtils';
+import toast from 'react-hot-toast';
 
 const CreateEventModal = ({ 
   isOpen, 
@@ -24,6 +26,11 @@ const CreateEventModal = ({
   const [error, setError] = useState('');
   const [userTimeZone, setUserTimeZone] = useState('');
   
+  // Calendar connection state
+  const [isCalendarConnected, setIsCalendarConnected] = useState(false);
+  const [calendarLoading, setCalendarLoading] = useState(true);
+  const [connectingCalendar, setConnectingCalendar] = useState(false);
+  
   const [formData, setFormData] = useState({
     eventName: '',
     eventDate: '',
@@ -36,6 +43,49 @@ const CreateEventModal = ({
     const timeZone = getUserTimeZone();
     setUserTimeZone(timeZone);
   }, []);
+
+  // Check calendar connection when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      checkUserCalendarConnection();
+    }
+  }, [isOpen]);
+
+  const checkUserCalendarConnection = async () => {
+    try {
+      setCalendarLoading(true);
+      const response = await checkCalendarConnection();
+      
+      if (response.success) {
+        setIsCalendarConnected(response.data.isConnected);
+      } else {
+        console.error('Failed to check calendar connection:', response.error);
+        toast.error('Failed to check calendar connection');
+      }
+    } catch (err) {
+      console.error('Calendar connection check error:', err);
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
+
+  const handleConnectCalendar = async () => {
+    try {
+      setConnectingCalendar(true);
+      const response = await connectCalendar();
+      
+      if (response.success) {
+        toast.success('Redirecting to Google Calendar...');
+      } else {
+        toast.error(response.error || 'Failed to connect calendar');
+      }
+    } catch (err) {
+      console.error('Calendar connection error:', err);
+      toast.error('Failed to connect calendar');
+    } finally {
+      setConnectingCalendar(false);
+    }
+  };
 
   // Effect to populate form data when editing
   useEffect(() => {
@@ -72,6 +122,13 @@ const CreateEventModal = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check if calendar is connected before submitting
+    if (!isCalendarConnected) {
+      setError('Please connect your Google Calendar before creating an event.');
+      toast.error('Google Calendar connection required');
+      return;
+    }
     
     // Validation
     if (!formData.eventName.trim()) {
@@ -171,14 +228,46 @@ const CreateEventModal = ({
           </button>
         </div>
 
-        <div className="p-6">
-            <button className='py-1.5 px-2 btn-blue-gradient text-sm rounded-lg mb-2 mx-auto'
-                onClick={() => {
-                    window.location.href = `http://localhost:5000/auth/google`;
-                }}
-                >
-                Connect Google Calendar
-            </button>
+        {/* Calendar Connection Section */}
+        <div className="px-6 py-4 border-b border-gray-100">
+          {calendarLoading ? (
+            <div className="flex items-center space-x-3">
+              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-sm text-gray-600">Checking calendar connection...</span>
+            </div>
+          ) : isCalendarConnected ? (
+            <div className="flex items-center space-x-3 text-green-600">
+              <FaCheckCircle className="w-5 h-5" />
+              <span className="text-sm font-medium">Google Calendar Connected</span>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2 text-amber-600">
+                <FaCalendarAlt className="w-4 h-4" />
+                <span className="text-sm font-medium">Google Calendar Required</span>
+              </div>
+              <button 
+                type="button"
+                className={`py-2 px-4 btn-blue-gradient text-sm rounded-lg text-white transition-all ${
+                  connectingCalendar ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+                }`}
+                onClick={handleConnectCalendar}
+                disabled={connectingCalendar}
+              >
+                {connectingCalendar ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Connecting...</span>
+                  </div>
+                ) : (
+                  'Connect Google Calendar'
+                )}
+              </button>
+              <p className="text-xs text-gray-500">
+                Connect your Google Calendar to create and sync events automatically.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Form */}
@@ -267,8 +356,13 @@ const CreateEventModal = ({
               </button>
               <button
                 type="submit"
-                disabled={loading || !formData.eventName.trim() || !formData.eventDate || !formData.eventTime || !formData.description.trim()}
-                className="flex-1 py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
+                disabled={loading || !isCalendarConnected || !formData.eventName.trim() || !formData.eventDate || !formData.eventTime || !formData.description.trim()}
+                className={`flex-1 py-3 px-6 rounded-xl font-medium transition-colors duration-200 ${
+                  !isCalendarConnected 
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                } disabled:opacity-50`}
+                title={!isCalendarConnected ? 'Please connect Google Calendar first' : ''}
               >
                 {loading ? (editMode ? 'Updating...' : 'Creating...') : (editMode ? 'Update Event' : 'Create Event')}
               </button>
