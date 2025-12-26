@@ -18,6 +18,8 @@ import MyPrayers from "../pages/my_prayers/MyPrayers";
 import UpdatePrayers from "../pages/update_prayers/UpdatePrayers";
 import AnsweredPrayers from "../pages/answered_prayer/AnsweredPrayers";
 import InviteValidation from "../pages/invite/InviteValidation";
+import CommunitySupport from "../pages/support/CommunitySupport";
+import PaymentSuccess from "../pages/support/PaymentSuccess";
 
 const Routes = () =>{
     return(
@@ -100,6 +102,22 @@ const Routes = () =>{
             element={
                 <ProtectedRoute>
                     <CommunityDetails/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/communities/:id/support"
+            element={
+                <ProtectedRoute>
+                    <CommunitySupport/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/payment-success"
+            element={
+                <ProtectedRoute>
+                    <PaymentSuccess/>
                 </ProtectedRoute>
             }
             />

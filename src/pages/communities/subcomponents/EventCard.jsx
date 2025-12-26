@@ -1,9 +1,14 @@
 import { FaCalendarAlt, FaClock, FaBell, FaEdit, FaTrash } from 'react-icons/fa';
 
-function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEvent, formatDate, formatTime }) {
+function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEvent, formatDate, formatTime, userTimeZone }) {
   return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {events.map((event) => (
+          {events.map((event) => {
+            // Use local time values for display, fallback to original if not available
+            const displayDate = event.localEventDate || event.eventDate;
+            const displayTime = event.localEventTime || event.eventTime;
+            
+            return (
             <div 
               key={event._id}
               className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden border border-gray-100 flex flex-col"
@@ -22,7 +27,10 @@ function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEv
                   </h3>
                   <div className="flex items-center gap-1 text-gray-700 text-sm">
                     <FaClock className="w-3 h-3" />
-                    <span>{formatDate(event.eventDate)} • {formatTime(event.eventTime)}</span>
+                    <span>{formatDate(displayDate, displayTime)} • {formatTime(displayTime, displayDate)}</span>
+                    {userTimeZone && (
+                      <span className="text-xs text-gray-400 ml-1">({userTimeZone})</span>
+                    )}
                   </div>
                 </div>
                 
@@ -41,7 +49,7 @@ function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEv
                         <FaEdit className="w-4 h-4 text-gray-600" />
                       </button>
                       <button
-                        onClick={() => handleDeleteEvent(event._id)}
+                        onClick={() => handleDeleteEvent(event)}
                         className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                         title="Delete Event"
                       >
@@ -66,12 +74,19 @@ function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEv
                     Interested
                   </button>
                   <button className="px-4 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors duration-200">
-                    Add to Calendar
+                    <a
+                        href={event.calendarLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >
+                        Add to Calendar
+                        </a>
                   </button>
                 </div>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
   )
 }
