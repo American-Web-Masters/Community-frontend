@@ -37,7 +37,7 @@ const CreatePrayerModal = ({
   const [newTag, setNewTag] = useState('');
 
   // Simple mood options like in the image
-  const moodOptions = ['😊', '😐', '😢', '😡', '😔'];
+  const moodOptions = ['😄', '😐', '😔', '😡', '😢'];
 
   // Effect to fetch user's communities when modal opens (only for non-community mode)
   React.useEffect(() => {
