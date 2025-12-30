@@ -219,16 +219,16 @@ const Login = () => {
                   
                   <div className="flex items-center justify-between mt-2">
                     <div className="text-sm">
-                      <button type="button" onClick={() => navigate('/forgot-password')} className="text-gray-800 hover:text-gray-900 hover:underline font-semibold">Forgot password?</button>
+                      <button type="button" onClick={() => navigate('/forgot-password')} className="text-gray-800 cursor-pointer hover:text-gray-900 hover:underline font-semibold">Forgot password?</button>
                     </div>
                     {/* Sign Up Link */}
                     <div>
-                      <p className="text-gray-300 text-sm">
+                      <p className="text-gray-800 text-sm">
                         Don't have an account?{' '}
                         <button
                           type="button"
                           onClick={() => navigate('/signup')}
-                          className="text-gray-800 hover:text-gray-900 hover:underline font-semibold transition-colors duration-200"
+                          className="text-gray-800 hover:text-gray-900 hover:underline cursor-pointer font-semibold transition-colors duration-200"
                         >
                           Sign up
                         </button>
