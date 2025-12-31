@@ -835,9 +835,9 @@ const CommunityDetails = () => {
 
       {/* Tab Navigation */}
       <div className="px-4 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           {/* Tabs Bar - Scrollable on small screens, auto on desktop */}
-          <div className="w-full md:w-auto relative">
+          <div className="w-full lg:w-auto relative">
             <div className="overflow-x-auto tab-scroll-container pb-2">
               <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm w-full min-w-max">
                 <button
@@ -895,16 +895,16 @@ const CommunityDetails = () => {
               </div>
             </div>
             {/* Scroll indicator for small screens */}
-            <div className="absolute right-0 top-1 bottom-1 w-8 bg-gradient-to-l from-gray-100/80 to-transparent pointer-events-none rounded-r-full md:hidden"></div>
+            <div className="absolute right-0 top-1 bottom-1 w-8 bg-gradient-to-l from-gray-100/80 to-transparent pointer-events-none rounded-r-full lg:hidden"></div>
           </div>
 
-          {/* Action Buttons - Right side on desktop, full width below on mobile */}
-          <div className="flex items-center justify-center md:justify-end w-full md:w-auto">
+          {/* Action Buttons - Inline with tabs on large screens only */}
+          <div className="hidden lg:flex items-center justify-end w-auto">
             {/* Create New Post Button */}
             {activeTab === "Feed" && (
               <button 
                 onClick={handleCreatePost}
-                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg w-full md:w-auto justify-center gap-x-1"
+                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg justify-center gap-x-1"
               >
                 <span className="inline">Create New Post</span>
                 <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
@@ -917,7 +917,7 @@ const CommunityDetails = () => {
             {activeTab === "Event" && (
               <button 
                 onClick={handleCreateEvent}
-                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg w-full md:w-auto justify-center"
+                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg justify-center"
               >
                 <span className="inline">Create New Event</span>
                 <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
@@ -928,7 +928,7 @@ const CommunityDetails = () => {
 
             {/* Post Approval Toggle */}
             {activeTab === "Moderator Queue" && (
-              <div className="flex items-center space-x-3 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-lg shadow-sm w-full md:w-auto justify-center">
+              <div className="flex items-center space-x-3 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-lg shadow-sm justify-center">
                 <span className="text-sm font-medium text-gray-700">Post Approval</span>
                 <div className="relative">
                   <input
@@ -940,6 +940,65 @@ const CommunityDetails = () => {
                   />
                   <label
                     htmlFor="post-approval-toggle"
+                    className={`block w-12 h-6 rounded-full cursor-pointer transition-all duration-200 ${
+                      postApprovalEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}
+                  >
+                    <div
+                      className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
+                        postApprovalEnabled ? 'transform translate-x-6' : ''
+                      }`}
+                    ></div>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Action Buttons - Below tabs on mobile and medium screens */}
+        <div className="lg:hidden mt-4 flex justify-end">
+          <div className="w-full sm:w-auto flex justify-end">
+            {/* Create New Post Button */}
+            {activeTab === "Feed" && (
+              <button 
+                onClick={handleCreatePost}
+                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg w-full sm:w-auto justify-center gap-x-1"
+              >
+                <span className="inline">Create New Post</span>
+                <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 text-lg font-bold relative -top-0.5">+</span>
+                </div>
+              </button>
+            )}
+
+            {/* Create New Event Button */}
+            {activeTab === "Event" && (
+              <button 
+                onClick={handleCreateEvent}
+                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg w-full sm:w-auto justify-center"
+              >
+                <span className="inline">Create New Event</span>
+                <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 text-lg font-bold relative -top-0.5">+</span>
+                </div>
+              </button>
+            )}
+
+            {/* Post Approval Toggle */}
+            {activeTab === "Moderator Queue" && (
+              <div className="flex items-center space-x-3 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-lg shadow-sm w-auto ">
+                <span className="text-sm font-medium text-gray-700">Post Approval</span>
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    id="post-approval-toggle-mobile"
+                    className="sr-only"
+                    checked={postApprovalEnabled}
+                    onChange={handleTogglePostApproval}
+                  />
+                  <label
+                    htmlFor="post-approval-toggle-mobile"
                     className={`block w-12 h-6 rounded-full cursor-pointer transition-all duration-200 ${
                       postApprovalEnabled ? 'bg-blue-600' : 'bg-gray-300'
                     }`}
