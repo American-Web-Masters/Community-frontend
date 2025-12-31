@@ -21,7 +21,7 @@ const Header = ({
   onClearFilters
 }) => {
   const urgencyOptions = ['low', 'normal', 'high'];
-  const moodOptions = ['😊', '😐', '😢', '😡', '😇'];
+  const moodOptions = ['😄', '😐', '😔', '😡', '😢'];
   const commonTags = ['healing', 'family', 'work', 'health', 'peace', 'guidance'];
 
   return (

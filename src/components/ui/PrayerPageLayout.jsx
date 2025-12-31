@@ -261,7 +261,7 @@ const PrayerPageLayout = ({
       />
 
       {/* Statistics - only show for prayer wall */}
-        <div className="px-6 py-4 mt-2">
+        <div className="px-2 py-2 md:px-6 md:py-4 mt-2">
           <div className="flex justify-between">
             <div className="flex items-center space-x-6 md:space-x-12 text-sm">
               <div className="flex items-center space-x-2">
