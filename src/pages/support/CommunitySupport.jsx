@@ -223,15 +223,13 @@ useEffect(() => {
             </>
           ) : (
             /* Stripe Payment Form */
-            <div className="max-w-2xl mx-auto">
-              <StripePaymentForm
-                amount={selectedAmount}
-                communityId={id}
-                personalMessage={personalMessage}
-                onSuccess={handlePaymentSuccess}
-                onCancel={handlePaymentCancel}
-              />
-            </div>
+            <StripePaymentForm
+              amount={selectedAmount}
+              communityId={id}
+              personalMessage={personalMessage}
+              onSuccess={handlePaymentSuccess}
+              onCancel={handlePaymentCancel}
+            />
           )}
         </div>
       </div>
