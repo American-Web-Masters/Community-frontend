@@ -796,7 +796,7 @@ const CommunityDetails = () => {
                   <span>Chat</span>
                 </button>
                 <button 
-                  // onClick={handleSupportClick}
+                  onClick={handleSupportClick}
                   className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2"
                 >
                   <span><FaRegHeart className="w-4 h-4" /></span>
