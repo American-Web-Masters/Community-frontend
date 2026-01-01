@@ -88,7 +88,7 @@ const CommunityCard = ({
 
       {/* Member count */}
       <div className="flex items-center justify-between text-xs text-gray-600 mb-4">
-      <div className='flex space-x-1'>
+      <div className='flex space-x-1 '>
         <IoPersonOutline className="w-4 h-4" />
         <span>{members} members</span>
       </div>

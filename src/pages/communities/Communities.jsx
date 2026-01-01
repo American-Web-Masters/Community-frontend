@@ -157,42 +157,84 @@ const Communities = () => {
 
       {/* Communities Section */}
       <div className="px-4 mt-6">
-          {/* Header with tabs and create button in same row */}
-          <div className="flex items-center justify-between mb-6">
-            {/* Tab Navigation */}
-            <div className="flex items-center bg-white/90 rounded-full p-0.5 backdrop-blur-sm">
+          {/* Header with tabs and create button */}
+          <div className="mb-6">
+            {/* Create New Community Button - Top right on mobile, integrated on desktop */}
+            <div className="flex justify-end mb-4 sm:hidden">
               <button
-                onClick={() => setActiveTab("My Communities")}
-                className={`px-6 py-3 rounded-full cursor-pointer text-sm font-medium transition-all duration-200 ${
-                  activeTab === "My Communities"
-                    ? "btn-blue-gradient text-white shadow-lg"
-                    : "text-gray-700 hover:bg-white/30"
-                }`}
+                onClick={handleCreateCommunity}
+                className="btn-blue-gradient cursor-pointer text-white px-4 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-3 shadow-lg"
               >
-                My Communities
-              </button>
-              <button
-                onClick={() => setActiveTab("Discovery Communities")}
-                className={`px-6 py-3 rounded-full cursor-pointer text-sm font-medium transition-all duration-200 ${
-                  activeTab === "Discovery Communities"
-                    ? "btn-blue-gradient text-white shadow-lg"
-                    : "text-gray-700 hover:bg-white/30"
-                }`}
-              >
-                Discovery Communities
+                <span>Create New Community</span>
+                <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 text-xl font-bold relative -top-0.5">+</span>
+                </div>
               </button>
             </div>
 
-            {/* Create New Community Button */}
-            <button
-              onClick={handleCreateCommunity}
-              className="btn-blue-gradient cursor-pointer text-white px-4 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-3 shadow-lg"
-            >
-              <span>Create New Community</span>
-              <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                <span className="text-blue-600 text-xl font-bold relative -top-0.5">+</span>
+            {/* Combined layout for desktop */}
+            <div className="hidden sm:flex sm:items-center sm:justify-between">
+              {/* Tab Navigation */}
+              <div className="flex items-center bg-white/90 rounded-full p-0.5 backdrop-blur-sm">
+                <button
+                  onClick={() => setActiveTab("My Communities")}
+                  className={`px-6 py-3 rounded-full cursor-pointer text-sm font-medium transition-all duration-200 ${
+                    activeTab === "My Communities"
+                      ? "btn-blue-gradient text-white shadow-lg"
+                      : "text-gray-700 hover:bg-white/30"
+                  }`}
+                >
+                  My Communities
+                </button>
+                <button
+                  onClick={() => setActiveTab("Discovery Communities")}
+                  className={`px-6 py-3 rounded-full cursor-pointer text-sm font-medium transition-all duration-200 ${
+                    activeTab === "Discovery Communities"
+                      ? "btn-blue-gradient text-white shadow-lg"
+                      : "text-gray-700 hover:bg-white/30"
+                  }`}
+                >
+                  Discovery Communities
+                </button>
               </div>
-            </button>
+
+              {/* Create New Community Button - Desktop */}
+              <button
+                onClick={handleCreateCommunity}
+                className="btn-blue-gradient cursor-pointer text-white px-4 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-3 shadow-lg"
+              >
+                <span>Create New Community</span>
+                <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 text-xl font-bold relative -top-0.5">+</span>
+                </div>
+              </button>
+            </div>
+
+            {/* Tab Navigation - Mobile (full width, centered) */}
+            <div className="flex sm:hidden justify-center">
+              <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm w-full max-w-md">
+                <button
+                  onClick={() => setActiveTab("My Communities")}
+                  className={`flex-1 py-2.5 px-4 rounded-full cursor-pointer text-sm font-medium transition-all duration-200 text-center ${
+                    activeTab === "My Communities"
+                      ? "btn-blue-gradient text-white shadow-lg"
+                      : "text-gray-700 hover:bg-white/30"
+                  }`}
+                >
+                  My Communities
+                </button>
+                <button
+                  onClick={() => setActiveTab("Discovery Communities")}
+                  className={`flex-1 py-2.5 px-4 rounded-full cursor-pointer text-sm font-medium transition-all duration-200 text-center ${
+                    activeTab === "Discovery Communities"
+                      ? "btn-blue-gradient text-white shadow-lg"
+                      : "text-gray-700 hover:bg-white/30"
+                  }`}
+                >
+                  Discovery Communities
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Content based on active tab */}

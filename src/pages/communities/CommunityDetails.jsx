@@ -630,10 +630,10 @@ const CommunityDetails = () => {
               </div>
             </div>
 
-            <div className="flex items-start space-x-6">
+            <div className="flex items-start space-x-6 max-sm:flex-col ">
               {/* Edit Community Avatar */}
               <div className="relative">
-                <div className="w-36 h-36 rounded-full overflow-hidden flex-shrink-0 border-2 border-dashed border-gray-300">
+                <div className="w-36 h-36 rounded-full overflow-hidden flex-shrink-0 border-2 border-dashed border-gray-300 ">
                   {editHeaderData.coverPhotoPreview ? (
                     <img 
                       src={editHeaderData.coverPhotoPreview} 
@@ -667,7 +667,7 @@ const CommunityDetails = () => {
               </div>
 
               {/* Edit Community Info */}
-              <div className="flex-1 space-y-4">
+              <div className="flex-1 space-y-4 w-full">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Community Name
@@ -725,7 +725,7 @@ const CommunityDetails = () => {
           </div>
         ) : (
           // View Mode
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 max-sm:flex-col max-sm:items-start">
             {/* Community Avatar */}
             <div className="w-36 h-36 rounded-full overflow-hidden flex-shrink-0">
               {community.coverPhoto ? (
@@ -744,7 +744,7 @@ const CommunityDetails = () => {
             </div>
 
             {/* Community Info */}
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               <div className="flex items-center justify-between ">
                 <h1 className="text-xl font-medium text-gray-900">
                   {community.name}
@@ -790,8 +790,8 @@ const CommunityDetails = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex md:items-center space-x-3">
-                <button className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2">
+              <div className="flex md:items-center space-x-3 flex-wrap gap-y-2">
+                <button className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 justify-center">
                   <span><PiChatText className="w-4 h-4" /></span>
                   <span>Chat</span>
                 </button>
@@ -802,14 +802,14 @@ const CommunityDetails = () => {
                   <span><FaRegHeart className="w-4 h-4" /></span>
                   <span>Support</span>
                 </button>
-                <button className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2">
+                <button className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2  justify-center">
                   <span><PiBellLight className="w-4 h-4" /></span>
                   <span>Notifications</span>
                 </button>
                 {isOwnerOrModerator && (
                                   <button 
                   onClick={handleInviteClick}
-                  className={`px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 transition-all duration-200 ${
+                  className={`px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 transition-all duration-200 justify-center ${
                     copied 
                       ? 'bg-green-500 text-white' 
                       : 'btn-blue-gradient hover:opacity-90'
@@ -835,117 +835,184 @@ const CommunityDetails = () => {
 
       {/* Tab Navigation */}
       <div className="px-4 mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center bg-white/90 rounded-full p-0.5 backdrop-blur-sm">
-            <button
-              onClick={() => setActiveTab("Feed")}
-              className={`px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 ${
-                activeTab === "Feed"
-                  ? "btn-blue-gradient text-white shadow-lg"
-                  : "text-gray-700 hover:bg-white/30"
-              }`}
-            >
-              Feed
-            </button>
-                        <button
-              onClick={() => setActiveTab("Members")}
-              className={`px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 ${
-                activeTab === "Members"
-                  ? "btn-blue-gradient text-white shadow-lg"
-                  : "text-gray-700 hover:bg-white/30"
-              }`}
-            >
-                Members
-            </button>
-            <button
-              onClick={() => setActiveTab("Event")}
-              className={`px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 ${
-                activeTab === "Event"
-                  ? "btn-blue-gradient text-white shadow-lg"
-                  : "text-gray-700 hover:bg-white/30"
-              }`}
-            >
-              Event
-            </button>
-            <button
-              onClick={() => setActiveTab("About")}
-              className={`px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 ${
-                activeTab === "About"
-                  ? "btn-blue-gradient text-white shadow-lg"
-                  : "text-gray-700 hover:bg-white/30"
-              }`}
-            >
-              About
-            </button>
-            {isOwnerOrModerator && (
-              <button
-                onClick={() => setActiveTab("Moderator Queue")}
-                className={`px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 ${
-                  activeTab === "Moderator Queue"
-                    ? "btn-blue-gradient text-white shadow-lg"
-                    : "text-gray-700 hover:bg-white/30"
-                }`}
-              >
-                Moderator Queue
-              </button>
-            )}
-          </div>
-
-          {/* Create New Post Button */}
-          {activeTab === "Feed" && (
-            <button 
-            onClick={handleCreatePost}
-            className="btn-blue-gradient text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg"
-          >
-            <span className="hidden sm:inline">Create New Post</span>
-            <span className="inline sm:hidden">Post</span>
-            <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-              <span className="text-blue-600 text-lg font-bold relative -top-0.5">+</span>
-            </div>
-          </button>
-          )}
-
-
-          {activeTab === "Event" && (
-            <button 
-            onClick={handleCreateEvent}
-            className="btn-blue-gradient text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg"
-          >
-            <span className="hidden sm:inline">Create New Event</span>
-            <span className="inline sm:hidden">Post</span>
-            <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-              <span className="text-blue-600 text-lg font-bold relative -top-0.5">+</span>
-            </div>
-          </button>
-          )}
-
-
-          {activeTab === "Moderator Queue" && (
-            <div className="flex items-center space-x-3">
-              <span className="text-sm font-medium text-gray-700">Post Approval</span>
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  id="post-approval-toggle"
-                  className="sr-only"
-                  checked={postApprovalEnabled}
-                  onChange={handleTogglePostApproval}
-                />
-                <label
-                  htmlFor="post-approval-toggle"
-                  className={`block w-12 h-6 rounded-full cursor-pointer transition-all duration-200 ${
-                    postApprovalEnabled ? 'bg-blue-600' : 'bg-gray-300'
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          {/* Tabs Bar - Scrollable on small screens, auto on desktop */}
+          <div className="w-full lg:w-auto relative">
+            <div className="overflow-x-auto tab-scroll-container pb-2">
+              <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm w-full min-w-max">
+                <button
+                  onClick={() => setActiveTab("Feed")}
+                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 md:flex-none min-w-[85px] sm:min-w-[95px] ${
+                    activeTab === "Feed"
+                      ? "btn-blue-gradient text-white shadow-lg"
+                      : "text-gray-700 hover:bg-white/30"
                   }`}
                 >
-                  <div
-                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
-                      postApprovalEnabled ? 'transform translate-x-6' : ''
+                  Feed
+                </button>
+                <button
+                  onClick={() => setActiveTab("Members")}
+                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 md:flex-none min-w-[95px] sm:min-w-[110px] ${
+                    activeTab === "Members"
+                      ? "btn-blue-gradient text-white shadow-lg"
+                      : "text-gray-700 hover:bg-white/30"
+                  }`}
+                >
+                  Members
+                </button>
+                <button
+                  onClick={() => setActiveTab("Event")}
+                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 md:flex-none min-w-[85px] sm:min-w-[95px] ${
+                    activeTab === "Event"
+                      ? "btn-blue-gradient text-white shadow-lg"
+                      : "text-gray-700 hover:bg-white/30"
+                  }`}
+                >
+                  Events
+                </button>
+                <button
+                  onClick={() => setActiveTab("About")}
+                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 md:flex-none min-w-[85px] sm:min-w-[95px] ${
+                    activeTab === "About"
+                      ? "btn-blue-gradient text-white shadow-lg"
+                      : "text-gray-700 hover:bg-white/30"
+                  }`}
+                >
+                  About
+                </button>
+                {isOwnerOrModerator && (
+                  <button
+                    onClick={() => setActiveTab("Moderator Queue")}
+                    className={`px-3 sm:px-4 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 md:flex-none min-w-[130px] sm:min-w-[150px] ${
+                      activeTab === "Moderator Queue"
+                        ? "btn-blue-gradient text-white shadow-lg"
+                        : "text-gray-700 hover:bg-white/30"
                     }`}
-                  ></div>
-                </label>
+                  >
+                    Moderator Queue
+                  </button>
+                )}
               </div>
             </div>
-          )}
+            {/* Scroll indicator for small screens */}
+            <div className="absolute right-0 top-1 bottom-1 w-8 bg-gradient-to-l from-gray-100/80 to-transparent pointer-events-none rounded-r-full lg:hidden"></div>
+          </div>
+
+          {/* Action Buttons - Inline with tabs on large screens only */}
+          <div className="hidden lg:flex items-center justify-end w-auto">
+            {/* Create New Post Button */}
+            {activeTab === "Feed" && (
+              <button 
+                onClick={handleCreatePost}
+                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg justify-center gap-x-1"
+              >
+                <span className="inline">Create New Post</span>
+                <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 text-lg font-bold relative -top-0.5">+</span>
+                </div>
+              </button>
+            )}
+
+            {/* Create New Event Button */}
+            {activeTab === "Event" && (
+              <button 
+                onClick={handleCreateEvent}
+                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg justify-center"
+              >
+                <span className="inline">Create New Event</span>
+                <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 text-lg font-bold relative -top-0.5">+</span>
+                </div>
+              </button>
+            )}
+
+            {/* Post Approval Toggle */}
+            {activeTab === "Moderator Queue" && (
+              <div className="flex items-center space-x-3 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-lg shadow-sm justify-center">
+                <span className="text-sm font-medium text-gray-700">Post Approval</span>
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    id="post-approval-toggle"
+                    className="sr-only"
+                    checked={postApprovalEnabled}
+                    onChange={handleTogglePostApproval}
+                  />
+                  <label
+                    htmlFor="post-approval-toggle"
+                    className={`block w-12 h-6 rounded-full cursor-pointer transition-all duration-200 ${
+                      postApprovalEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}
+                  >
+                    <div
+                      className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
+                        postApprovalEnabled ? 'transform translate-x-6' : ''
+                      }`}
+                    ></div>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Action Buttons - Below tabs on mobile and medium screens */}
+        <div className="lg:hidden mt-4 flex justify-end">
+          <div className="w-full sm:w-auto flex justify-end">
+            {/* Create New Post Button */}
+            {activeTab === "Feed" && (
+              <button 
+                onClick={handleCreatePost}
+                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg w-full sm:w-auto justify-center gap-x-1"
+              >
+                <span className="inline">Create New Post</span>
+                <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 text-lg font-bold relative -top-0.5">+</span>
+                </div>
+              </button>
+            )}
+
+            {/* Create New Event Button */}
+            {activeTab === "Event" && (
+              <button 
+                onClick={handleCreateEvent}
+                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg w-full sm:w-auto justify-center"
+              >
+                <span className="inline">Create New Event</span>
+                <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 text-lg font-bold relative -top-0.5">+</span>
+                </div>
+              </button>
+            )}
+
+            {/* Post Approval Toggle */}
+            {activeTab === "Moderator Queue" && (
+              <div className="flex items-center space-x-3 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-lg shadow-sm w-auto ">
+                <span className="text-sm font-medium text-gray-700">Post Approval</span>
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    id="post-approval-toggle-mobile"
+                    className="sr-only"
+                    checked={postApprovalEnabled}
+                    onChange={handleTogglePostApproval}
+                  />
+                  <label
+                    htmlFor="post-approval-toggle-mobile"
+                    className={`block w-12 h-6 rounded-full cursor-pointer transition-all duration-200 ${
+                      postApprovalEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}
+                  >
+                    <div
+                      className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
+                        postApprovalEnabled ? 'transform translate-x-6' : ''
+                      }`}
+                    ></div>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
