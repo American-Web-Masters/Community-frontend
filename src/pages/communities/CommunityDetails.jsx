@@ -842,7 +842,7 @@ const CommunityDetails = () => {
               <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm w-full min-w-max">
                 <button
                   onClick={() => setActiveTab("Feed")}
-                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 md:flex-none min-w-[85px] sm:min-w-[95px] ${
+                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[85px] sm:min-w-[95px] ${
                     activeTab === "Feed"
                       ? "btn-blue-gradient text-white shadow-lg"
                       : "text-gray-700 hover:bg-white/30"
@@ -852,7 +852,7 @@ const CommunityDetails = () => {
                 </button>
                 <button
                   onClick={() => setActiveTab("Members")}
-                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 md:flex-none min-w-[95px] sm:min-w-[110px] ${
+                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[95px] sm:min-w-[110px] ${
                     activeTab === "Members"
                       ? "btn-blue-gradient text-white shadow-lg"
                       : "text-gray-700 hover:bg-white/30"
@@ -862,7 +862,7 @@ const CommunityDetails = () => {
                 </button>
                 <button
                   onClick={() => setActiveTab("Event")}
-                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 md:flex-none min-w-[85px] sm:min-w-[95px] ${
+                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[85px] sm:min-w-[95px] ${
                     activeTab === "Event"
                       ? "btn-blue-gradient text-white shadow-lg"
                       : "text-gray-700 hover:bg-white/30"
@@ -872,7 +872,7 @@ const CommunityDetails = () => {
                 </button>
                 <button
                   onClick={() => setActiveTab("About")}
-                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 md:flex-none min-w-[85px] sm:min-w-[95px] ${
+                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[85px] sm:min-w-[95px] ${
                     activeTab === "About"
                       ? "btn-blue-gradient text-white shadow-lg"
                       : "text-gray-700 hover:bg-white/30"
@@ -883,7 +883,7 @@ const CommunityDetails = () => {
                 {isOwnerOrModerator && (
                   <button
                     onClick={() => setActiveTab("Moderator Queue")}
-                    className={`px-3 sm:px-4 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 md:flex-none min-w-[130px] sm:min-w-[150px] ${
+                    className={`px-3 sm:px-4 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[130px] sm:min-w-[150px] ${
                       activeTab === "Moderator Queue"
                         ? "btn-blue-gradient text-white shadow-lg"
                         : "text-gray-700 hover:bg-white/30"
@@ -1017,7 +1017,7 @@ const CommunityDetails = () => {
       </div>
 
       {/* Content Area */}
-      <div className="px-4 pb-24">
+      <div className="px-4 pb-24 flex">
         {activeTab === "Feed" && (
           <div className="space-y-4">
             {loading ? (
