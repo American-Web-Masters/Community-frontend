@@ -19,7 +19,6 @@ export const useLogout = () => {
       
       // Fallback: clear client state even if server logout fails
       dispatch(clearUser());
-      localStorage.removeItem('authenticatedUser');
       
       // Redirect to login
       window.location.href = '/login';

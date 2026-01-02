@@ -230,7 +230,7 @@ const CreateEventModal = ({
 
         {/* Calendar Connection Section */}
         <div className="px-6 py-4 border-b border-gray-100">
-          {calendarLoading ? (
+          {/* {calendarLoading ? (
             <div className="flex items-center space-x-3">
               <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
               <span className="text-sm text-gray-600">Checking calendar connection...</span>
@@ -240,7 +240,7 @@ const CreateEventModal = ({
               <FaCheckCircle className="w-5 h-5" />
               <span className="text-sm font-medium">Google Calendar Connected</span>
             </div>
-          ) : (
+          ) : ( */}
             <div className="space-y-3">
               <div className="flex items-center space-x-2 text-amber-600">
                 <FaCalendarAlt className="w-4 h-4" />
@@ -252,22 +252,22 @@ const CreateEventModal = ({
                   connectingCalendar ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
                 }`}
                 onClick={handleConnectCalendar}
-                disabled={connectingCalendar}
+                // disabled={connectingCalendar}
               >
-                {connectingCalendar ? (
+                {/* {connectingCalendar ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     <span>Connecting...</span>
                   </div>
                 ) : (
                   'Connect Google Calendar'
-                )}
+                )} */}
               </button>
               <p className="text-xs text-gray-500">
                 Connect your Google Calendar to create and sync events automatically.
               </p>
             </div>
-          )}
+          
         </div>
 
         {/* Form */}

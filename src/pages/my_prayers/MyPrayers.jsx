@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
+import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
+import { useLogout } from "../../hooks/useLogout";
 import PrayerPageLayout from "../../components/ui/PrayerPageLayout";
 import CreatePrayerModal from "../../components/ui/CreatePrayerModal";
 import { apiClient } from "../../api";
@@ -12,13 +13,14 @@ const MyPrayers = () => {
   const user = useSelector(selectUser);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useDispatch();
+  const { logout } = useLogout();
   const [bookmarkedPrayers, setBookmarkedPrayers] = useState([]);
   const [loadingBookmarks, setLoadingBookmarks] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [selectedDraftPrayer, setSelectedDraftPrayer] = useState(null);
 
   const handleLogout = () => {
-    dispatch(clearUser());
+    logout();
   };
 
   // Function to fetch user's prayers from API with pagination

@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
+import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
+import { useLogout } from "../../hooks/useLogout";
 import PrayerPageLayout from "../../components/ui/PrayerPageLayout";
 import { apiClient } from "../../api";
 import useInfiniteScroll from "../../hooks/useInfiniteScroll";
@@ -10,9 +11,10 @@ const AnsweredPrayers = () => {
   const user = useSelector(selectUser);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useDispatch();
+  const { logout } = useLogout();
 
   const handleLogout = () => {
-    dispatch(clearUser());
+    logout();
   };
 
   // Function to fetch answered prayers from API with pagination
