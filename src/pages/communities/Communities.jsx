@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import toast from 'react-hot-toast';
-import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
+import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
+import { useLogout } from "../../hooks/useLogout";
 import Header from "../../components/ui/Header";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import CreateCommunityModal from "../../components/ui/CreateCommunityModal";
@@ -16,6 +17,7 @@ const Communities = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { logout } = useLogout();
   const [activeTab, setActiveTab] = useState("My Communities");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinRequestModalOpen, setIsJoinRequestModalOpen] = useState(false);
@@ -26,7 +28,7 @@ const Communities = () => {
   const [joiningCommunityId, setJoiningCommunityId] = useState(null);
 
   const handleLogout = () => {
-    dispatch(clearUser());
+    logout();
   };
 
   const handleJoinCommunity = async (communityId) => {

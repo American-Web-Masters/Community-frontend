@@ -51,13 +51,11 @@ export const validateAuthenticationState = async () => {
 export const performLogout = async () => {
   try {
     // Try to logout on server first
-    await apiClient.post('/users/logout');
+    const response = await apiClient.post('/users/logout');
+    console.log('Server logout response:', response.data);
   } catch (error) {
     console.warn('Server logout failed, proceeding with client cleanup:', error);
   } finally {
-    // Always clear local data regardless of server response
-    localStorage.removeItem('authenticatedUser');
-    
     // Clear Redux store if available
     if (window.__REDUX_STORE__) {
       window.__REDUX_STORE__.dispatch({ type: 'user/clearUser' });

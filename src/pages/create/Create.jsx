@@ -1,15 +1,17 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { selectUser, selectIsLoggedIn, clearUser } from "../../store/userSlice";
+import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
+import { useLogout } from "../../hooks/useLogout";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 
 const Create = () => {
   const user = useSelector(selectUser);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useDispatch();
+  const { logout } = useLogout();
 
   const handleLogout = () => {
-    dispatch(clearUser());
+    logout();
   };
 
   if (!isLoggedIn || !user) {
