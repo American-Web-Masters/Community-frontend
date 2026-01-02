@@ -1017,7 +1017,7 @@ const CommunityDetails = () => {
       </div>
 
       {/* Content Area */}
-      <div className="px-4 pb-24 flex">
+      <div className="px-4 pb-24">
         {activeTab === "Feed" && (
           <div className="space-y-4">
             {loading ? (
@@ -1158,26 +1158,34 @@ const CommunityDetails = () => {
         )}
 
         {activeTab === "Members" && (
-          <Members 
-            community={community} 
-            currentUser={user} 
-            onCommunityUpdate={fetchCommunityDetails}
-          />
+          <div className="w-full">
+            <Members 
+              community={community} 
+              currentUser={user} 
+              onCommunityUpdate={fetchCommunityDetails}
+            />
+          </div>
         )}
 
         {activeTab === "Event" && (
-          <Events 
-            community={community} 
-            isOwnerOrModerator={isOwnerOrModerator} 
-          />
+          <div className="w-full">
+            <Events 
+              community={community} 
+              isOwnerOrModerator={isOwnerOrModerator} 
+            />
+          </div>
         )}
 
         {activeTab === "About" && (
-          <About community={community} onCommunityUpdate={handleCommunityUpdate} />
+          <div className="w-full">
+            <About community={community} onCommunityUpdate={handleCommunityUpdate} />
+          </div>
         )}
 
         {activeTab === "Moderator Queue" && isOwnerOrModerator && (
-          <ModeratorQueue community={community} currentUser={user} />
+          <div className="w-full">
+            <ModeratorQueue community={community} currentUser={user} />
+          </div>
         )}
       </div>
       
