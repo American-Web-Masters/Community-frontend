@@ -210,9 +210,9 @@ const ModeratorQueue = ({ community, currentUser }) => {
   };
 
   return (
-    <div className="flex gap-6">
+    <div className="flex gap-6 max-md:flex-col w-full">
       {/* Left Content Area - Prayer Feed */}
-      <div className="flex-1 space-y-4">
+      <div className="flex-1 space-y-4 max-md:hidden">
         {mockPrayerCards.slice(0, 2).map((prayer) => (
           <PrayerCard
             key={prayer.id}
@@ -231,7 +231,7 @@ const ModeratorQueue = ({ community, currentUser }) => {
       </div>
 
       {/* Right Sidebar - Moderator Queue */}
-      <div className="w-[50%] bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="w-full md:w-[50%]  bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         {/* Header */}
         <div className="px-4 py-3 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -298,7 +298,7 @@ const ModeratorQueue = ({ community, currentUser }) => {
         )} */}
 
         {/* Queue Items */}
-        <div className="max-h-96 overflow-y-auto">
+        <div className="max-h-[480px] md:max-h-96 overflow-y-auto">
           {activeTab === "Flagged Posts" ? (
             /* Render FlaggedPosts component for flagged posts tab */
             <div className="p-4">

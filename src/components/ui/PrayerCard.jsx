@@ -417,13 +417,20 @@ const PrayerCard = ({
                   )}
                   {communities.length > 2 && (
                     <span className="bg-gray-400 text-white px-2 py-1 rounded-full text-xs">
-                      +{communities.length - 2} more
+                      +{communities.length - 2}
                     </span>
                   )}
                 </div>
               )}
             </div>
-            <p className="text-sm text-gray-500">{timeAgo}</p>
+            <div className="flex items-center space-x-4 mt-2">
+            <span className="text-sm text-gray-500">{timeAgo}</span>
+            {showStatusPill && status && (
+              <span className={`px-1 py-1 rounded-full md:hidden text-xs ${getStatusPillStyle(status)}`}>
+                {status}
+              </span>
+            )}
+            </div>
           </div>
         </div>
 
@@ -432,7 +439,7 @@ const PrayerCard = ({
           <div className="flex items-center space-x-2">
             {/* Show status pill only when showStatusPill is true */}
             {showStatusPill && status && (
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusPillStyle(status)}`}>
+              <span className={`px-1 py-1 rounded-full hidden md:block text-xs relative -top-1 ${getStatusPillStyle(status)}`}>
                 {status}
               </span>
             )}

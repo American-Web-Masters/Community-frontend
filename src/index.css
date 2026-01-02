@@ -341,3 +341,29 @@ body {
 body.modal-open {
   overflow: hidden;
 }
+
+/* Tab navigation horizontal scroll styling */
+.tab-scroll-container {
+  scrollbar-width: auto;
+  scrollbar-color: #A6D3FF #f0f0f0;
+}
+
+.tab-scroll-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.tab-scroll-container::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 10px;
+  margin: 0 10px;
+}
+
+.tab-scroll-container::-webkit-scrollbar-thumb {
+  background-color: #A6D3FF;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+}
+
+.tab-scroll-container::-webkit-scrollbar-thumb:hover {
+  background-color: #7bbcff;
+}

@@ -26,7 +26,7 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
   
   const [newTag, setNewTag] = useState('');
 
-  const moodOptions = ['😊', '🙂', '😐', '😔', '😢'];
+  const moodOptions = ['😄', '😐', '😔', '😡', '😢'];
 
   // Fetch user's communities on component mount
   React.useEffect(() => {

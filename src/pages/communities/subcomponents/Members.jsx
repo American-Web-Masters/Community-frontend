@@ -166,7 +166,7 @@ const Members = ({ community, currentUser, onCommunityUpdate }) => {
   }
 
   return (
-    <div>
+    <div className="-mt-4 mx-4">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">
         Members ({members.length})
       </h3>

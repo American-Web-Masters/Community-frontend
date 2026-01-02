@@ -25,9 +25,11 @@ function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEv
                   <h3 className="text-lg font-bold text-gray-900 mb-1">
                     {event.eventName}
                   </h3>
-                  <div className="flex items-center gap-1 text-gray-700 text-sm">
-                    <FaClock className="w-3 h-3" />
+                  <div className="flex items-start gap-1 text-gray-700 text-sm max-sm:flex-col">
+                    <div className='flex items-center gap-x-2'>
+                    <FaClock className="min-w-3 min-h-3" />
                     <span>{formatDate(displayDate, displayTime)} • {formatTime(displayTime, displayDate)}</span>
+                    </div>
                     {userTimeZone && (
                       <span className="text-xs text-gray-400 ml-1">({userTimeZone})</span>
                     )}

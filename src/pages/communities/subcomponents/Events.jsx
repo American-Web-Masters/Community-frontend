@@ -180,7 +180,7 @@ const Events = ({ community, isOwnerOrModerator }) => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-2">
       {/* Events Grid */}
       {events.length === 0 ? (
         <div className="text-center py-12">
