@@ -67,19 +67,21 @@ const CheckoutForm = ({ amount, communityId, personalMessage, onSuccess, onCance
         throw new Error('No client secret received from server');
       }
 
-      const { error } = await stripe.confirmPayment({
+      const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         clientSecret,
         confirmParams: {
           return_url: `${window.location.origin}/payment-success`,
         },
+        redirect: 'if_required',
       });
 
       if (error) {
         setErrorMessage(error.message);
-      } else {
+        toast.error(`Payment failed: ${error.message}`);
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
         toast.success('🎉 Payment successful! Thank you for your support.');
-        onSuccess();
+        onSuccess && onSuccess(paymentIntent);
       }
     } catch (err) {
       console.error('Payment error:', err);
