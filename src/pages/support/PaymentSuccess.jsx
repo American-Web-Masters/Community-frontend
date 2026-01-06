@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/userSlice';
 import Header from '../../components/ui/Header';
@@ -7,13 +7,19 @@ import BottomNavBar from '../../components/ui/BottomNavBar';
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useSelector(selectUser);
-  const [searchParams] = useSearchParams();
   
-  // Get payment intent from URL parameters
-  const paymentIntent = searchParams.get('payment_intent');
-  const paymentIntentClientSecret = searchParams.get('payment_intent_client_secret');
-  const redirectStatus = searchParams.get('redirect_status');
+  // Get payment data from navigation state
+  const { paymentType, amount, interval, communityName, paymentIntent } = location.state || {};
+
+  // Debug logging
+  console.log('PaymentSuccess - Received data:', { paymentType, amount, interval, communityName, paymentIntent });
+
+  // Try to get amount from multiple sources
+  const displayAmount = amount || paymentIntent?.amount || 0;
+  
+  console.log('PaymentSuccess - Display amount:', displayAmount);
 
   useEffect(() => {
     // Auto-redirect to communities after 5 seconds
@@ -26,6 +32,19 @@ const PaymentSuccess = () => {
 
   const handleContinue = () => {
     navigate('/communities');
+  };
+
+  const formatInterval = (interval) => {
+    switch (interval) {
+      case 'week':
+        return 'weekly';
+      case 'biweek':
+        return 'bi-weekly';
+      case 'month':
+        return 'monthly';
+      default:
+        return interval;
+    }
   };
 
   return (
@@ -55,10 +74,13 @@ const PaymentSuccess = () => {
               </div>
               
               <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
-                Payment Successful! 🎉
+                {paymentType === 'recurring' ? 'Subscription Created! 🎉' : 'Payment Successful! 🎉'}
               </h1>
               <p className="text-lg text-white/90 max-w-xl mx-auto">
-                Thank you for your generous blessing! Your support will strengthen our community.
+                {paymentType === 'recurring' 
+                  ? 'Thank you for setting up recurring support! Your ongoing blessings will continuously strengthen our community.'
+                  : 'Thank you for your generous blessing! Your support will strengthen our community.'
+                }
               </p>
             </div>
           </div>
@@ -69,41 +91,86 @@ const PaymentSuccess = () => {
               
               {/* Left Column - Payment Details */}
               <div className="lg:col-span-2">
-                {redirectStatus === 'succeeded' && (
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5 mb-6">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-bold text-green-800">Payment Confirmed</h3>
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5 mb-6">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
                     </div>
-                    <p className="text-green-700 mb-3">
-                      Your payment has been processed successfully and your blessing is now part of our community.
-                    </p>
-                    {paymentIntent && (
-                      <div className="bg-white/50 rounded-lg p-3">
-                        <p className="text-xs font-medium text-green-800">Transaction ID:</p>
-                        <p className="text-xs text-green-600 font-mono break-all">{paymentIntent}</p>
+                    <h3 className="text-lg font-bold text-green-800">
+                      {paymentType === 'recurring' ? 'Subscription Confirmed' : 'Payment Confirmed'}
+                    </h3>
+                  </div>
+                  <p className="text-green-700 mb-3">
+                    {paymentType === 'recurring' 
+                      ? `Your ${formatInterval(interval)} subscription has been set up successfully. Future payments will be processed automatically.`
+                      : 'Your payment has been processed successfully and your blessing is now part of our community.'
+                    }
+                  </p>
+                  
+                  {/* Payment Details */}
+                  <div className="bg-white/50 rounded-lg p-3 mb-3">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="font-medium text-green-800">Amount:</p>
+                        <p className="text-green-600">${displayAmount ? (displayAmount / 100).toFixed(2) : '0.00'}</p>
                       </div>
-                    )}
+                      {paymentType === 'recurring' && (
+                        <div>
+                          <p className="font-medium text-green-800">Frequency:</p>
+                          <p className="text-green-600 capitalize">{formatInterval(interval)}</p>
+                        </div>
+                      )}
+                      {communityName && (
+                        <div>
+                          <p className="font-medium text-green-800">Supporting:</p>
+                          <p className="text-green-600">{communityName}</p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium text-green-800">Type:</p>
+                        <p className="text-green-600 capitalize">{paymentType === 'recurring' ? 'Subscription' : 'One-time'}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {paymentIntent?.id && (
+                    <div className="bg-white/50 rounded-lg p-3">
+                      <p className="text-xs font-medium text-green-800">Transaction ID:</p>
+                      <p className="text-xs text-green-600 font-mono break-all">{paymentIntent.id}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* What's Next Section for Recurring Payments */}
+                {paymentType === 'recurring' && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <h4 className="text-sm font-bold text-blue-800 mb-2">What happens next?</h4>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      <li>• Your first payment has been processed</li>
+                      <li>• Future payments will be automatically charged</li>
+                      <li>• You can manage your subscription from your profile</li>
+                      <li>• You'll receive email confirmations for each payment</li>
+                    </ul>
                   </div>
                 )}
 
                 {/* Action Button */}
-                <button
-                  onClick={handleContinue}
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 px-8 rounded-xl font-bold text-lg hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl mb-3"
-                >
-                  Continue to Communities
-                </button>
-                
-                <div className="flex items-center justify-center space-x-2 text-gray-500">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L10 9.586V6z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-sm">Auto-redirecting in a few seconds...</span>
+                <div className="mt-6">
+                  <button
+                    onClick={handleContinue}
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 px-8 rounded-xl font-bold text-lg hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl mb-3"
+                  >
+                    Continue to Communities
+                  </button>
+                  
+                  <div className="flex items-center justify-center space-x-2 text-gray-500">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L10 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm">Auto-redirecting in a few seconds...</span>
+                  </div>
                 </div>
               </div>
 
