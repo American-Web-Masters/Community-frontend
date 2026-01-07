@@ -914,7 +914,7 @@ const CommunityDetails = () => {
             )}
 
             {/* Create New Event Button */}
-            {activeTab === "Event" && (
+            {(activeTab === "Event" && isOwnerOrModerator) && (
               <button 
                 onClick={handleCreateEvent}
                 className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg justify-center"
