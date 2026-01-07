@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/userSlice';
-import { fetchCommunityById } from '../../api/communities';
+import { fetchCommunityById, getStripeAccountStatus } from '../../api/communities';
 import BottomNavBar from '../../components/ui/BottomNavBar';
 import StripePaymentForm from '../../components/ui/StripePaymentForm';
+import RecurringPaymentForm from '../../components/ui/RecurringPaymentForm';
 import toast from 'react-hot-toast';  
 
 const CommunitySupport = () => {
@@ -17,13 +18,23 @@ const CommunitySupport = () => {
   const [personalMessage, setPersonalMessage] = useState('');
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
+  const [paymentType, setPaymentType] = useState('one-time'); // 'one-time' or 'recurring'
+  const [recurringInterval, setRecurringInterval] = useState('month');
   const [communityInfo, setCommunityInfo] = useState(null);
+  const [stripeStatus, setStripeStatus] = useState(null);
+  const [checkingStripe, setCheckingStripe] = useState(true);
 
   const predefinedAmounts = [
     { label: '$10', value: 1000, description: 'Small Blessing' },
     { label: '$25', value: 2500, description: 'Kind Gift' },
     { label: '$50', value: 5000, description: 'Generous Donation' },
     { label: '$100', value: 10000, description: 'Major Support' }
+  ];
+
+  const recurringIntervals = [
+    { value: 'week', label: 'Weekly' },
+    { value: 'biweek', label: 'Bi-weekly' },
+    { value: 'month', label: 'Monthly' }
   ];
 
   const handleAmountSelect = (amount) => {
@@ -46,8 +57,19 @@ useEffect(() => {
     try {
       const community = await fetchCommunityById(id, user);
       setCommunityInfo(community?.data || null);
+      
+      // Check Stripe status for payment availability
+      try {
+        const stripeResponse = await getStripeAccountStatus(id);
+        setStripeStatus(stripeResponse.data);
+      } catch (stripeError) {
+        console.error('Stripe status check failed:', stripeError);
+        setStripeStatus({ connected: false });
+      }
     } catch (error) {
       toast.error("Failed to load community information.");
+    } finally {
+      setCheckingStripe(false);
     }
   };
 
@@ -65,15 +87,105 @@ useEffect(() => {
     setShowPaymentForm(true);
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = (paymentIntent) => {
     // Handle successful payment
     setShowPaymentForm(false);
-    navigate(`/communities/${id}`);
+    if (paymentType === 'recurring') {
+      toast.success('Recurring payment set up successfully!');
+    } else {
+      toast.success('Payment sent successfully!');
+    }
+    
+    // Debug logging
+    console.log('CommunitySupport - Payment success:', {
+      paymentType,
+      selectedAmount,
+      recurringInterval,
+      paymentIntent
+    });
+    
+    // Navigate to success page or back to community
+    navigate('/payment-success', {
+      state: {
+        paymentType,
+        amount: selectedAmount,
+        interval: recurringInterval,
+        communityName: communityInfo?.name,
+        paymentIntent
+      }
+    });
   };
 
   const handlePaymentCancel = () => {
     setShowPaymentForm(false);
   };
+
+  // Show loading state while checking Stripe
+  if (checkingStripe) {
+    return (
+      <div className="min-h-screen light-background">
+        <div className="px-4 sm:px-6 lg:px-8 pb-24">
+          <div className="max-w-4xl mx-auto py-6">
+            <button 
+              onClick={() => navigate(`/communities/${id}`)}
+              className="flex items-center text-gray-800 hover:text-gray-900 mb-6 transition-colors"
+            >
+              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Community
+            </button>
+            
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Checking payment availability...</p>
+            </div>
+          </div>
+        </div>
+        <BottomNavBar />
+      </div>
+    );
+  }
+
+  // Show error if Stripe is not properly connected
+  if (stripeStatus && (!stripeStatus.connected || !stripeStatus.chargesEnabled)) {
+    return (
+      <div className="min-h-screen light-background">
+        <div className="px-4 sm:px-6 lg:px-8 pb-24">
+          <div className="max-w-4xl mx-auto py-6">
+            <button 
+              onClick={() => navigate(`/communities/${id}`)}
+              className="flex items-center text-gray-800 hover:text-gray-900 mb-6 transition-colors"
+            >
+              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Community
+            </button>
+            
+            <div className="max-w-lg mx-auto text-center py-12">
+              <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">Payment Support Unavailable</h2>
+              <p className="text-gray-600 mb-6">
+                This community has not set up payment support yet. Community donations are currently unavailable.
+              </p>
+              <button 
+                onClick={() => navigate(`/communities/${id}`)}
+                className="btn-blue-gradient px-6 py-3 rounded-lg font-medium"
+              >
+                Back to Community
+              </button>
+            </div>
+          </div>
+        </div>
+        <BottomNavBar />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen light-background">
@@ -156,40 +268,85 @@ useEffect(() => {
 
                 {/* Right Column */}
                 <div>
-
-                  {/* Payment Methods Section */}
+                  {/* Payment Type Selection */}
                   <div className="mb-8">
-                    <h2 className="text-xl lg:text-2xl font-semibold text-gray-800 mb-6">Choose Your Payment Method</h2>
+                    <h2 className="text-xl lg:text-2xl font-semibold text-gray-800 mb-6">Payment Type</h2>
                     
-                    <div className="space-y-4">
-                      {/* Credit Card Options */}
-                      {[1, 2, 3].map((index) => (
-                        <div 
-                          key={index}
-                          onClick={() => setSelectedPaymentMethod(index)}
-                          className="flex items-center justify-between p-5 lg:p-6 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
-                        >
-                          <div className="flex items-center space-x-4">
-                            <div className="w-10 h-8 lg:w-12 lg:h-10 bg-blue-600 rounded flex items-center justify-center">
-                              <span className="text-white text-sm lg:text-base font-bold">💳</span>
-                            </div>
-                            <div>
-                              <div className="font-medium text-gray-800 text-base lg:text-lg">Credit Card</div>
-                              <div className="text-sm lg:text-base text-gray-500">Add card details via Stripe</div>
-                            </div>
-                          </div>
-                          <div className={`w-6 h-6 lg:w-8 lg:h-8 border-2 rounded-full flex items-center justify-center transition-colors ${
-                            selectedPaymentMethod === index 
-                              ? 'border-blue-500' 
-                              : 'border-gray-300'
-                          }`}>
-                            {selectedPaymentMethod === index && (
-                              <div className="w-3 h-3 lg:w-4 lg:h-4 bg-blue-500 rounded-full"></div>
-                            )}
+                    <div className="space-y-3">
+                      {/* One-time Payment */}
+                      <button
+                        onClick={() => setPaymentType('one-time')}
+                        className={`w-full flex items-center justify-between p-4 lg:p-5 bg-white rounded-lg border transition-all ${
+                          paymentType === 'one-time' 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <span className="text-xl">💳</span>
+                          <div className="text-left">
+                            <div className="font-medium text-gray-800">One-time Payment</div>
+                            <div className="text-sm text-gray-500">Send support once</div>
                           </div>
                         </div>
-                      ))}
+                        <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center ${
+                          paymentType === 'one-time' ? 'border-blue-500' : 'border-gray-300'
+                        }`}>
+                          {paymentType === 'one-time' && (
+                            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
+                          )}
+                        </div>
+                      </button>
+
+                      {/* Recurring Payment */}
+                      <button
+                        onClick={() => setPaymentType('recurring')}
+                        className={`w-full flex items-center justify-between p-4 lg:p-5 bg-white rounded-lg border transition-all ${
+                          paymentType === 'recurring' 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <span className="text-xl">🔄</span>
+                          <div className="text-left">
+                            <div className="font-medium text-gray-800">Recurring Payment</div>
+                            <div className="text-sm text-gray-500">Automatic ongoing support</div>
+                          </div>
+                        </div>
+                        <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center ${
+                          paymentType === 'recurring' ? 'border-blue-500' : 'border-gray-300'
+                        }`}>
+                          {paymentType === 'recurring' && (
+                            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
+                          )}
+                        </div>
+                      </button>
                     </div>
+
+                    {/* Recurring Interval Selection */}
+                    {paymentType === 'recurring' && (
+                      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Frequency
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {recurringIntervals.map((interval) => (
+                            <button
+                              key={interval.value}
+                              onClick={() => setRecurringInterval(interval.value)}
+                              className={`p-2 text-sm rounded-md transition-colors ${
+                                recurringInterval === interval.value
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                              }`}
+                            >
+                              {interval.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Personal Message */}
@@ -216,20 +373,34 @@ useEffect(() => {
                       : 'bg-blue-700/50 cursor-not-allowed'
                   }`}
                 >
-                  Send Support ({selectedAmount ? `$${(selectedAmount / 100).toFixed(2)}` : '$0.00'})
+                  {paymentType === 'recurring' 
+                    ? `Set Up ${recurringInterval === 'biweek' ? 'Bi-weekly' : recurringInterval.charAt(0).toUpperCase() + recurringInterval.slice(1)} Payment (${selectedAmount ? `$${(selectedAmount / 100).toFixed(2)}` : '$0.00'})`
+                    : `Send Support (${selectedAmount ? `$${(selectedAmount / 100).toFixed(2)}` : '$0.00'})`
+                  }
                 </button>
               </div>
             </div>
             </>
           ) : (
-            /* Stripe Payment Form */
-            <StripePaymentForm
-              amount={selectedAmount}
-              communityId={id}
-              personalMessage={personalMessage}
-              onSuccess={handlePaymentSuccess}
-              onCancel={handlePaymentCancel}
-            />
+            /* Payment Form - Choose based on payment type */
+            paymentType === 'one-time' ? (
+              <StripePaymentForm
+                amount={selectedAmount}
+                communityId={id}
+                personalMessage={personalMessage}
+                onSuccess={handlePaymentSuccess}
+                onCancel={handlePaymentCancel}
+              />
+            ) : (
+              <RecurringPaymentForm
+                amount={selectedAmount}
+                interval={recurringInterval}
+                communityId={id}
+                description={`${recurringInterval === 'biweek' ? 'Bi-weekly' : recurringInterval} support for ${communityInfo?.name || 'community'}`}
+                onSuccess={handlePaymentSuccess}
+                onCancel={handlePaymentCancel}
+              />
+            )
           )}
         </div>
       </div>

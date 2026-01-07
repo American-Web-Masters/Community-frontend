@@ -12,3 +12,6 @@ export * from './invites.js';
 
 // Export calendar API functions
 export * from './calendar.js';
+
+// Export subscription API functions
+export * from './subscriptions.js';
