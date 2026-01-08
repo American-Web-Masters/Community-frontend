@@ -117,7 +117,7 @@ const Routes = () =>{
             }
             />
             <Route
-            path="/community/stripe/success"
+            path="/community/:communityId/stripe/success"
             element={
                 <ProtectedRoute>
                     <StripeOnboardingSuccess/>
@@ -125,7 +125,7 @@ const Routes = () =>{
             }
             />
             <Route
-            path="/community/stripe/refresh"
+            path="/community/:communityId/stripe/refresh"
             element={
                 <ProtectedRoute>
                     <StripeOnboardingRefresh/>

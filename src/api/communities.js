@@ -514,7 +514,7 @@ export const connectStripe = async (communityId) => {
 };
 
 /**
- * Get Stripe account status for community
+ * Get Stripe account status for community (for moderators)
  * @param {string} communityId - ID of the community
  * @returns {Promise<Object>} Response with Stripe account status
  */
@@ -524,6 +524,21 @@ export const getStripeAccountStatus = async (communityId) => {
     return response.data;
   } catch (error) {
     console.error('Error getting Stripe account status:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get community payment availability (for all users)
+ * @param {string} communityId - ID of the community
+ * @returns {Promise<Object>} Response with payment availability
+ */
+export const getCommunityPaymentStatus = async (communityId) => {
+  try {
+    const response = await apiClient.get(`/payments/community-payment-status/${communityId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting community payment status:', error);
     throw error;
   }
 };

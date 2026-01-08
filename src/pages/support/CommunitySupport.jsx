@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/userSlice';
-import { fetchCommunityById, getStripeAccountStatus } from '../../api/communities';
+import { fetchCommunityById, getCommunityPaymentStatus } from '../../api/communities';
 import BottomNavBar from '../../components/ui/BottomNavBar';
 import StripePaymentForm from '../../components/ui/StripePaymentForm';
 import RecurringPaymentForm from '../../components/ui/RecurringPaymentForm';
@@ -21,7 +21,7 @@ const CommunitySupport = () => {
   const [paymentType, setPaymentType] = useState('one-time'); // 'one-time' or 'recurring'
   const [recurringInterval, setRecurringInterval] = useState('month');
   const [communityInfo, setCommunityInfo] = useState(null);
-  const [stripeStatus, setStripeStatus] = useState(null);
+  const [paymentAvailable, setPaymentAvailable] = useState(false);
   const [checkingStripe, setCheckingStripe] = useState(true);
 
   const predefinedAmounts = [
@@ -58,13 +58,13 @@ useEffect(() => {
       const community = await fetchCommunityById(id, user);
       setCommunityInfo(community?.data || null);
       
-      // Check Stripe status for payment availability
+      // Check payment availability for all users
       try {
-        const stripeResponse = await getStripeAccountStatus(id);
-        setStripeStatus(stripeResponse.data);
+        const stripeResponse = await getCommunityPaymentStatus(id);
+        setPaymentAvailable(stripeResponse.data?.paymentsEnabled || false);
       } catch (stripeError) {
-        console.error('Stripe status check failed:', stripeError);
-        setStripeStatus({ connected: false });
+        console.error('Payment status check failed:', stripeError);
+        setPaymentAvailable(false);
       }
     } catch (error) {
       toast.error("Failed to load community information.");
@@ -147,8 +147,8 @@ useEffect(() => {
     );
   }
 
-  // Show error if Stripe is not properly connected
-  if (stripeStatus && (!stripeStatus.connected || !stripeStatus.chargesEnabled)) {
+  // Show error if payments are not available
+  if (!paymentAvailable) {
     return (
       <div className="min-h-screen light-background">
         <div className="px-4 sm:px-6 lg:px-8 pb-24">

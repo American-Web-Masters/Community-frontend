@@ -10,7 +10,7 @@ import { PiChatText , PiBellLight} from "react-icons/pi";
 import { FaRegHeart, FaEdit } from "react-icons/fa";
 import { MdCheck, MdClose, MdCameraAlt } from 'react-icons/md';
 import { IoShareSocialOutline } from "react-icons/io5";
-import { fetchCommunityById, updateCommunityDetails, getStripeAccountStatus } from "../../api";
+import { fetchCommunityById, updateCommunityDetails, getStripeAccountStatus, getCommunityPaymentStatus } from "../../api";
 import { flagPrayer } from "../../api/prayer";
 import apiClient  from "../../api/client";
 import toast from 'react-hot-toast';
@@ -39,6 +39,7 @@ const CommunityDetails = () => {
   const [postApprovalEnabled, setPostApprovalEnabled] = useState(false);
   const [loading2, setLoading2] = useState(false);
   const [stripeStatus, setStripeStatus] = useState(null);
+  const [paymentAvailable, setPaymentAvailable] = useState(false);
   // Header editing states
   const [isEditingHeader, setIsEditingHeader] = useState(false);
   const [headerLoading, setHeaderLoading] = useState(false);
@@ -560,14 +561,24 @@ const CommunityDetails = () => {
   };
 
   const checkCommunityStripeStatus = async () => {
-    if (!community?.isOwner && id) {
-      try {
+    if (!id) return;
+
+    try {
+      if (community?.isOwner) {
+        // Moderators get detailed status for admin management
         const response = await getStripeAccountStatus(id);
         setStripeStatus(response.data);
-      } catch (error) {
-        // Community support is disabled if we can't check status
-        setStripeStatus({ connected: false });
+        setPaymentAvailable(response.data?.chargesEnabled || false);
+      } else {
+        // Non-moderators get public payment availability
+        const response = await getCommunityPaymentStatus(id);
+        setPaymentAvailable(response.data?.paymentsEnabled || false);
       }
+    } catch (error) {
+      console.error('Error checking Stripe status:', error);
+      // Default to disabled for any errors
+      setStripeStatus({ hasStripeAccount: false });
+      setPaymentAvailable(false);
     }
   };
 
@@ -578,8 +589,8 @@ const CommunityDetails = () => {
   }, [community, id]);
 
   const handleSupportClick = () => {
-    // Check if Stripe is properly connected before allowing support
-    if (!community?.isOwner && stripeStatus && (!stripeStatus.connected || !stripeStatus.chargesEnabled)) {
+    // Check if payments are available for non-owners
+    if (!community?.isOwner && !paymentAvailable) {
       toast.error('Payment support is currently unavailable for this community.');
       return;
     }
@@ -822,14 +833,14 @@ const CommunityDetails = () => {
                 </button>
                 <button 
                   onClick={handleSupportClick}
-                  disabled={!community?.isOwner && stripeStatus && (!stripeStatus.connected || !stripeStatus.chargesEnabled)}
+                  disabled={!community?.isOwner && !paymentAvailable}
                   className={`px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 transition-opacity ${
-                    !community?.isOwner && stripeStatus && (!stripeStatus.connected || !stripeStatus.chargesEnabled)
+                    !community?.isOwner && !paymentAvailable
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'btn-blue-gradient hover:opacity-90'
                   }`}
                   title={
-                    !community?.isOwner && stripeStatus && (!stripeStatus.connected || !stripeStatus.chargesEnabled)
+                    !community?.isOwner && !paymentAvailable
                       ? 'Payment support is currently unavailable'
                       : 'Support this community'
                   }

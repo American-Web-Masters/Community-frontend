@@ -21,6 +21,7 @@ const StripeStatusBanner = ({ communityId, isOwner }) => {
       setChecking(true);
       const response = await getStripeAccountStatus(communityId);
       setStripeStatus(response.data);
+      console.log(response.data)
     } catch (error) {
       console.error('Error checking Stripe status:', error);
       setStripeStatus({ connected: false });
@@ -54,51 +55,76 @@ const StripeStatusBanner = ({ communityId, isOwner }) => {
     return null;
   }
 
-  // Don't show if Stripe is connected and working
-  if (stripeStatus?.connected && stripeStatus?.chargesEnabled) {
+  // Don't show if Stripe is fully working (has account, details submitted, and charges enabled)
+  if (stripeStatus?.hasStripeAccount && stripeStatus?.detailsSubmitted && stripeStatus?.chargesEnabled) {
     return null;
   }
+
+  // Determine the current state and appropriate messaging
+  const getStatusInfo = () => {
+    if (!stripeStatus?.hasStripeAccount) {
+      return {
+        title: 'Payment Support Not Connected',
+        message: 'Connect your Stripe account to enable community members to send you donations and support. The support button will be disabled until this is set up.',
+        buttonText: 'Connect Stripe',
+        icon: <FaStripe className="w-5 h-5 text-amber-600 mt-0.5" />
+      };
+    }
+    
+    if (!stripeStatus?.detailsSubmitted) {
+      return {
+        title: 'Complete Stripe Account Setup',
+        message: 'Your Stripe account is connected but needs additional information. Please complete your account details to start receiving payments.',
+        buttonText: 'Complete Setup',
+        icon: <FaExclamationTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+      };
+    }
+    
+    if (!stripeStatus?.chargesEnabled) {
+      return {
+        title: 'Account Under Review',
+        message: 'Your Stripe account details are submitted and under review. You\'ll be able to receive payments once the review is complete.',
+        buttonText: 'Check Status',
+        icon: <FaExclamationTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+      };
+    }
+    
+    return {
+      title: 'Payment Setup Required',
+      message: 'There\'s an issue with your payment setup. Please complete the Stripe onboarding process.',
+      buttonText: 'Fix Setup',
+      icon: <FaExclamationTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+    };
+  };
+
+  const statusInfo = getStatusInfo();
 
   return (
     <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
       <div className="flex items-start space-x-3">
         <div className="flex-shrink-0">
-          {stripeStatus?.connected ? (
-            <FaExclamationTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
-          ) : (
-            <FaStripe className="w-5 h-5 text-amber-600 mt-0.5" />
-          )}
+          {statusInfo.icon}
         </div>
         
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-medium text-amber-800">
-            {stripeStatus?.connected ? 'Stripe Account Setup Required' : 'Payment Support Not Connected'}
+            {statusInfo.title}
           </h3>
           
           <div className="mt-2 text-sm text-amber-700">
-            {stripeStatus?.connected ? (
-              <p>
-                Your Stripe account is connected but requires additional setup to receive payments. 
-                Please complete the verification process.
-              </p>
-            ) : (
-              <p>
-                Connect your Stripe account to enable community members to send you donations and support.
-                The support button will be disabled until this is set up.
-              </p>
-            )}
+            <p>{statusInfo.message}</p>
           </div>
 
-          {stripeStatus?.requirements?.disabled_reason && (
+          {stripeStatus?.accountStatus && (
             <div className="mt-2 text-xs text-amber-600">
-              <strong>Issue:</strong> {stripeStatus.requirements.disabled_reason.replace(/_/g, ' ')}
+              <strong>Status:</strong> {stripeStatus.accountStatus}
             </div>
           )}
 
           <div className="mt-3 flex items-center space-x-3">
             <button
               onClick={handleConnectStripe}
-              disabled={loading}
+              disabled={loading || (stripeStatus?.detailsSubmitted && !stripeStatus?.chargesEnabled)}
               className="inline-flex items-center px-3 py-2 border border-amber-300 shadow-sm text-sm leading-4 font-medium rounded-md text-amber-800 bg-amber-100 hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50"
             >
               {loading ? (
@@ -106,13 +132,13 @@ const StripeStatusBanner = ({ communityId, isOwner }) => {
               ) : (
                 <>
                   <FaStripe className="mr-2 -ml-0.5 h-4 w-4" />
-                  {stripeStatus?.connected ? 'Complete Setup' : 'Connect Stripe'}
+                  {statusInfo.buttonText}
                 </>
               )}
             </button>
             
             <button
-              onClick={() => setStripeStatus({ connected: true, chargesEnabled: true })}
+              onClick={() => setStripeStatus({ hasStripeAccount: true, detailsSubmitted: true, chargesEnabled: true })}
               className="text-xs text-amber-700 hover:text-amber-600 underline"
             >
               Hide for now
@@ -121,7 +147,7 @@ const StripeStatusBanner = ({ communityId, isOwner }) => {
         </div>
 
         <button
-          onClick={() => setStripeStatus({ connected: true, chargesEnabled: true })}
+          onClick={() => setStripeStatus({ hasStripeAccount: true, detailsSubmitted: true, chargesEnabled: true })}
           className="flex-shrink-0 text-amber-400 hover:text-amber-600"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
