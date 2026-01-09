@@ -110,7 +110,7 @@ const CommunityCard = ({
           <button
             onClick={() => !isLoading && onJoinClick && onJoinClick(id)}
             disabled={isLoading}
-            className={`w-full py-2.5 text-sm font-medium rounded-3xl transition-colors duration-200 shadow-sm ${
+            className={`cursor-pointer w-full py-2.5 text-sm font-medium rounded-3xl transition-colors duration-200 shadow-sm ${
               isLoading 
                 ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
                 : 'btn-blue-gradient hover:bg-blue-700'

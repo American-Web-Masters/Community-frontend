@@ -249,7 +249,7 @@ const ModeratorQueue = ({ community, currentUser }) => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2 px-3 rounded-md text-xs font-medium transition-all duration-200 ${
+                className={`flex-1 cursor-pointer py-2 px-3 rounded-md text-xs font-medium transition-all duration-200 ${
                   activeTab === tab
                     ? "btn-blue-gradient text-white shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
@@ -352,13 +352,13 @@ const ModeratorQueue = ({ community, currentUser }) => {
                     <div className="flex gap-1 flex-shrink-0">
                       <button
                         onClick={() => handleApprove(item.id)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
+                        className="cursor-pointer bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
                       >
                         Approve
                       </button>
                       <button
                         onClick={() => handleReject(item.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
+                        className="bg-red-500 cursor-pointer hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
                       >
                         Reject
                       </button>
@@ -407,13 +407,13 @@ const ModeratorQueue = ({ community, currentUser }) => {
                     <div className="flex gap-3">
                       <button
                         onClick={() => handleApprove(item.id)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded-3xl text-xs font-medium transition-colors"
+                        className="cursor-pointer bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded-3xl text-xs font-medium transition-colors"
                       >
                         Approve
                       </button>
                       <button
                         onClick={() => handleReject(item.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-3xl text-xs font-medium transition-colors"
+                        className="cursor-pointer bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-3xl text-xs font-medium transition-colors"
                       >
                         Reject
                       </button>
