@@ -495,3 +495,50 @@ export const togglePrayerPin = async (communityId, prayerId) => {
     throw error;
   }
 };
+
+/**
+ * Connect Stripe account for community
+ * @param {string} communityId - ID of the community
+ * @returns {Promise<Object>} Response with Stripe onboarding URL
+ */
+export const connectStripe = async (communityId) => {
+  try {
+    const response = await apiClient.post('/payments/create-stripe-account', {
+      communityId
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error connecting Stripe:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get Stripe account status for community (for moderators)
+ * @param {string} communityId - ID of the community
+ * @returns {Promise<Object>} Response with Stripe account status
+ */
+export const getStripeAccountStatus = async (communityId) => {
+  try {
+    const response = await apiClient.get(`/payments/stripe-account-status/${communityId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting Stripe account status:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get community payment availability (for all users)
+ * @param {string} communityId - ID of the community
+ * @returns {Promise<Object>} Response with payment availability
+ */
+export const getCommunityPaymentStatus = async (communityId) => {
+  try {
+    const response = await apiClient.get(`/payments/community-payment-status/${communityId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting community payment status:', error);
+    throw error;
+  }
+};

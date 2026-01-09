@@ -4,12 +4,13 @@ import { useSelector } from "react-redux";
 import { selectUser } from "../../store/userSlice";
 import { useStableMasonry } from "../../hooks/useStableMasonry";
 import PrayerCard from "../../components/ui/PrayerCard";
+import StripeStatusBanner from "../../components/ui/StripeStatusBanner";
 import { IoPersonOutline, IoArrowBackOutline, IoFlagOutline } from "react-icons/io5";
 import { PiChatText , PiBellLight} from "react-icons/pi";
 import { FaRegHeart, FaEdit } from "react-icons/fa";
 import { MdCheck, MdClose, MdCameraAlt } from 'react-icons/md';
 import { IoShareSocialOutline } from "react-icons/io5";
-import { fetchCommunityById, updateCommunityDetails } from "../../api";
+import { fetchCommunityById, updateCommunityDetails, getStripeAccountStatus, getCommunityPaymentStatus } from "../../api";
 import { flagPrayer } from "../../api/prayer";
 import apiClient  from "../../api/client";
 import toast from 'react-hot-toast';
@@ -37,6 +38,8 @@ const CommunityDetails = () => {
   const [flagDescription, setFlagDescription] = useState('');
   const [postApprovalEnabled, setPostApprovalEnabled] = useState(false);
   const [loading2, setLoading2] = useState(false);
+  const [stripeStatus, setStripeStatus] = useState(null);
+  const [paymentAvailable, setPaymentAvailable] = useState(false);
   // Header editing states
   const [isEditingHeader, setIsEditingHeader] = useState(false);
   const [headerLoading, setHeaderLoading] = useState(false);
@@ -557,7 +560,40 @@ const CommunityDetails = () => {
     }
   };
 
+  const checkCommunityStripeStatus = async () => {
+    if (!id) return;
+
+    try {
+      if (community?.isOwner) {
+        // Moderators get detailed status for admin management
+        const response = await getStripeAccountStatus(id);
+        setStripeStatus(response.data);
+        setPaymentAvailable(response.data?.chargesEnabled || false);
+      } else {
+        // Non-moderators get public payment availability
+        const response = await getCommunityPaymentStatus(id);
+        setPaymentAvailable(response.data?.paymentsEnabled || false);
+      }
+    } catch (error) {
+      console.error('Error checking Stripe status:', error);
+      // Default to disabled for any errors
+      setStripeStatus({ hasStripeAccount: false });
+      setPaymentAvailable(false);
+    }
+  };
+
+  useEffect(() => {
+    if (community) {
+      checkCommunityStripeStatus();
+    }
+  }, [community, id]);
+
   const handleSupportClick = () => {
+    // Check if payments are available for non-owners
+    if (!community?.isOwner && !paymentAvailable) {
+      toast.error('Payment support is currently unavailable for this community.');
+      return;
+    }
     navigate(`/communities/${id}/support`);
   };
 
@@ -797,7 +833,17 @@ const CommunityDetails = () => {
                 </button>
                 <button 
                   onClick={handleSupportClick}
-                  className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2"
+                  disabled={!community?.isOwner && !paymentAvailable}
+                  className={`px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 transition-opacity ${
+                    !community?.isOwner && !paymentAvailable
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'btn-blue-gradient hover:opacity-90'
+                  }`}
+                  title={
+                    !community?.isOwner && !paymentAvailable
+                      ? 'Payment support is currently unavailable'
+                      : 'Support this community'
+                  }
                 >
                   <span><FaRegHeart className="w-4 h-4" /></span>
                   <span>Support</span>
@@ -1018,6 +1064,12 @@ const CommunityDetails = () => {
 
       {/* Content Area */}
       <div className="px-4 pb-24">
+        {/* Stripe Status Banner for Community Owners */}
+        <StripeStatusBanner 
+          communityId={id}
+          isOwner={community?.isOwner}
+        />
+        
         {activeTab === "Feed" && (
           <div className="space-y-4">
             {loading ? (
