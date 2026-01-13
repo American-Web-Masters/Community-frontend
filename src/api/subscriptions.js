@@ -32,13 +32,26 @@ export const getUserSubscriptions = async () => {
 };
 
 /**
+ * Get user's subscriptions from new endpoint
+ * @returns {Promise} - Promise resolving to user's subscriptions
+ */
+export const getMySubscriptions = async () => {
+  try {
+    const response = await apiClient.get('/subscriptions/my-subscriptions');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
  * Cancel a subscription
- * @param {string} subscriptionId - Stripe subscription ID
+ * @param {string} subscriptionId - Database subscription ID (not Stripe ID)
  * @returns {Promise} - Promise resolving to cancellation confirmation
  */
 export const cancelSubscription = async (subscriptionId) => {
   try {
-    const response = await apiClient.delete(`/subscriptions/${subscriptionId}/cancel`);
+    const response = await apiClient.patch(`/subscriptions/${subscriptionId}/cancel`);
     return response.data;
   } catch (error) {
     throw error;
