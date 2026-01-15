@@ -19,7 +19,7 @@ const CommunitySupport = () => {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
   const [paymentType, setPaymentType] = useState('one-time'); // 'one-time' or 'recurring'
-  const [recurringInterval, setRecurringInterval] = useState('month');
+  const [recurringInterval] = useState('month'); // Fixed to monthly only
   const [communityInfo, setCommunityInfo] = useState(null);
   const [paymentAvailable, setPaymentAvailable] = useState(false);
   const [checkingStripe, setCheckingStripe] = useState(true);
@@ -29,12 +29,6 @@ const CommunitySupport = () => {
     { label: '$25', value: 2500, description: 'Kind Gift' },
     { label: '$50', value: 5000, description: 'Generous Donation' },
     { label: '$100', value: 10000, description: 'Major Support' }
-  ];
-
-  const recurringIntervals = [
-    { value: 'week', label: 'Weekly' },
-    { value: 'biweek', label: 'Bi-weekly' },
-    { value: 'month', label: 'Monthly' }
   ];
 
   const handleAmountSelect = (amount) => {
@@ -84,6 +78,27 @@ useEffect(() => {
     if (!selectedAmount || selectedAmount < 50) { // Minimum $0.50
       return;
     }
+    
+    // Store payment data in localStorage for success page fallback
+    if (paymentType === 'recurring') {
+      localStorage.setItem('pendingPayment', JSON.stringify({
+        paymentType,
+        amount: selectedAmount,
+        interval: recurringInterval,
+        communityName: communityInfo?.name,
+        communityId: id
+      }));
+      
+      // Also store in sessionStorage as backup
+      sessionStorage.setItem('paymentDetails', JSON.stringify({
+        paymentType,
+        amount: selectedAmount,
+        interval: recurringInterval,
+        communityName: communityInfo?.name,
+        communityId: id
+      }));
+    }
+    
     setShowPaymentForm(true);
   };
 
@@ -245,24 +260,26 @@ useEffect(() => {
                       ))}
                     </div>
 
-                    {/* Custom Amount */}
-                    <div className="mt-6">
-                      <label className="block text-base lg:text-lg font-medium text-gray-700 mb-3">
-                        Custom Amount
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-lg">$</span>
-                        <input
-                          type="number"
-                          value={customAmount}
-                          onChange={handleCustomAmountChange}
-                          placeholder="Enter amount"
-                          className="w-full pl-10 pr-4 py-4 lg:py-5 border bg-white border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg shadow-sm"
-                          min="0.50"
-                          step="0.01"
-                        />
+                    {/* Custom Amount - Hidden for recurring payments */}
+                    {paymentType === 'one-time' && (
+                      <div className="mt-6">
+                        <label className="block text-base lg:text-lg font-medium text-gray-700 mb-3">
+                          Custom Amount
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-lg">$</span>
+                          <input
+                            type="number"
+                            value={customAmount}
+                            onChange={handleCustomAmountChange}
+                            placeholder="Enter amount"
+                            className="w-full pl-10 pr-4 py-4 lg:py-5 border bg-white border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg shadow-sm"
+                            min="0.50"
+                            step="0.01"
+                          />
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
@@ -310,8 +327,8 @@ useEffect(() => {
                         <div className="flex items-center space-x-3">
                           <span className="text-xl">🔄</span>
                           <div className="text-left">
-                            <div className="font-medium text-gray-800">Recurring Payment</div>
-                            <div className="text-sm text-gray-500">Automatic ongoing support</div>
+                            <div className="font-medium text-gray-800">Monthly Recurring Payment</div>
+                            <div className="text-sm text-gray-500">Automatic monthly support</div>
                           </div>
                         </div>
                         <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center ${
@@ -323,43 +340,21 @@ useEffect(() => {
                         </div>
                       </button>
                     </div>
-
-                    {/* Recurring Interval Selection */}
-                    {paymentType === 'recurring' && (
-                      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Frequency
-                        </label>
-                        <div className="grid grid-cols-3 gap-2">
-                          {recurringIntervals.map((interval) => (
-                            <button
-                              key={interval.value}
-                              onClick={() => setRecurringInterval(interval.value)}
-                              className={`p-2 text-sm rounded-md transition-colors ${
-                                recurringInterval === interval.value
-                                  ? 'bg-blue-600 text-white'
-                                  : 'bg-white text-gray-700 hover:bg-gray-50'
-                              }`}
-                            >
-                              {interval.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
-                  {/* Personal Message */}
-                  <div className="mb-8">
-                    <h2 className="text-xl lg:text-2xl font-semibold text-gray-800 mb-4">Add a Personal Message or Prayer</h2>
-                    <textarea
-                      value={personalMessage}
-                      onChange={(e) => setPersonalMessage(e.target.value)}
-                      placeholder="Write your message of support..."
-                      className="w-full p-4 lg:p-5 border-1 border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none text-base lg:text-lg shadow-sm"
-                      rows="6"
-                    />
-                  </div>
+                  {/* Personal Message - Hidden for recurring payments */}
+                  {paymentType === 'one-time' && (
+                    <div className="mb-8">
+                      <h2 className="text-xl lg:text-2xl font-semibold text-gray-800 mb-4">Add a Personal Message or Prayer</h2>
+                      <textarea
+                        value={personalMessage}
+                        onChange={(e) => setPersonalMessage(e.target.value)}
+                        placeholder="Write your message of support..."
+                        className="w-full p-4 lg:p-5 border-1 border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none text-base lg:text-lg shadow-sm"
+                        rows="6"
+                      />
+                    </div>
+                  )}
                 </div>
 
               {/* Send Support Button */}
@@ -374,7 +369,7 @@ useEffect(() => {
                   }`}
                 >
                   {paymentType === 'recurring' 
-                    ? `Set Up ${recurringInterval === 'biweek' ? 'Bi-weekly' : recurringInterval.charAt(0).toUpperCase() + recurringInterval.slice(1)} Payment (${selectedAmount ? `$${(selectedAmount / 100).toFixed(2)}` : '$0.00'})`
+                    ? `Set Up Monthly Payment (${selectedAmount ? `$${(selectedAmount / 100).toFixed(2)}` : '$0.00'})`
                     : `Send Support (${selectedAmount ? `$${(selectedAmount / 100).toFixed(2)}` : '$0.00'})`
                   }
                 </button>
@@ -396,7 +391,7 @@ useEffect(() => {
                 amount={selectedAmount}
                 interval={recurringInterval}
                 communityId={id}
-                description={`${recurringInterval === 'biweek' ? 'Bi-weekly' : recurringInterval} support for ${communityInfo?.name || 'community'}`}
+                description={`Monthly support for ${communityInfo?.name || 'community'}`}
                 onSuccess={handlePaymentSuccess}
                 onCancel={handlePaymentCancel}
               />

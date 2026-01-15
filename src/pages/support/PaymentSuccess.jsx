@@ -1,14 +1,18 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/userSlice';
 import Header from '../../components/ui/Header';
 import BottomNavBar from '../../components/ui/BottomNavBar';
+import apiClient from '../../api/client';
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const user = useSelector(selectUser);
+  const [paymentDetails, setPaymentDetails] = useState(null);
+  const [loading, setLoading] = useState(false);
   
   // Get payment data from navigation state
   const { paymentType, amount, interval, communityName, paymentIntent } = location.state || {};
@@ -16,8 +20,74 @@ const PaymentSuccess = () => {
   // Debug logging
   console.log('PaymentSuccess - Received data:', { paymentType, amount, interval, communityName, paymentIntent });
 
+  // Get session_id from URL params (for Stripe redirects)
+  const sessionId = searchParams.get('session_id');
+
+  useEffect(() => {
+    // If we have session_id from Stripe redirect, try to get payment details from multiple sources
+    if (sessionId && !amount) {
+      // Method 1: Try localStorage first
+      let paymentData = null;
+      
+      const pendingPayment = localStorage.getItem('pendingPayment');
+      if (pendingPayment) {
+        try {
+          paymentData = JSON.parse(pendingPayment);
+          localStorage.removeItem('pendingPayment');
+        } catch (error) {
+          console.error('Error parsing payment data from localStorage:', error);
+        }
+      }
+      
+      // Method 2: Try sessionStorage as backup
+      if (!paymentData) {
+        const sessionPayment = sessionStorage.getItem('paymentDetails');
+        if (sessionPayment) {
+          try {
+            paymentData = JSON.parse(sessionPayment);
+            sessionStorage.removeItem('paymentDetails');
+          } catch (error) {
+            console.error('Error parsing payment data from sessionStorage:', error);
+          }
+        }
+      }
+      
+      // Method 3: Check if data is stored in URL hash (we can implement this)
+      if (!paymentData && window.location.hash) {
+        try {
+          const hashData = window.location.hash.substring(1);
+          const decodedData = decodeURIComponent(hashData);
+          paymentData = JSON.parse(atob(decodedData)); // base64 decode
+        } catch (error) {
+          console.error('Error parsing payment data from URL hash:', error);
+        }
+      }
+      
+      if (paymentData) {
+        setPaymentDetails(paymentData);
+      }
+    }
+  }, [sessionId]);
+
+  const fetchPaymentDetails = async () => {
+    try {
+      setLoading(true);
+      // You might need to create this endpoint in your backend
+      const response = await apiClient.get(`/api/donations/session/${sessionId}`);
+      setPaymentDetails(response.data);
+    } catch (error) {
+      console.error('Error fetching payment details:', error);
+      // Fallback - we'll handle this gracefully
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Try to get amount from multiple sources
-  const displayAmount = amount || paymentIntent?.amount || 0;
+  const displayAmount = amount || paymentDetails?.amount || paymentIntent?.amount || 0;
+  const displayPaymentType = paymentDetails?.paymentType || paymentType || 'one-time';
+  const displayInterval = paymentDetails?.interval || interval || 'month';
+  const displayCommunityName = paymentDetails?.communityName || communityName || 'Community';
   
   console.log('PaymentSuccess - Display amount:', displayAmount);
 
@@ -74,10 +144,10 @@ const PaymentSuccess = () => {
               </div>
               
               <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
-                {paymentType === 'recurring' ? 'Subscription Created! 🎉' : 'Payment Successful! 🎉'}
+                {displayPaymentType === 'recurring' ? 'Subscription Created! 🎉' : 'Payment Successful! 🎉'}
               </h1>
               <p className="text-lg text-white/90 max-w-xl mx-auto">
-                {paymentType === 'recurring' 
+                {displayPaymentType === 'recurring' 
                   ? 'Thank you for setting up recurring support! Your ongoing blessings will continuously strengthen our community.'
                   : 'Thank you for your generous blessing! Your support will strengthen our community.'
                 }
@@ -99,12 +169,12 @@ const PaymentSuccess = () => {
                       </svg>
                     </div>
                     <h3 className="text-lg font-bold text-green-800">
-                      {paymentType === 'recurring' ? 'Subscription Confirmed' : 'Payment Confirmed'}
+                      {displayPaymentType === 'recurring' ? 'Subscription Confirmed' : 'Payment Confirmed'}
                     </h3>
                   </div>
                   <p className="text-green-700 mb-3">
-                    {paymentType === 'recurring' 
-                      ? `Your ${formatInterval(interval)} subscription has been set up successfully. Future payments will be processed automatically.`
+                    {displayPaymentType === 'recurring' 
+                      ? `Your ${formatInterval(displayInterval)} subscription has been set up successfully. Future payments will be processed automatically.`
                       : 'Your payment has been processed successfully and your blessing is now part of our community.'
                     }
                   </p>
@@ -116,21 +186,21 @@ const PaymentSuccess = () => {
                         <p className="font-medium text-green-800">Amount:</p>
                         <p className="text-green-600">${displayAmount ? (displayAmount / 100).toFixed(2) : '0.00'}</p>
                       </div>
-                      {paymentType === 'recurring' && (
+                      {displayPaymentType === 'recurring' && (
                         <div>
                           <p className="font-medium text-green-800">Frequency:</p>
-                          <p className="text-green-600 capitalize">{formatInterval(interval)}</p>
+                          <p className="text-green-600 capitalize">{formatInterval(displayInterval)}</p>
                         </div>
                       )}
-                      {communityName && (
+                      {displayCommunityName && (
                         <div>
                           <p className="font-medium text-green-800">Supporting:</p>
-                          <p className="text-green-600">{communityName}</p>
+                          <p className="text-green-600">{displayCommunityName}</p>
                         </div>
                       )}
                       <div>
                         <p className="font-medium text-green-800">Type:</p>
-                        <p className="text-green-600 capitalize">{paymentType === 'recurring' ? 'Subscription' : 'One-time'}</p>
+                        <p className="text-green-600 capitalize">{displayPaymentType === 'recurring' ? 'Subscription' : 'One-time'}</p>
                       </div>
                     </div>
                   </div>
@@ -144,7 +214,7 @@ const PaymentSuccess = () => {
                 </div>
 
                 {/* What's Next Section for Recurring Payments */}
-                {paymentType === 'recurring' && (
+                {displayPaymentType === 'recurring' && (
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                     <h4 className="text-sm font-bold text-blue-800 mb-2">What happens next?</h4>
                     <ul className="text-sm text-blue-700 space-y-1">

@@ -33,9 +33,9 @@ const Profile = () => {
   const profileMenuItems = [
     {
       title: "My Subscriptions",
-      description: "Manage your recurring payments (demo)",
+      description: "Manage your recurring payments",
       icon: "💳",
-      onClick: () => navigate('/demo-subscriptions')
+      onClick: () => navigate('/my-subscriptions')
     },
     {
       title: "Logout",
