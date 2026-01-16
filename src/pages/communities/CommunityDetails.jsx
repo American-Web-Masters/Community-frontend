@@ -4,12 +4,13 @@ import { useSelector } from "react-redux";
 import { selectUser } from "../../store/userSlice";
 import { useStableMasonry } from "../../hooks/useStableMasonry";
 import PrayerCard from "../../components/ui/PrayerCard";
+import StripeStatusBanner from "../../components/ui/StripeStatusBanner";
 import { IoPersonOutline, IoArrowBackOutline, IoFlagOutline } from "react-icons/io5";
 import { PiChatText , PiBellLight} from "react-icons/pi";
 import { FaRegHeart, FaEdit } from "react-icons/fa";
 import { MdCheck, MdClose, MdCameraAlt } from 'react-icons/md';
 import { IoShareSocialOutline } from "react-icons/io5";
-import { fetchCommunityById, updateCommunityDetails } from "../../api";
+import { fetchCommunityById, updateCommunityDetails, getStripeAccountStatus, getCommunityPaymentStatus } from "../../api";
 import { flagPrayer } from "../../api/prayer";
 import apiClient  from "../../api/client";
 import toast from 'react-hot-toast';
@@ -37,6 +38,8 @@ const CommunityDetails = () => {
   const [flagDescription, setFlagDescription] = useState('');
   const [postApprovalEnabled, setPostApprovalEnabled] = useState(false);
   const [loading2, setLoading2] = useState(false);
+  const [stripeStatus, setStripeStatus] = useState(null);
+  const [paymentAvailable, setPaymentAvailable] = useState(false);
   // Header editing states
   const [isEditingHeader, setIsEditingHeader] = useState(false);
   const [headerLoading, setHeaderLoading] = useState(false);
@@ -557,7 +560,40 @@ const CommunityDetails = () => {
     }
   };
 
+  const checkCommunityStripeStatus = async () => {
+    if (!id) return;
+
+    try {
+      if (community?.isOwner) {
+        // Moderators get detailed status for admin management
+        const response = await getStripeAccountStatus(id);
+        setStripeStatus(response.data);
+        setPaymentAvailable(response.data?.chargesEnabled || false);
+      } else {
+        // Non-moderators get public payment availability
+        const response = await getCommunityPaymentStatus(id);
+        setPaymentAvailable(response.data?.paymentsEnabled || false);
+      }
+    } catch (error) {
+      console.error('Error checking Stripe status:', error);
+      // Default to disabled for any errors
+      setStripeStatus({ hasStripeAccount: false });
+      setPaymentAvailable(false);
+    }
+  };
+
+  useEffect(() => {
+    if (community) {
+      checkCommunityStripeStatus();
+    }
+  }, [community, id]);
+
   const handleSupportClick = () => {
+    // Check if payments are available for non-owners
+    if (!community?.isOwner && !paymentAvailable) {
+      toast.error('Payment support is currently unavailable for this community.');
+      return;
+    }
     navigate(`/communities/${id}/support`);
   };
 
@@ -592,7 +628,7 @@ const CommunityDetails = () => {
       <div className="ml-3 px-4 pt-4 pb-2">
         <button 
           onClick={handleBackClick}
-          className="flex items-center space-x-2 bg-white text-gray-800 px-4 py-3 rounded-full shadow-sm hover:shadow-md transition-all duration-200"
+          className="flex cursor-pointer items-center space-x-2 bg-white text-gray-800 px-4 py-3 rounded-full shadow-sm hover:shadow-md transition-all duration-200"
         >
           <IoArrowBackOutline className="w-5 h-5" />
           <span className="text-sm font-medium">Back to communities</span>
@@ -752,7 +788,7 @@ const CommunityDetails = () => {
                 {isOwnerOrModerator && (
                   <button
                     onClick={handleEditHeader}
-                    className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors duration-200"
+                    className="cursor-pointer p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors duration-200"
                     title="Edit Community Details"
                   >
                     <FaEdit size={20} />
@@ -791,18 +827,28 @@ const CommunityDetails = () => {
 
               {/* Action Buttons */}
               <div className="flex md:items-center space-x-3 flex-wrap gap-y-2">
-                <button className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 justify-center">
+                <button className="cursor-pointer btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 justify-center">
                   <span><PiChatText className="w-4 h-4" /></span>
                   <span>Chat</span>
                 </button>
                 <button 
                   onClick={handleSupportClick}
-                  className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2"
+                  disabled={!community?.isOwner && !paymentAvailable}
+                  className={`cursor-pointer px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 transition-opacity ${
+                    !community?.isOwner && !paymentAvailable
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'btn-blue-gradient hover:opacity-90'
+                  }`}
+                  title={
+                    !community?.isOwner && !paymentAvailable
+                      ? 'Payment support is currently unavailable'
+                      : 'Support this community'
+                  }
                 >
                   <span><FaRegHeart className="w-4 h-4" /></span>
                   <span>Support</span>
                 </button>
-                <button className="btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2  justify-center">
+                <button className="cursor-pointer btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2  justify-center">
                   <span><PiBellLight className="w-4 h-4" /></span>
                   <span>Notifications</span>
                 </button>
@@ -813,7 +859,7 @@ const CommunityDetails = () => {
                     copied 
                       ? 'bg-green-500 text-white' 
                       : 'btn-blue-gradient hover:opacity-90'
-                  }`}
+                  } cursor-pointer`}
                 >
                   <span>
                     {copied ? (
@@ -842,7 +888,7 @@ const CommunityDetails = () => {
               <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm w-full min-w-max">
                 <button
                   onClick={() => setActiveTab("Feed")}
-                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[85px] sm:min-w-[95px] ${
+                  className={`px-4 cursor-pointer sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[85px] sm:min-w-[95px] ${
                     activeTab === "Feed"
                       ? "btn-blue-gradient text-white shadow-lg"
                       : "text-gray-700 hover:bg-white/30"
@@ -852,7 +898,7 @@ const CommunityDetails = () => {
                 </button>
                 <button
                   onClick={() => setActiveTab("Members")}
-                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[95px] sm:min-w-[110px] ${
+                  className={`px-4 cursor-pointer sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[95px] sm:min-w-[110px] ${
                     activeTab === "Members"
                       ? "btn-blue-gradient text-white shadow-lg"
                       : "text-gray-700 hover:bg-white/30"
@@ -862,7 +908,7 @@ const CommunityDetails = () => {
                 </button>
                 <button
                   onClick={() => setActiveTab("Event")}
-                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[85px] sm:min-w-[95px] ${
+                  className={`px-4 cursor-pointer sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[85px] sm:min-w-[95px] ${
                     activeTab === "Event"
                       ? "btn-blue-gradient text-white shadow-lg"
                       : "text-gray-700 hover:bg-white/30"
@@ -872,7 +918,7 @@ const CommunityDetails = () => {
                 </button>
                 <button
                   onClick={() => setActiveTab("About")}
-                  className={`px-4 sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[85px] sm:min-w-[95px] ${
+                  className={`px-4 cursor-pointer sm:px-6 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[85px] sm:min-w-[95px] ${
                     activeTab === "About"
                       ? "btn-blue-gradient text-white shadow-lg"
                       : "text-gray-700 hover:bg-white/30"
@@ -883,7 +929,7 @@ const CommunityDetails = () => {
                 {isOwnerOrModerator && (
                   <button
                     onClick={() => setActiveTab("Moderator Queue")}
-                    className={`px-3 sm:px-4 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[130px] sm:min-w-[150px] ${
+                    className={`px-3 cursor-pointer sm:px-4 md:px-8 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none min-w-[130px] sm:min-w-[150px] ${
                       activeTab === "Moderator Queue"
                         ? "btn-blue-gradient text-white shadow-lg"
                         : "text-gray-700 hover:bg-white/30"
@@ -914,7 +960,7 @@ const CommunityDetails = () => {
             )}
 
             {/* Create New Event Button */}
-            {activeTab === "Event" && (
+            {(activeTab === "Event" && isOwnerOrModerator) && (
               <button 
                 onClick={handleCreateEvent}
                 className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg justify-center"
@@ -1018,6 +1064,12 @@ const CommunityDetails = () => {
 
       {/* Content Area */}
       <div className="px-4 pb-24">
+        {/* Stripe Status Banner for Community Owners */}
+        <StripeStatusBanner 
+          communityId={id}
+          isOwner={community?.isOwner}
+        />
+        
         {activeTab === "Feed" && (
           <div className="space-y-4">
             {loading ? (

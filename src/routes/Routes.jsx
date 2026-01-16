@@ -20,6 +20,10 @@ import AnsweredPrayers from "../pages/answered_prayer/AnsweredPrayers";
 import InviteValidation from "../pages/invite/InviteValidation";
 import CommunitySupport from "../pages/support/CommunitySupport";
 import PaymentSuccess from "../pages/support/PaymentSuccess";
+import DemoSubscriptionManagement from "../pages/support/DemoSubscriptionManagement";
+import SubscriptionManagement from "../pages/support/SubscriptionManagement";
+import StripeOnboardingSuccess from "../pages/communities/StripeOnboardingSuccess";
+import StripeOnboardingRefresh from "../pages/communities/StripeOnboardingRefresh";
 
 const Routes = () =>{
     return(
@@ -114,6 +118,22 @@ const Routes = () =>{
             }
             />
             <Route
+            path="/community/:communityId/stripe/success"
+            element={
+                <ProtectedRoute>
+                    <StripeOnboardingSuccess/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/community/:communityId/stripe/refresh"
+            element={
+                <ProtectedRoute>
+                    <StripeOnboardingRefresh/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
             path="/payment-success"
             element={
                 <ProtectedRoute>
@@ -173,6 +193,22 @@ const Routes = () =>{
             path="/invite/:token"
             element={
                 <InviteValidation/>
+            }
+            />
+            <Route
+            path="/demo-subscriptions"
+            element={
+                <ProtectedRoute>
+                    <DemoSubscriptionManagement/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/my-subscriptions"
+            element={
+                <ProtectedRoute>
+                    <SubscriptionManagement/>
+                </ProtectedRoute>
             }
             />
         </AppRoutes>
