@@ -8,6 +8,28 @@ import CommunityCard from "../communities/subcomponents/CommunityCard";
 import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu } from "react-icons/io5";
 import { IoPeopleOutline } from "react-icons/io5";
 
+// Custom styles for thin scrollbars
+const scrollbarStyles = `
+  .thin-scrollbar::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+  .thin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .thin-scrollbar::-webkit-scrollbar-thumb {
+    background: #A6D3FF;
+    border-radius: 10px;
+  }
+  .thin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #8BC1FF;
+  }
+  .thin-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #A6D3FF transparent;
+  }
+`;
+
 // Mock data for chats
 const mockChats = [
   {
@@ -136,66 +158,70 @@ const Messages = () => {
   }
 
   return (
-    <div className="min-h-screen light-background overflow-hidden">
+    <>
+      <style>{scrollbarStyles}</style>
+      <div className="min-h-screen light-background overflow-hidden">
       <div className="flex" style={{ height: 'calc(100vh - 80px)' }}>
         {/* Sidebar Toggle Button */}
-        <div className="w-14 flex flex-col items-center justify-center space-y-6 mr-3">
+        <div className="w-14 flex flex-col items-center justify-center space-y-6 mr-5">
+          <div className="side-trapezoid btn-blue-gradient flex flex-col items-center justify-center">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="w-12 h-12 rounded-full btn-blue-gradient flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md"
+            className="flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md"
           >
             <IoMenu className="w-6 h-6 text-white" />
           </button>
-          <button className="w-12 h-12 rounded-full btn-blue-gradient flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md">
+          <button className="flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md">
             <IoPeopleOutline className="w-6 h-6 text-white" />
           </button>
+        </div>
         </div>
 
         {/* Left Sidebar Container */}
         {isSidebarOpen && (
           <div className="flex flex-col mt-4">
-            {/* Back Button - Outside above sidebar */}
-            <button
-              onClick={() => navigate(-1)}
-              className="w-10 h-10 rounded-full bg-[#03045E] flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-sm mb-3 ml-4"
-            >
-              <IoChevronBack className="w-5 h-5 text-white" />
-            </button>
+            {/* Back Button and Search - Same Line */}
+            <div className="flex items-center space-x-3 mb-3 ml-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="w-10 h-10 rounded-full bg-[#03045E] flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-sm flex-shrink-0"
+              >
+                <IoChevronBack className="w-5 h-5 text-white" />
+              </button>
+              
+              {/* Search Input */}
+              <div className="relative flex-1">
+                <IoSearchOutline className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="search"
+                  className="w-full pl-9 pr-3 py-2 rounded-full bg-white/70 border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-300"
+                />
+              </div>
+            </div>
+
+            {/* Filter Tabs - Below Search */}
+            <div className="flex space-x-2 mb-3 ml-4">
+              {["All", "Unread", "Communities"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 ${
+                    activeTab === tab
+                      ? "btn-blue-gradient text-white shadow-sm"
+                      : "bg-white/70 text-gray-700 hover:bg-white/90"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
 
             {/* Sidebar */}
-            <div className="w-80 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-tr-2xl rounded-br-2xl shadow-sm flex-1">
-              {/* Search and Filters */}
-              <div className="p-4 space-y-3 flex-shrink-0">
-                {/* Search Input */}
-                <div className="relative">
-                  <IoSearchOutline className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="search"
-                    className="w-full pl-9 pr-3 py-2 rounded-full bg-white/70 border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-300"
-                  />
-                </div>
-
-                {/* Filter Tabs */}
-                <div className="flex space-x-1">
-                  {["All", "Unread", "Communities"].map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
-                        activeTab === tab
-                          ? "btn-blue-gradient text-white shadow-sm"
-                          : "bg-white/70 text-gray-700 hover:bg-white/90"
-                      }`}
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <div className="w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-tr-2xl rounded-br-2xl shadow-sm flex-1">
 
           {/* Chats Section */}
-          <div className="flex-1 overflow-y-auto px-4 py-3" style={{ maxHeight: '45%' }}>
+          <div className="flex-1 overflow-y-auto px-4 py-3 thin-scrollbar" style={{ maxHeight: '45%' }}>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Chats</h3>
             <div className="space-y-1">
               {mockChats.map((chat) => (
@@ -241,7 +267,7 @@ const Messages = () => {
           </div>
 
           {/* Discover Section */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 pb-4" style={{ maxHeight: '45%' }}>
+          <div className="flex-1 overflow-y-auto px-4 py-3 pb-4 thin-scrollbar" style={{ maxHeight: '45%' }}>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Discover</h3>
             <div className="space-y-3">
               {mockCommunities.map((community) => (
@@ -290,7 +316,7 @@ const Messages = () => {
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5 thin-scrollbar">
             {mockMessages.map((message) => (
               <div
                 key={message.id}
@@ -331,7 +357,7 @@ const Messages = () => {
           </div>
 
           {/* Input Area */}
-          <div className="bg-white/50 backdrop-blur-sm border-t border-white/50 px-6 py-4 flex-shrink-0">
+          <div className="px-6 py-4 flex-shrink-0">
             <div className="flex items-center space-x-2">
               <input
                 type="text"
@@ -347,7 +373,8 @@ const Messages = () => {
       </div>
 
       <BottomNavBar />
-    </div>
+      </div>
+    </>
   );
 };
 
