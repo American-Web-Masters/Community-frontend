@@ -277,29 +277,34 @@ const Messages = () => {
 
         {/* Left Sidebar Container */}
         {isSidebarOpen && (
-          <div className="flex flex-col mt-4">
-            {/* Back Button and Search - Same Line */}
-            <div className="flex items-center space-x-3 mb-3 ml-4">
-              <button
+          <>
+          
+              <div className="fixed top-4.5 left-3">
+                <button
                 onClick={() => navigate(-1)}
-                className="w-10 h-10 rounded-full bg-[#03045E] flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-sm flex-shrink-0"
+                className="w-11 h-11 rounded-full bg-[#03045E] flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-sm flex-shrink-0"
               >
                 <IoChevronBack className="w-5 h-5 text-white" />
               </button>
+              </div>
+          
+          <div className="flex flex-col mt-4 mb-3">
+            {/* Back Button and Search - Same Line */}
+            <div className="flex items-center space-x-3 mb-2">
               
               {/* Search Input */}
               <div className="relative flex-1">
-                <IoSearchOutline className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <IoSearchOutline className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6 " />
                 <input
                   type="text"
                   placeholder="search"
-                  className="w-full pl-9 pr-3 py-2 rounded-full bg-white/70 border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-300"
+                  className="w-full h-11 pl-9 pr-3 py-2 rounded-full bg-white/70 border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-300 placeholder:text-[16px] placeholder:pl-2"
                 />
               </div>
             </div>
 
             {/* Filter Tabs - Below Search */}
-            <div className="flex space-x-2 mb-3 ml-4">
+            <div className="flex space-x-2 mb-3 ">
               {["All", "Unread", "Communities"].map((tab) => (
                 <button
                   key={tab}
@@ -319,7 +324,7 @@ const Messages = () => {
             <div className="w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-tr-2xl rounded-br-2xl shadow-sm flex-1">
 
           {/* Chats Section */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 thin-scrollbar" style={{ maxHeight: '45%' }}>
+          <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar" style={{ maxHeight: '45%' }}>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Chats</h3>
             {loading ? (
               <div className="text-center py-4 text-gray-500">Loading...</div>
@@ -362,13 +367,13 @@ const Messages = () => {
           </div>
 
           {/* Separator */}
-          <div className="px-4 py-2">
-            <div className="border-t border-gray-200"></div>
+          <div className="px-1 ">
+            <div className="border-t border-gray-300"></div>
           </div>
 
           {/* Discover Section */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 pb-4 thin-scrollbar" style={{ maxHeight: '45%' }}>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Discover</h3>
+          <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar" style={{ maxHeight: '45%' }}>
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Discover</h3>
             <div className="space-y-3">
               {mockCommunities.map((community) => (
                 <CommunityCard
@@ -387,6 +392,7 @@ const Messages = () => {
           </div>
         </div>
       </div>
+          </>
         )}
 
         {/* Main Chat Area */}
