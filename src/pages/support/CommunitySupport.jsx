@@ -219,7 +219,7 @@ useEffect(() => {
           </button>
 
           {/* Community Info */}
-          <div className="text-center mb-8 lg:mb-12">
+          <div className="text-center mb-8 lg:mb-8">
             <div className="w-20 h-20 lg:w-24 lg:h-24 mx-auto mb-4 rounded-full overflow-hidden shadow-lg">
               <img 
                 src={communityInfo?.coverPhoto || '/celebration-party.png'} 
@@ -240,15 +240,15 @@ useEffect(() => {
                 <div>
                   {/* Choose Blessing Amount Section */}
                   <div className="mb-8">
-                    <h2 className="text-xl lg:text-2xl font-semibold text-gray-800 mb-6">Choose Your Blessing Amount</h2>
+                    <h2 className="text-xl  font-semibold text-gray-800 mb-3">Choose Your Blessing Amount</h2>
                     
                     {/* Predefined Amounts Grid */}
-                    <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       {predefinedAmounts.map((amount) => (
                         <button
                           key={amount.value}
                           onClick={() => handleAmountSelect(amount.value)}
-                          className={`p-5 lg:p-6 rounded-lg border text-center transition-all hover:shadow-md ${
+                          className={`p-5  rounded-lg border text-center transition-all hover:shadow-md ${
                             selectedAmount === amount.value
                               ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                               : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
@@ -262,8 +262,8 @@ useEffect(() => {
 
                     {/* Custom Amount - Hidden for recurring payments */}
                     {paymentType === 'one-time' && (
-                      <div className="mt-6">
-                        <label className="block text-base lg:text-lg font-medium text-gray-700 mb-3">
+                      <div className="mt-3">
+                        <label className="block text-base lg:text-lg font-bold text-gray-700 mb-3">
                           Custom Amount
                         </label>
                         <div className="relative">
@@ -286,8 +286,8 @@ useEffect(() => {
                 {/* Right Column */}
                 <div>
                   {/* Payment Type Selection */}
-                  <div className="mb-8">
-                    <h2 className="text-xl lg:text-2xl font-semibold text-gray-800 mb-6">Payment Type</h2>
+                  <div className="mb-4">
+                    <h2 className="text-xl font-semibold text-gray-800 mb-3">Payment Type</h2>
                     
                     <div className="space-y-3">
                       {/* One-time Payment */}
@@ -344,14 +344,14 @@ useEffect(() => {
 
                   {/* Personal Message - Hidden for recurring payments */}
                   {paymentType === 'one-time' && (
-                    <div className="mb-8">
-                      <h2 className="text-xl lg:text-2xl font-semibold text-gray-800 mb-4">Add a Personal Message or Prayer</h2>
+                    <div className="mb-4">
+                      <h2 className="text-xl font-semibold text-gray-800 mb-3">Add a Personal Message or Prayer</h2>
                       <textarea
                         value={personalMessage}
                         onChange={(e) => setPersonalMessage(e.target.value)}
                         placeholder="Write your message of support..."
                         className="w-full p-4 lg:p-5 border-1 border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none text-base lg:text-lg shadow-sm"
-                        rows="6"
+                        rows="3"
                       />
                     </div>
                   )}

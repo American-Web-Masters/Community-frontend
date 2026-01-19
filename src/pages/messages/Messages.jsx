@@ -151,6 +151,9 @@ const Messages = () => {
   const [messageInput, setMessageInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
+  console.log(activeChat);
+  console.log(messages);
+  
 
   // Fetch all users
   useEffect(() => {
