@@ -38,17 +38,43 @@ const Profile = () => {
   }
 
   const tabs = [
-    { name: "Posts", icon: "�", component: Posts },
-    { name: "Communities", icon: "🏘️", component: Communities },
-    { name: "Testimonies", icon: "✨", component: Testimony },
-    { name: "Journal", icon: "📔", component: Journal },
-    { name: "Subscriptions", icon: "�", component: SubscriptionMgt },
+    { 
+      name: "Posts", 
+      component: Posts,
+      buttonText: "Create New Post",
+      buttonAction: () => navigate('/create')
+    },
+    { 
+      name: "Communities", 
+      component: Communities,
+      buttonText: "Create Community",
+      buttonAction: () => console.log('Create Community') // Add your logic here
+    },
+    { 
+      name: "Testimonies", 
+      component: Testimony,
+      buttonText: "Share Your Story",
+      buttonAction: () => console.log('Share Story') // Add your logic here
+    },
+    { 
+      name: "Journal", 
+      component: Journal,
+      buttonText: "Create New Entry",
+      buttonAction: () => console.log('Create Entry') // Add your logic here
+    },
+    { 
+      name: "Subscriptions", 
+      component: SubscriptionMgt,
+      buttonText: null, // No button for subscriptions
+      buttonAction: null
+    },
   ];
 
   const ActiveComponent = tabs.find(tab => tab.name === activeTab)?.component || Posts;
+  const activeTabData = tabs.find(tab => tab.name === activeTab);
 
   return (
-    <div className="min-h-screen light-background">
+    <div className="min-h-screen light-background overflow-x-hidden">
       <Header />
       
       <div className="pt-16 pb-20">
@@ -56,29 +82,78 @@ const Profile = () => {
         <ProfileHeader />
 
         {/* Tabs Navigation */}
-        <div className="sticky top-16 bg-white border-b border-gray-200 z-10">
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="flex space-x-8 overflow-x-auto scrollbar-hide">
-              {tabs.map((tab) => (
+        <div className="px-4 mt-6 mb-6">
+          <div className="max-w-6xl mx-auto">
+            {/* Mobile Tab Navigation with Button */}
+            <div className="flex sm:hidden items-center justify-between gap-3">
+              {/* Tabs - Scrollable */}
+              <div className="flex overflow-x-auto scrollbar-hide pb-2 flex-1">
+                <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm min-w-max">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.name}
+                      onClick={() => setActiveTab(tab.name)}
+                      className={`flex items-center space-x-2 py-2.5 px-4 rounded-full cursor-pointer text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                        activeTab === tab.name
+                          ? "btn-blue-gradient text-white shadow-lg"
+                          : "text-gray-700 hover:bg-white/30"
+                      }`}
+                    >
+                      <span>{tab.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Button */}
+              {activeTabData?.buttonText && (
                 <button
-                  key={tab.name}
-                  onClick={() => setActiveTab(tab.name)}
-                  className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                    activeTab === tab.name
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                  onClick={activeTabData.buttonAction}
+                  className="btn-blue-gradient text-white px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
                 >
-                  <span>{tab.icon}</span>
-                  <span>{tab.name}</span>
+                  <span>{activeTabData.buttonText}</span>
+                  <span className="text-lg">+</span>
                 </button>
-              ))}
+              )}
+            </div>
+
+            {/* Desktop Tab Navigation with Button */}
+            <div className="hidden sm:flex items-center justify-between gap-4">
+              {/* Tabs */}
+              <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.name}
+                    onClick={() => setActiveTab(tab.name)}
+                    className={`flex items-center space-x-2 px-6 py-3 rounded-full cursor-pointer text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                      activeTab === tab.name
+                        ? "btn-blue-gradient text-white shadow-lg"
+                        : "text-gray-700 hover:bg-white/30"
+                    }`}
+                  >
+                    <span>{tab.name}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Action Button */}
+              {activeTabData?.buttonText && (
+                <button
+                  onClick={activeTabData.buttonAction}
+                  className="btn-blue-gradient text-white px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-4 cursor-pointer "
+                >
+                  <span>{activeTabData.buttonText}</span>
+                  <div className="bg-white rounded-full text-black text-3xl  w-8 h-8 flex justify-center items-center pb-1">
+                    +
+                  </div>
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         {/* Tab Content */}
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto px-4">
           <ActiveComponent />
         </div>
 
