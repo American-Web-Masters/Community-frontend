@@ -82,73 +82,108 @@ const Profile = () => {
         <ProfileHeader />
 
         {/* Tabs Navigation */}
-        <div className="px-4 mt-6 mb-6">
-          <div className="max-w-6xl mx-auto">
-            {/* Mobile Tab Navigation with Button */}
-            <div className="flex sm:hidden items-center justify-between gap-3">
-              {/* Tabs - Scrollable */}
-              <div className="flex overflow-x-auto scrollbar-hide pb-2 flex-1">
-                <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm min-w-max">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.name}
-                      onClick={() => setActiveTab(tab.name)}
-                      className={`flex items-center space-x-2 py-2.5 px-4 rounded-full cursor-pointer text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                        activeTab === tab.name
-                          ? "btn-blue-gradient text-white shadow-lg"
-                          : "text-gray-700 hover:bg-white/30"
-                      }`}
-                    >
-                      <span>{tab.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Action Button */}
-              {activeTabData?.buttonText && (
-                <button
-                  onClick={activeTabData.buttonAction}
-                  className="btn-blue-gradient text-white px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
-                >
-                  <span>{activeTabData.buttonText}</span>
-                  <span className="text-lg">+</span>
-                </button>
-              )}
-            </div>
-
-            {/* Desktop Tab Navigation with Button */}
-            <div className="hidden sm:flex items-center justify-between gap-4">
-              {/* Tabs */}
-              <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm">
+        <div className=" mt-6 w-full md:w-3/4 mx-auto">
+          {/* Header with tabs and create button */}
+          <div className="mb-6 px-4 lg:px-0">
+            {/* Large Desktop (>=lg) - tabs and button on same line */}
+            <div className="hidden lg:flex lg:items-center lg:justify-between lg:gap-4">
+              {/* Tab Navigation */}
+              <div className="flex items-center bg-white/90 rounded-full p-0.5 backdrop-blur-sm">
                 {tabs.map((tab) => (
                   <button
                     key={tab.name}
                     onClick={() => setActiveTab(tab.name)}
-                    className={`flex items-center space-x-2 px-6 py-3 rounded-full cursor-pointer text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                    className={`px-6 py-3 rounded-full cursor-pointer text-sm font-medium transition-all duration-200 ${
                       activeTab === tab.name
                         ? "btn-blue-gradient text-white shadow-lg"
                         : "text-gray-700 hover:bg-white/30"
                     }`}
                   >
-                    <span>{tab.name}</span>
+                    {tab.name}
                   </button>
                 ))}
               </div>
 
-              {/* Action Button */}
+              {/* Create Button - Large Desktop */}
               {activeTabData?.buttonText && (
                 <button
                   onClick={activeTabData.buttonAction}
-                  className="btn-blue-gradient text-white px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-4 cursor-pointer "
+                  className="btn-blue-gradient cursor-pointer text-white px-4 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-3 shadow-lg whitespace-nowrap"
                 >
                   <span>{activeTabData.buttonText}</span>
-                  <div className="bg-white rounded-full text-black text-3xl  w-8 h-8 flex justify-center items-center pb-1">
-                    +
+                  <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 text-xl font-bold relative -top-0.5">+</span>
                   </div>
                 </button>
               )}
             </div>
+
+            {/* Medium layout (sm to lg) - tabs full width, button below and right-aligned */}
+            <div className="hidden sm:flex lg:hidden flex-col items-stretch space-y-3">
+              <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm w-full">
+                <div className="flex w-full">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.name}
+                      onClick={() => setActiveTab(tab.name)}
+                      className={`flex-1 py-2.5 px-3 rounded-full cursor-pointer text-xs sm:text-sm font-medium transition-all duration-200 text-center ${
+                        activeTab === tab.name
+                          ? "btn-blue-gradient text-white shadow-lg"
+                          : "text-gray-700 hover:bg-white/30"
+                      }`}
+                    >
+                      {tab.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Button sits below tabs and aligned to the right on sm..lg */}
+              {activeTabData?.buttonText && (
+                <div className="w-full flex justify-end">
+                  <button
+                    onClick={activeTabData.buttonAction}
+                    className="btn-blue-gradient cursor-pointer text-white px-4 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-3 shadow-lg"
+                  >
+                    <span>{activeTabData.buttonText}</span>
+                    <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 text-xl font-bold relative -top-0.5">+</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Tab Navigation - Mobile (full width, centered) */}
+            <div className="flex sm:hidden w-full">
+              <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm w-full">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.name}
+                    onClick={() => setActiveTab(tab.name)}
+                    className={`flex-1 py-2.5 px-2 rounded-full cursor-pointer text-xs font-medium transition-all duration-200 text-center ${
+                      activeTab === tab.name
+                        ? "btn-blue-gradient text-white shadow-lg"
+                        : "text-gray-700 hover:bg-white/30"
+                    }`}
+                  >
+                    {tab.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Mobile action button: full-width under tabs */}
+            {activeTabData?.buttonText && (
+              <div className="w-full sm:hidden mt-3">
+                <button
+                  onClick={activeTabData.buttonAction}
+                  className="w-full btn-blue-gradient text-white px-4 py-3 rounded-full text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center justify-center space-x-3 shadow-lg"
+                >
+                  <span>{activeTabData.buttonText}</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
