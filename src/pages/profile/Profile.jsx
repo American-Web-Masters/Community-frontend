@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
@@ -13,6 +13,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const { logout } = useLogout();
   const [activeTab, setActiveTab] = useState("Posts");
+  const postsRef = useRef(null);
 
   const handleLogout = () => {
     logout();
@@ -42,7 +43,12 @@ const Profile = () => {
       name: "Posts", 
       component: Posts,
       buttonText: "Create New Post",
-      buttonAction: () => navigate('/create')
+      buttonAction: () => {
+        // Trigger the create modal in the Posts component
+        if (postsRef.current?.openCreateModal) {
+          postsRef.current.openCreateModal();
+        }
+      }
     },
     { 
       name: "Communities", 
@@ -77,12 +83,12 @@ const Profile = () => {
     <div className="min-h-screen light-background overflow-x-hidden">
       <Header />
       
-      <div className="pt-16 pb-20">
+      <div className="pt-10 pb-20">
         {/* Profile Header - Always visible */}
         <ProfileHeader />
 
         {/* Tabs Navigation */}
-        <div className=" mt-6 w-full md:w-3/4 mx-auto">
+        <div className="mt-6 w-full md:w-3/4 mx-auto">
           {/* Header with tabs and create button */}
           <div className="mb-6 px-4 lg:px-0">
             {/* Large Desktop (>=lg) - tabs and button on same line */}
@@ -188,8 +194,12 @@ const Profile = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="max-w-6xl mx-auto px-4">
-          <ActiveComponent />
+        <div className="max-sm:min-w-[95%] sm:w-3/4 mx-auto max-sm:mx-4">
+          {activeTab === "Posts" ? (
+            <Posts ref={postsRef} />
+          ) : (
+            <ActiveComponent />
+          )}
         </div>
 
         {/* Logout Button - Fixed at bottom of content */}
