@@ -10,10 +10,11 @@ import {
   PiBookBookmarkLight,
 } from "react-icons/pi";
 import { BsSend } from "react-icons/bs";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../store/userSlice";
 import {CommentsModal, TimelineModal} from "../../pages/home/subcomponents";
+import ProfilePrayerMenu from "./ProfilePrayerMenu";
 import {
   markAsPrayed, 
   unmarkAsPrayed, 
@@ -72,6 +73,10 @@ const PrayerCard = ({
   communityId = null, // Community ID for pin/unpin functionality
   onPinStateChange = null, // Callback for pin state changes
   feedItemId = null, // Feed item ID for pin/unpin functionality
+  isProfileContext = false, // Flag to indicate if this is in profile context
+  onProfileTogglePin = null, // Profile-specific pin toggle handler
+  onProfileToggleVisibility = null, // Profile-specific visibility toggle handler
+  isPrivate = false, // Flag to show if prayer is private
 }) => {
   const currentUser = useSelector(selectUser);
   const [showComments, setShowComments] = useState(false);
@@ -397,10 +402,22 @@ const PrayerCard = ({
               <img className="rounded-full" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPnE_fy9lLMRP5DLYLnGN0LRLzZOiEpMrU4g&s" alt="banda" />
           </div>
           <div>
-            <div className="flex items-center space-x-2">
+            <div className="w-full flex items-center justify-between space-x-2">
               <h3 className="font-medium text-gray-900">
                 {user?.name || "Anonymous"}
               </h3>
+              
+              {/* Pin Icon - Show when post is pinned in profile context */}
+              {isProfileContext && isPinnedState && (
+                <TbPinFilled className="w-6 h-6 text-primary-800" title="Pinned post" />
+              )}
+              
+              {/* Private Pill - Show when post is private in profile context */}
+              {isProfileContext && isPrivate && (
+                <span className="btn-blue-gradient text-white px-2 py-1 rounded-full text-xs">
+                  Private
+                </span>
+              )}
               
               {/* Community Pills - Show only in collapsed view */}
               {!isExpanded && (
@@ -443,6 +460,16 @@ const PrayerCard = ({
                 {status}
               </span>
             )}
+            
+            {/* Profile-specific menu */}
+            {isProfileContext && (
+              <ProfilePrayerMenu
+                prayer={prayer}
+                onTogglePin={onProfileTogglePin}
+                onToggleVisibility={onProfileToggleVisibility}
+              />
+            )}
+            
             {(isCommunityPrayer && isOwnerOrModerator) ? (
               <button
                 onClick={handleTogglePin}
@@ -460,7 +487,7 @@ const PrayerCard = ({
                   <TbPin className="w-5 h-5 cursor-pointer" />
                 )}
               </button>
-            ) : (
+            ) : !isProfileContext && (
             <svg
               width="18"
               height="25"

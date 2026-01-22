@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandl
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../../store/userSlice';
 import { apiClient } from '../../../api';
+import { togglePrayerPinStatus, togglePrayerVisibility } from '../../../api/prayer';
 import PrayerCard from '../../../components/ui/PrayerCard';
 import CreatePrayerModal from '../../../components/ui/CreatePrayerModal';
 import useInfiniteScroll from '../../../hooks/useInfiniteScroll';
@@ -55,6 +56,43 @@ const Posts = forwardRef((props, ref) => {
 
   // Use stable masonry hook for layout
   const masonryColumns = useStableMasonry(prayers, 2);
+
+  // Profile-specific handlers
+  const handleProfileTogglePin = async (prayerId, newPinState) => {
+    try {
+      console.log(`${newPinState ? 'Pinning' : 'Unpinning'} prayer:`, prayerId);
+      const response = await togglePrayerPinStatus(prayerId);
+      
+      if (response.success) {
+        console.log('Pin status updated successfully:', response.prayer);
+        // Refresh the prayers list to get updated data
+        refresh();
+      } else {
+        throw new Error(response.message || 'Failed to update pin status');
+      }
+    } catch (error) {
+      console.error('Error toggling pin status:', error);
+      // You could add a toast notification here to show the error to the user
+    }
+  };
+
+  const handleProfileToggleVisibility = async (prayerId, newVisibilityState) => {
+    try {
+      console.log(`Making prayer ${newVisibilityState ? 'private' : 'public'}:`, prayerId);
+      const response = await togglePrayerVisibility(prayerId);
+      
+      if (response.success) {
+        console.log('Visibility updated successfully:', response.prayer);
+        // Refresh the prayers list to get updated data
+        refresh();
+      } else {
+        throw new Error(response.message || 'Failed to update visibility');
+      }
+    } catch (error) {
+      console.error('Error toggling visibility:', error);
+      // You could add a toast notification here to show the error to the user
+    }
+  };
 
   const handlePrayerCreated = (newPrayer) => {
     console.log('New prayer created:', newPrayer);
@@ -158,6 +196,11 @@ const Posts = forwardRef((props, ref) => {
                         onPublishDraft={prayer.isDraft ? handlePublishDraft : null}
                         isDraft={prayer.isDraft}
                         onRefresh={refresh}
+                        isProfileContext={true}
+                        onProfileTogglePin={handleProfileTogglePin}
+                        onProfileToggleVisibility={handleProfileToggleVisibility}
+                        isPinned={prayer.isUserPinned || false}
+                        isPrivate={prayer.isPrivate || false}
                       />
                     </div>
                   ))}

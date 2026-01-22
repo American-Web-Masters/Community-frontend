@@ -181,3 +181,29 @@ export const getReportedPrayers = async (communityId) => {
     throw error;
   }
 };
+
+/**
+ * Toggle prayer pin status for profile
+ */
+export const togglePrayerPinStatus = async (prayerId) => {
+  try {
+    const response = await apiClient.patch(`/prayers/${prayerId}/pin`);
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling prayer pin status:', error);
+    throw error;
+  }
+};
+
+/**
+ * Toggle prayer visibility (public/private) for profile
+ */
+export const togglePrayerVisibility = async (prayerId) => {
+  try {
+    const response = await apiClient.patch(`/prayers/${prayerId}/visibility`);
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling prayer visibility:', error);
+    throw error;
+  }
+};
