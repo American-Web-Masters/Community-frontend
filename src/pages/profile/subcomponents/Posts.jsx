@@ -6,6 +6,7 @@ import PrayerCard from '../../../components/ui/PrayerCard';
 import CreatePrayerModal from '../../../components/ui/CreatePrayerModal';
 import useInfiniteScroll from '../../../hooks/useInfiniteScroll';
 import PlusLoader from '../../../components/ui/PlusLoader';
+import { useStableMasonry } from '../../../hooks/useStableMasonry';
 import { formatComments, formatTimeAgo, getPrayerStatus } from '../../../utils/profileUtils';
 
 const Posts = forwardRef((props, ref) => {
@@ -51,6 +52,9 @@ const Posts = forwardRef((props, ref) => {
     limit: 20,
     enabledCondition: user?._id
   });
+
+  // Use stable masonry hook for layout
+  const masonryColumns = useStableMasonry(prayers, 2);
 
   const handlePrayerCreated = (newPrayer) => {
     console.log('New prayer created:', newPrayer);
@@ -123,36 +127,41 @@ const Posts = forwardRef((props, ref) => {
           </div>
         ) : (
           <>
-            {/* Grid layout for posts - responsive grid system */}
-            <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2  gap-2">
-              {prayers.map((prayer) => (
-                <PrayerCard
-                  key={prayer._id}
-                  prayer={prayer}
-                  prayerId={prayer._id}
-                  user={{
-                    name: prayer.anonymous ? 'Anonymous' : prayer.user?.firstname || prayer.userProfile?.firstname || 'Unknown User',
-                    _id: prayer.user?._id || prayer.userProfile?._id
-                  }}
-                  timeAgo={formatTimeAgo(prayer.createdAt)}
-                  urgency={prayer.urgency}
-                  prayerText={prayer.content}
-                  status={getPrayerStatus(prayer)}
-                  communities={prayer.communities || []}
-                  mood={prayer.moodEmoji || '😊'}
-                  comments={formatComments(prayer.comments)}
-                  tags={prayer.tags || []}
-                  isExpanded={expandedPrayers[prayer._id] || false}
-                  onToggleExpand={() => handleToggleExpand(prayer._id)}
-                  isPrayed={prayer.isPrayed?.some(p => p.user === user?._id || p === user?._id) || false}
-                  prayerCount={prayer.isPrayed?.length || 0}
-                  isShared={prayer.shares?.some(s => s.user === user?._id || s === user?._id) || false}
-                  shareCount={prayer.shares?.length || 0}
-                  showStatusPill={true}
-                  onPublishDraft={prayer.isDraft ? handlePublishDraft : null}
-                  isDraft={prayer.isDraft}
-                  onRefresh={refresh}
-                />
+            {/* Masonry layout for posts - responsive masonry system */}
+            <div className="stable-masonry-container">
+              {masonryColumns.map((columnItems, columnIndex) => (
+                <div key={columnIndex} className="masonry-column">
+                  {columnItems.map((prayer) => (
+                    <div key={prayer._id} className="masonry-item">
+                      <PrayerCard
+                        prayer={prayer}
+                        prayerId={prayer._id}
+                        user={{
+                          name: prayer.anonymous ? 'Anonymous' : prayer.user?.firstname || prayer.userProfile?.firstname || 'Unknown User',
+                          _id: prayer.user?._id || prayer.userProfile?._id
+                        }}
+                        timeAgo={formatTimeAgo(prayer.createdAt)}
+                        urgency={prayer.urgency}
+                        prayerText={prayer.content}
+                        status={getPrayerStatus(prayer)}
+                        communities={prayer.communities || []}
+                        mood={prayer.moodEmoji || '😊'}
+                        comments={formatComments(prayer.comments)}
+                        tags={prayer.tags || []}
+                        isExpanded={expandedPrayers[prayer._id] || false}
+                        onToggleExpand={() => handleToggleExpand(prayer._id)}
+                        isPrayed={prayer.isPrayed?.some(p => p.user === user?._id || p === user?._id) || false}
+                        prayerCount={prayer.isPrayed?.length || 0}
+                        isShared={prayer.shares?.some(s => s.user === user?._id || s === user?._id) || false}
+                        shareCount={prayer.shares?.length || 0}
+                        showStatusPill={true}
+                        onPublishDraft={prayer.isDraft ? handlePublishDraft : null}
+                        isDraft={prayer.isDraft}
+                        onRefresh={refresh}
+                      />
+                    </div>
+                  ))}
+                </div>
               ))}
             </div>
 
