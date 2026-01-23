@@ -1,10 +1,11 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
 import { useLogout } from "../../hooks/useLogout";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import Header from "../../components/ui/Header";
+import { apiClient } from "../../api";
 import { ProfileHeader, Posts, Communities, Testimony, Journal, SubscriptionMgt } from "./subcomponents";
 
 const Profile = () => {
@@ -14,6 +15,29 @@ const Profile = () => {
   const { logout } = useLogout();
   const [activeTab, setActiveTab] = useState("Posts");
   const postsRef = useRef(null);
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        setLoading(true);
+        const response = await apiClient.get('/user-profiles');
+        if (response?.data?.data) {
+          setUserProfile(response?.data?.data?.userProfile);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isLoggedIn && user) {
+      fetchUserProfile();
+    }
+  }, [isLoggedIn, user]);
 
   const handleLogout = () => {
     logout();
@@ -85,7 +109,13 @@ const Profile = () => {
       
       <div className="pt-10 pb-20">
         {/* Profile Header - Always visible */}
-        <ProfileHeader />
+        {loading ? (
+          <div className="flex justify-center items-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <ProfileHeader userProfile={userProfile} />
+        )}
 
         {/* Tabs Navigation */}
         <div className="mt-6 w-full md:w-3/4 mx-auto">
@@ -194,7 +224,7 @@ const Profile = () => {
         </div>
 
         {/* Tab Content */}
-        <div className={activeTab === "Posts" ? "w-full" : "max-sm:min-w-[95%] sm:w-3/4 mx-auto max-sm:mx-4"}>
+        <div className="max-sm:min-w-[95%] sm:w-3/4 mx-auto max-sm:mx-4">
           {activeTab === "Posts" ? (
             <Posts ref={postsRef} />
           ) : (

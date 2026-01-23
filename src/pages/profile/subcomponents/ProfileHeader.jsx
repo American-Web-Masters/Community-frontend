@@ -2,17 +2,19 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../store/userSlice";
 
-const ProfileHeader = () => {
+const ProfileHeader = ({ userProfile }) => {
   const user = useSelector(selectUser);
+  console.log(userProfile)
 
-  // Mock data - replace with real user data
+  // Use real data from API with fallback placeholders
   const profileData = {
-    name: `${user?.firstName || "Sarah"} ${user?.lastName || "Grace"}`,
-    username: user?.username || "sarahgrace_faith",
-    profileImage: null, // Will show initials if no image
-    verse: '"Be still and know that I am God" - Psalm 46:10',
-    bio: "Faith-driven entrepreneur sharing my journey of trust, growth, and God's faithfulness. Faith-driven entrepreneur sharing my journey of trust, growth, and God's faithfulness. Faith-driven entrepreneur sharing my journey...",
-    streak: 21,
+    name: userProfile ? `${userProfile.firstname || "First"} ${userProfile.lastname || "Last"}` : "Loading...",
+    username: userProfile?.username || "username",
+    email: userProfile?.email || "email@example.com",
+    profileImage: userProfile?.profilePicture || null,
+    verse: userProfile?.verse || '"Add your favorite verse here"',
+    bio: userProfile?.bio || "Tell us about your faith journey...",
+    streak: 21, // This might come from a different endpoint
   };
 
   return (
@@ -62,14 +64,14 @@ const ProfileHeader = () => {
 
               {/* Verse Banner */}
               <div className="btn-blue-gradient cursor-pointer text-white px-4 py-1.5 mb-4 rounded-md">
-                <p className="text-sm font-medium italic">
+                <p className={`text-sm font-medium italic ${!userProfile?.verse ? 'opacity-70' : ''}`}>
                   {profileData.verse}
                 </p>
               </div>
 
               {/* Bio */}
               <div className="mb-4">
-                <p className="text-gray-700 text-sm leading-relaxed">
+                <p className={`text-gray-700 text-sm leading-relaxed ${!userProfile?.bio ? 'italic opacity-70' : ''}`}>
                   {profileData.bio}
                 </p>
               </div>
