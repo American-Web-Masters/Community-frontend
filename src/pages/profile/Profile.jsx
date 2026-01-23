@@ -194,7 +194,7 @@ const Profile = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="max-sm:min-w-[95%] sm:w-3/4 mx-auto max-sm:mx-4">
+        <div className={activeTab === "Posts" ? "w-full" : "max-sm:min-w-[95%] sm:w-3/4 mx-auto max-sm:mx-4"}>
           {activeTab === "Posts" ? (
             <Posts ref={postsRef} />
           ) : (
