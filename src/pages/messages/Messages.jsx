@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
 import { useLogout } from "../../hooks/useLogout";
 import { useNavigate } from "react-router-dom";
+import { useSocket } from "../../hooks/useSocket";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import CommunityCard from "../communities/subcomponents/CommunityCard";
 import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu } from "react-icons/io5";
@@ -30,92 +31,6 @@ const scrollbarStyles = `
     scrollbar-color: #A6D3FF transparent;
   }
 `;
-
-// Mock data for chats
-const mockChats = [
-  {
-    id: 1,
-    name: "David Park",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    lastMessage: "Hey Chris, Can you please review the latest work when you can?",
-    timestamp: "2m",
-    isTyping: true,
-  },
-  {
-    id: 2,
-    name: "David Park",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    lastMessage: "Thanks for sharing this with me",
-    timestamp: "1hr",
-    isTyping: false,
-  },
-  {
-    id: 3,
-    name: "David Park",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    lastMessage: "What do you think about this strategy?",
-    timestamp: "3hr",
-    isTyping: false,
-  },
-];
-
-// Mock data for messages
-const mockMessages = [
-  {
-    id: 1,
-    sender: "David Park",
-    senderAvatar: "https://i.pravatar.cc/150?img=12",
-    text: "No Worries, I'm on it!",
-    label: "Isaac Work",
-    timestamp: "11m",
-    isOutgoing: false,
-  },
-  {
-    id: 2,
-    sender: "David Park",
-    senderAvatar: "https://i.pravatar.cc/150?img=12",
-    text: "Hey Chris, Can you please review the latest work when you can?",
-    label: "Isaac Work",
-    timestamp: "5 M",
-    isOutgoing: false,
-  },
-  {
-    id: 3,
-    text: "I'm not able to bike this at the moment thankyou",
-    timestamp: "10 m",
-    isOutgoing: true,
-  },
-  {
-    id: 4,
-    sender: "David Park",
-    senderAvatar: "https://i.pravatar.cc/150?img=12",
-    text: "Hey Chris, Can you please review the latest work when you can?",
-    label: "Okay!",
-    timestamp: "5 M",
-    isOutgoing: false,
-  },
-  {
-    id: 5,
-    text: "I'm not able to bike this at the moment thankyou",
-    timestamp: "20 m",
-    isOutgoing: true,
-  },
-  {
-    id: 6,
-    sender: "David Park",
-    senderAvatar: "https://i.pravatar.cc/150?img=12",
-    text: "Hey Chris, Can you please review the latest work when you can?",
-    label: "Isaac Work",
-    timestamp: "5 M",
-    isOutgoing: false,
-  },
-  {
-    id: 7,
-    text: "I'm not able to bike this at the moment thankyou",
-    timestamp: "30 m",
-    isOutgoing: true,
-  },
-];
 
 // Mock data for communities
 const mockCommunities = [
@@ -151,8 +66,12 @@ const Messages = () => {
   const [messageInput, setMessageInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
-  console.log(activeChat);
-  console.log(messages);
+  
+  // Socket.IO state
+  const { socket, isConnected, onlineUsers } = useSocket();
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
+  const messagesEndRef = useRef(null);
   
 
   // Fetch all users
@@ -193,6 +112,11 @@ const Messages = () => {
           setMessages(sortedMessages);
           // Mark messages as read
           await markConversationAsRead(activeChat._id);
+          
+          // Instantly scroll to bottom (no animation) when loading conversation
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+          }, 0);
         }
       } catch (error) {
         console.error('Error fetching messages:', error);
@@ -202,6 +126,107 @@ const Messages = () => {
 
     fetchMessages();
   }, [activeChat]);
+
+  // Socket.IO event listeners
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    // Listen for new messages
+    const handleNewMessage = (messageData) => {
+      console.log('📨 New message received:', messageData);
+      
+      // Check if message is for current conversation
+      const isForCurrentChat = 
+        (messageData.sender._id === activeChat?._id && messageData.receiver._id === user?._id) ||
+        (messageData.sender._id === user?._id && messageData.receiver._id === activeChat?._id);
+      
+      if (isForCurrentChat) {
+        setMessages(prev => {
+          // Prevent duplicate messages
+          const exists = prev.some(msg => msg._id === messageData._id);
+          if (exists) return prev;
+          return [...prev, messageData];
+        });
+        
+        // Mark as read if we're the receiver
+        if (messageData.receiver._id === user?._id && activeChat) {
+          markConversationAsRead(activeChat._id).catch(console.error);
+        }
+        
+        // Scroll to bottom
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      } else {
+        // Show notification or update unread count for other conversations
+        console.log('Message from other conversation');
+      }
+    };
+
+    // Listen for typing indicators
+    const handleTypingStart = ({ userId, username }) => {
+      if (userId === activeChat?._id) {
+        console.log(`${username} is typing...`);
+        setIsTyping(true);
+      }
+    };
+
+    const handleTypingStop = ({ userId }) => {
+      if (userId === activeChat?._id) {
+        setIsTyping(false);
+      }
+    };
+
+    // Listen for message read receipts
+    const handleMessageRead = ({ messageIds, readBy }) => {
+      if (readBy !== user?._id) {
+        setMessages(prev => 
+          prev.map(msg => 
+            messageIds.includes(msg._id) ? { ...msg, isRead: true } : msg
+          )
+        );
+      }
+    };
+
+    // Listen for message deletions
+    const handleMessageDeleted = ({ messageId }) => {
+      setMessages(prev => prev.filter(msg => msg._id !== messageId));
+    };
+
+    // Attach event listeners
+    socket.on('message:new', handleNewMessage);
+    socket.on('typing:start', handleTypingStart);
+    socket.on('typing:stop', handleTypingStop);
+    socket.on('message:read', handleMessageRead);
+    socket.on('message:deleted', handleMessageDeleted);
+
+    // Cleanup
+    return () => {
+      socket.off('message:new', handleNewMessage);
+      socket.off('typing:start', handleTypingStart);
+      socket.off('typing:stop', handleTypingStop);
+      socket.off('message:read', handleMessageRead);
+      socket.off('message:deleted', handleMessageDeleted);
+    };
+  }, [socket, isConnected, activeChat, user]);
+
+  // Handle typing with debounce
+  const handleTyping = (value) => {
+    setMessageInput(value);
+    
+    if (!socket || !isConnected || !activeChat) return;
+
+    // Emit typing start
+    socket.emit('typing:start', { receiverId: activeChat._id });
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set timeout to emit typing stop
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit('typing:stop', { receiverId: activeChat._id });
+    }, 2000);
+  };
 
   // Send message handler
   const handleSendMessage = async () => {
@@ -216,9 +241,27 @@ const Messages = () => {
       });
 
       if (response.data.status === 'success') {
-        // Add the new message to the list
-        setMessages(prev => [...prev, response.data.data.message]);
+        // Message will be received via Socket.IO, but update local state for immediate feedback
+        const newMessage = response.data.data.message;
+        setMessages(prev => {
+          const exists = prev.some(msg => msg._id === newMessage._id);
+          if (exists) return prev;
+          return [...prev, newMessage];
+        });
         setMessageInput('');
+        
+        // Stop typing indicator
+        if (socket && isConnected) {
+          socket.emit('typing:stop', { receiverId: activeChat._id });
+        }
+        
+        // Clear typing timeout
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        }
+        
+        // Scroll to bottom after sending
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -345,11 +388,16 @@ const Messages = () => {
                         : "hover:bg-white/50"
                     }`}
                   >
-                    <img
-                      src={chat.profilePicture || "https://i.pravatar.cc/150?img=12"}
-                      alt={`${chat.firstname} ${chat.lastname}`}
-                      className="w-10 h-10 rounded-full flex-shrink-0"
-                    />
+                    <div className="relative">
+                      <img
+                        src={chat.profilePicture || "https://i.pravatar.cc/150?img=12"}
+                        alt={`${chat.firstname} ${chat.lastname}`}
+                        className="w-10 h-10 rounded-full flex-shrink-0"
+                      />
+                      {onlineUsers.has(chat._id) && (
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-0.5">
                         <h4 className="text-sm font-semibold text-gray-900 truncate">
@@ -405,21 +453,46 @@ const Messages = () => {
             {activeChat ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <img
-                    src={activeChat.profilePicture || "https://i.pravatar.cc/150?img=12"}
-                    alt={`${activeChat.firstname} ${activeChat.lastname}`}
-                    className="w-11 h-11 rounded-full"
-                  />
+                  <div className="relative">
+                    <img
+                      src={activeChat.profilePicture || "https://i.pravatar.cc/150?img=12"}
+                      alt={`${activeChat.firstname} ${activeChat.lastname}`}
+                      className="w-11 h-11 rounded-full"
+                    />
+                    {onlineUsers.has(activeChat._id) && (
+                      <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
+                    )}
+                  </div>
                   <div>
                     <h2 className="text-sm font-semibold text-gray-900">
                       {activeChat.firstname} {activeChat.lastname}
                     </h2>
-                    <p className="text-[11px] text-gray-500">@{activeChat.username}</p>
+                    <p className="text-[11px] text-gray-500">
+                      @{activeChat.username}
+                      {onlineUsers.has(activeChat._id) ? (
+                        <span className="text-green-500 ml-2">● Online</span>
+                      ) : (
+                        <span className="text-gray-400 ml-2">● Offline</span>
+                      )}
+                    </p>
                   </div>
                 </div>
-                <button className="text-gray-600 hover:text-gray-900 transition-colors">
-                  <IoEllipsisVertical className="w-5 h-5" />
-                </button>
+                <div className="flex items-center space-x-3">
+                  {isConnected ? (
+                    <span className="text-[10px] text-green-500 flex items-center">
+                      <span className="w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
+                      Connected
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-red-500 flex items-center">
+                      <span className="w-2 h-2 bg-red-500 rounded-full mr-1.5"></span>
+                      Reconnecting...
+                    </span>
+                  )}
+                  <button className="text-gray-600 hover:text-gray-900 transition-colors">
+                    <IoEllipsisVertical className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="text-center text-gray-500">Select a user to start messaging</div>
@@ -437,44 +510,63 @@ const Messages = () => {
                 No messages yet. Start the conversation!
               </div>
             ) : (
-              messages.map((message) => {
-                const isOutgoing = message.sender._id === user._id;
-                return (
-                  <div
-                    key={message._id}
-                    className={`flex items-start gap-3 ${
-                      isOutgoing ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    {!isOutgoing && (
-                      <img
-                        src={message.sender.profilePicture || "https://i.pravatar.cc/150?img=12"}
-                        alt={`${message.sender.firstname} ${message.sender.lastname}`}
-                        className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
-                      />
-                    )}
-                    <div className="flex flex-col space-y-1 max-w-md">
-                      <div
-                        className={`px-4 py-2.5 rounded-2xl ${
-                          isOutgoing
-                            ? "btn-blue-gradient text-white"
-                            : "bg-white/80 text-gray-900 shadow-sm"
-                        }`}
-                      >
-                        <p className="text-[13px] leading-relaxed">{message.content}</p>
+              <>
+                {messages.map((message) => {
+                  const isOutgoing = message.sender._id === user._id;
+                  return (
+                    <div
+                      key={message._id}
+                      className={`flex items-start gap-3 ${
+                        isOutgoing ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      {!isOutgoing && (
+                        <img
+                          src={message.sender.profilePicture || "https://i.pravatar.cc/150?img=12"}
+                          alt={`${message.sender.firstname} ${message.sender.lastname}`}
+                          className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
+                        />
+                      )}
+                      <div className="flex flex-col space-y-1 max-w-md">
+                        <div
+                          className={`px-4 py-2.5 rounded-2xl ${
+                            isOutgoing
+                              ? "btn-blue-gradient text-white"
+                              : "bg-white/80 text-gray-900 shadow-sm"
+                          }`}
+                        >
+                          <p className="text-[13px] leading-relaxed">{message.content}</p>
+                        </div>
+                        <div className="flex items-center gap-3 px-1">
+                          <span className="text-[10px] text-gray-400">
+                            {formatTimestamp(message.createdAt)}
+                          </span>
+                          {message.isRead && isOutgoing && (
+                            <span className="text-[10px] text-blue-500">Read</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3 px-1">
-                        <span className="text-[10px] text-gray-400">
-                          {formatTimestamp(message.createdAt)}
-                        </span>
-                        {message.isRead && isOutgoing && (
-                          <span className="text-[10px] text-blue-500">Read</span>
-                        )}
+                    </div>
+                  );
+                })}
+                {isTyping && (
+                  <div className="flex items-start gap-3 justify-start">
+                    <img
+                      src={activeChat.profilePicture || "https://i.pravatar.cc/150?img=12"}
+                      alt={`${activeChat.firstname} ${activeChat.lastname}`}
+                      className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
+                    />
+                    <div className="bg-white/80 px-4 py-3 rounded-2xl shadow-sm">
+                      <div className="flex space-x-1.5">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                       </div>
                     </div>
                   </div>
-                );
-              })
+                )}
+                <div ref={messagesEndRef} />
+              </>
             )}
           </div>
 
@@ -484,8 +576,8 @@ const Messages = () => {
               <input
                 type="text"
                 value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                onChange={(e) => handleTyping(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                 placeholder={activeChat ? `Reply to ${activeChat.firstname}` : "Select a user to start messaging"}
                 disabled={!activeChat || sendingMessage}
                 className="flex-1 px-4 py-2.5 rounded-full bg-white/70 border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
