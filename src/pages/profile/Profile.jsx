@@ -5,7 +5,7 @@ import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
 import { useLogout } from "../../hooks/useLogout";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import Header from "../../components/ui/Header";
-import { apiClient } from "../../api";
+import { getUserProfile } from "../../api";
 import { ProfileHeader, Posts, Communities, Testimony, Journal, SubscriptionMgt } from "./subcomponents";
 
 const Profile = () => {
@@ -23,9 +23,11 @@ const Profile = () => {
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get('/user-profiles');
-        if (response?.data?.data) {
-          setUserProfile(response?.data?.data?.userProfile);
+        const result = await getUserProfile();
+        if (result.success) {
+          setUserProfile(result.data);
+        } else {
+          console.error('Error fetching user profile:', result.error);
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);

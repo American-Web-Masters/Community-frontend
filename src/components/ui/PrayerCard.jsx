@@ -77,6 +77,8 @@ const PrayerCard = ({
   onProfileTogglePin = null, // Profile-specific pin toggle handler
   onProfileToggleVisibility = null, // Profile-specific visibility toggle handler
   isPrivate = false, // Flag to show if prayer is private
+  onProfileEdit = null, // Profile-specific edit handler
+  onProfileDelete = null, // Profile-specific delete handler
 }) => {
   const currentUser = useSelector(selectUser);
   const [showComments, setShowComments] = useState(false);
@@ -467,6 +469,8 @@ const PrayerCard = ({
                 prayer={prayer}
                 onTogglePin={onProfileTogglePin}
                 onToggleVisibility={onProfileToggleVisibility}
+                onEdit={onProfileEdit}
+                onDelete={onProfileDelete}
               />
             )}
             

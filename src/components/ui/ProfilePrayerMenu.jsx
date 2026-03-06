@@ -2,24 +2,36 @@ import React, { useState, useRef, useEffect } from 'react';
 import { BsThreeDots } from 'react-icons/bs';
 import { TbPin, TbPinFilled } from 'react-icons/tb';
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
+import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 
 const ProfilePrayerMenu = ({ 
   prayer, 
   onTogglePin, 
-  onToggleVisibility, 
+  onToggleVisibility,
+  onEdit,
+  onDelete,
   className = "" 
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isPinned, setIsPinned] = useState(prayer?.isPinned || false);
-  const [isPublic, setIsPublic] = useState(prayer?.isPublic !== false); // Default to true
+  // Keep local mirror of pin/visibility so the menu reflects current state immediately
+  const [isPinned, setIsPinned] = useState(prayer?.isUserPinned || prayer?.isPinned || false);
+  const [isPublic, setIsPublic] = useState(prayer?.isPrivate !== true); // isPrivate=true → private
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
+
+  // Sync local state when the prayer prop changes (e.g. after a refresh)
+  useEffect(() => {
+    setIsPinned(prayer?.isUserPinned || prayer?.isPinned || false);
+    setIsPublic(prayer?.isPrivate !== true);
+  }, [prayer?.isUserPinned, prayer?.isPinned, prayer?.isPrivate]);
 
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target) && 
-          buttonRef.current && !buttonRef.current.contains(event.target)) {
+      if (
+        menuRef.current && !menuRef.current.contains(event.target) && 
+        buttonRef.current && !buttonRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -30,26 +42,33 @@ const ProfilePrayerMenu = ({
     }
   }, [isOpen]);
 
-  const handleTogglePin = async () => {
+  const handleTogglePin = () => {
     const newPinState = !isPinned;
-    setIsPinned(newPinState);
+    setIsPinned(newPinState);   // optimistic local update
     setIsOpen(false);
-    
-    // Call the parent handler
     if (onTogglePin) {
       onTogglePin(prayer._id, newPinState);
     }
   };
 
-  const handleToggleVisibility = async () => {
-    const newVisibilityState = !isPublic;
-    setIsPublic(newVisibilityState);
+  const handleToggleVisibility = () => {
+    const newIsPublic = !isPublic;
+    setIsPublic(newIsPublic);   // optimistic local update
     setIsOpen(false);
-    
-    // Call the parent handler
+    // pass newVisibilityState = newIsPublic (true → make public, false → make private)
     if (onToggleVisibility) {
-      onToggleVisibility(prayer._id, newVisibilityState);
+      onToggleVisibility(prayer._id, newIsPublic);
     }
+  };
+
+  const handleEdit = () => {
+    setIsOpen(false);
+    if (onEdit) onEdit(prayer);
+  };
+
+  const handleDelete = () => {
+    setIsOpen(false);
+    if (onDelete) onDelete(prayer);
   };
 
   return (
@@ -104,6 +123,27 @@ const ProfilePrayerMenu = ({
                 <span>Make Public</span>
               </>
             )}
+          </button>
+
+          {/* Divider */}
+          <div className="border-t border-gray-100 my-1" />
+
+          {/* Edit Option */}
+          <button
+            onClick={handleEdit}
+            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2"
+          >
+            <FiEdit2 className="w-4 h-4 text-blue-500" />
+            <span>Edit Post</span>
+          </button>
+
+          {/* Delete Option */}
+          <button
+            onClick={handleDelete}
+            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors duration-200 flex items-center space-x-2"
+          >
+            <FiTrash2 className="w-4 h-4" />
+            <span>Delete Post</span>
           </button>
         </div>
       )}

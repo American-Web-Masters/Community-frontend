@@ -4,7 +4,7 @@ import { selectUser } from "../../../store/userSlice";
 
 const ProfileHeader = ({ userProfile }) => {
   const user = useSelector(selectUser);
-  console.log(userProfile)
+  console.log("User Profile",userProfile)
 
   // Use real data from API with fallback placeholders
   const profileData = {

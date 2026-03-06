@@ -207,3 +207,29 @@ export const togglePrayerVisibility = async (prayerId) => {
     throw error;
   }
 };
+
+/**
+ * Edit / update a prayer
+ */
+export const editPrayer = async (prayerId, payload) => {
+  try {
+    const response = await apiClient.put(`/prayers/${prayerId}`, payload);
+    return response.data;
+  } catch (error) {
+    console.error('Error editing prayer:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a prayer
+ */
+export const deletePrayer = async (prayerId) => {
+  try {
+    const response = await apiClient.delete(`/prayers/${prayerId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting prayer:', error);
+    throw error;
+  }
+};
