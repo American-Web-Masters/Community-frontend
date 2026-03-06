@@ -116,7 +116,7 @@ const Profile = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         ) : (
-          <ProfileHeader userProfile={userProfile} />
+          <ProfileHeader userProfile={userProfile} onProfileUpdate={(updated) => setUserProfile(prev => ({ ...prev, ...updated }))} />
         )}
 
         {/* Tabs Navigation */}
