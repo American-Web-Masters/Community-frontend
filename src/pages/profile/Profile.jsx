@@ -1,17 +1,18 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
 import { useLogout } from "../../hooks/useLogout";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import Header from "../../components/ui/Header";
-import { apiClient } from "../../api";
+import { getUserProfile } from "../../api";
 import { ProfileHeader, Posts, Communities, Testimony, Journal, SubscriptionMgt } from "./subcomponents";
 
 const Profile = () => {
   const user = useSelector(selectUser);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const navigate = useNavigate();
+  const { username } = useParams();
   const { logout } = useLogout();
   const [activeTab, setActiveTab] = useState("Posts");
   const postsRef = useRef(null);
@@ -23,9 +24,11 @@ const Profile = () => {
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get('/user-profiles');
-        if (response?.data?.data) {
-          setUserProfile(response?.data?.data?.userProfile);
+        const result = await getUserProfile(username);
+        if (result.success) {
+          setUserProfile(result.data);
+        } else {
+          console.error('Error fetching user profile:', result.error);
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);
@@ -34,10 +37,10 @@ const Profile = () => {
       }
     };
 
-    if (isLoggedIn && user) {
+    if (isLoggedIn && user && username) {
       fetchUserProfile();
     }
-  }, [isLoggedIn, user]);
+  }, [isLoggedIn, user, username]);
 
   const handleLogout = () => {
     logout();
@@ -114,11 +117,11 @@ const Profile = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         ) : (
-          <ProfileHeader userProfile={userProfile} />
+          <ProfileHeader userProfile={userProfile} onProfileUpdate={(updated) => setUserProfile(prev => ({ ...prev, ...updated }))} />
         )}
 
         {/* Tabs Navigation */}
-        <div className="mt-6 w-full md:w-3/4 mx-auto">
+        <div className="mt-6 w-full md:w-4/6 mx-auto">
           {/* Header with tabs and create button */}
           <div className="mb-6 px-4 lg:px-0">
             {/* Large Desktop (>=lg) - tabs and button on same line */}
@@ -156,7 +159,7 @@ const Profile = () => {
 
             {/* Medium layout (sm to lg) - tabs full width, button below and right-aligned */}
             <div className="hidden sm:flex lg:hidden flex-col items-stretch space-y-3">
-              <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm w-full">
+              <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm w-full overflow-x-hidden">
                 <div className="flex w-full">
                   {tabs.map((tab) => (
                     <button
@@ -192,7 +195,7 @@ const Profile = () => {
 
             {/* Tab Navigation - Mobile (full width, centered) */}
             <div className="flex sm:hidden w-full">
-              <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm w-full">
+              <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm w-full overflow-x-auto">
                 {tabs.map((tab) => (
                   <button
                     key={tab.name}
@@ -224,7 +227,7 @@ const Profile = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="max-sm:min-w-[95%] sm:w-3/4 mx-auto max-sm:mx-4">
+        <div className="max-sm:min-w-[95%] md:w-4/6 mx-auto overflow-x-hidden">
           {activeTab === "Posts" ? (
             <Posts ref={postsRef} />
           ) : (

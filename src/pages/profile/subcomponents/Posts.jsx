@@ -2,12 +2,13 @@ import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandl
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../../store/userSlice';
 import { apiClient } from '../../../api';
-import { togglePrayerPinStatus, togglePrayerVisibility } from '../../../api/prayer';
+import { togglePrayerPinStatus, togglePrayerVisibility, deletePrayer } from '../../../api/prayer';
 import PrayerCard from '../../../components/ui/PrayerCard';
 import CreatePrayerModal from '../../../components/ui/CreatePrayerModal';
 import useInfiniteScroll from '../../../hooks/useInfiniteScroll';
 import PlusLoader from '../../../components/ui/PlusLoader';
 import { formatComments, formatTimeAgo, getPrayerStatus } from '../../../utils/profileUtils';
+import { FaTrash, FaExclamationTriangle } from 'react-icons/fa';
 
 const Posts = forwardRef((props, ref) => {
   const user = useSelector(selectUser);
@@ -15,6 +16,15 @@ const Posts = forwardRef((props, ref) => {
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [selectedDraftPrayer, setSelectedDraftPrayer] = useState(null);
   const [expandedPrayers, setExpandedPrayers] = useState({});
+
+  // Edit state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingPrayer, setEditingPrayer] = useState(null);
+
+  // Delete state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingPrayer, setDeletingPrayer] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Expose openCreateModal method to parent component
   useImperativeHandle(ref, () => ({
@@ -90,6 +100,50 @@ const Posts = forwardRef((props, ref) => {
     }
   };
 
+  // Open the CreatePrayerModal in edit mode pre-filled with the selected prayer
+  const handleProfileEdit = (prayer) => {
+    setEditingPrayer(prayer);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setEditingPrayer(null);
+  };
+
+  const handleEditSuccess = (updatedPrayer) => {
+    console.log('Prayer edited successfully:', updatedPrayer);
+    refresh();
+    handleEditModalClose();
+  };
+
+  // Open delete confirmation modal
+  const handleProfileDelete = (prayer) => {
+    setDeletingPrayer(prayer);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteModalClose = () => {
+    setIsDeleteModalOpen(false);
+    setDeletingPrayer(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingPrayer?._id || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await deletePrayer(deletingPrayer._id);
+      // Backend returns 204 No Content on success — no body to check
+      console.log('Prayer deleted successfully');
+      refresh();
+      handleDeleteModalClose();
+    } catch (error) {
+      console.error('Error deleting prayer:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handlePrayerCreated = (newPrayer) => {
     console.log('New prayer created:', newPrayer);
     setIsCreateModalOpen(false);
@@ -162,7 +216,7 @@ const Posts = forwardRef((props, ref) => {
         ) : (
           <>
             {/* Simple grid layout for posts */}
-            <div className="grid gap-4 grid-cols-1 xl:grid-cols-2 md:w-3/4 mx-auto max-md:mx-3">
+            <div className="grid gap-4 grid-cols-1 w-full max-md:px-3">
               {prayers.map((prayer) => (
                 <div key={prayer._id}>
                   <PrayerCard
@@ -193,6 +247,8 @@ const Posts = forwardRef((props, ref) => {
                     isProfileContext={true}
                     onProfileTogglePin={handleProfileTogglePin}
                     onProfileToggleVisibility={handleProfileToggleVisibility}
+                    onProfileEdit={handleProfileEdit}
+                    onProfileDelete={handleProfileDelete}
                     isPinned={prayer.isUserPinned || false}
                     isPrivate={prayer.isPrivate || false}
                   />
@@ -245,6 +301,72 @@ const Posts = forwardRef((props, ref) => {
         initialData={selectedDraftPrayer}
         editPrayerId={selectedDraftPrayer?._id}
       />
+
+      {/* Edit Prayer Modal */}
+      <CreatePrayerModal
+        isOpen={isEditModalOpen}
+        onClose={handleEditModalClose}
+        onSuccess={handleEditSuccess}
+        editMode={true}
+        initialData={editingPrayer}
+        editPrayerId={editingPrayer?._id}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md shadow-xl">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">Delete Post</h3>
+                <button
+                  onClick={handleDeleteModalClose}
+                  className="text-gray-500 hover:text-gray-700 text-xl leading-none"
+                  disabled={isDeleting}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                    <FaExclamationTriangle className="w-6 h-6 text-red-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-medium text-gray-900 mb-1">Are you sure?</h4>
+                    <p className="text-sm text-gray-600">This action cannot be undone.</p>
+                  </div>
+                </div>
+                <p className="text-gray-700 text-sm line-clamp-3">
+                  You are about to permanently delete this prayer post:
+                  <span className="font-medium block mt-1 text-gray-800">
+                    "{deletingPrayer?.content?.slice(0, 80)}{deletingPrayer?.content?.length > 80 ? '…' : ''}"
+                  </span>
+                </p>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleDeleteModalClose}
+                  disabled={isDeleting}
+                  className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={isDeleting}
+                  className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <FaTrash className="w-4 h-4" />
+                  {isDeleting ? 'Deleting…' : 'Delete Post'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 });

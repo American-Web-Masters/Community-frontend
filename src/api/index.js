@@ -15,3 +15,6 @@ export * from './calendar.js';
 
 // Export subscription API functions
 export * from './subscriptions.js';
+
+// Export profile API functions
+export * from './profile.js';
