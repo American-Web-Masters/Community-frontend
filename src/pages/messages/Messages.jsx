@@ -84,7 +84,6 @@ const Messages = () => {
   }, [isLoggedIn, user]);
 
 
-  // Fetch discovery communities
   useEffect(() => {
     const fetchDiscover = async () => {
       try {
