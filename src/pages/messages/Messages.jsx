@@ -366,11 +366,10 @@ const Messages = () => {
               ))}
             </div>
 
-            {/* Sidebar */}
-            <div className="w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-tr-2xl rounded-br-2xl shadow-sm flex-1">
-
+            {/* Chats Container */}
+            <div className="w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-tr-2xl rounded-br-2xl shadow-sm" style={{ maxHeight: '48%' }}>
           {/* Chats Section */}
-          <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar" style={{ maxHeight: '45%' }}>
+          <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Chats</h3>
             {loading ? (
               <div className="text-center py-4 text-gray-500">Loading...</div>
@@ -416,14 +415,12 @@ const Messages = () => {
               </div>
             )}
           </div>
+        </div>
 
-          {/* Separator */}
-          <div className="px-1 ">
-            <div className="border-t border-gray-300"></div>
-          </div>
-
+            {/* Discover Container */}
+            <div className="w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-tr-2xl rounded-br-2xl shadow-sm mt-3" style={{ maxHeight: '48%' }}>
           {/* Discover Section */}
-          <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar" style={{ maxHeight: '45%' }}>
+          <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
             <h3 className="text-sm font-semibold text-gray-900 mb-2">Discover</h3>
             <div className="space-y-3">
               {mockCommunities.map((community) => (
