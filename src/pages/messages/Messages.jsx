@@ -49,6 +49,9 @@ const Messages = () => {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [discoverCommunities, setDiscoverCommunities] = useState([]);
   const [loadingCommunities, setLoadingCommunities] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const searchDebounceRef = useRef(null);
   
   // Socket.IO state
   const { socket, isConnected, onlineUsers } = useSocket();
@@ -348,6 +351,13 @@ const Messages = () => {
                 <IoSearchOutline className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6 " />
                 <input
                   type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSearchQuery(val);
+                    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+                    searchDebounceRef.current = setTimeout(() => setDebouncedSearch(val), 300);
+                  }}
                   placeholder="search"
                   className="w-full h-11 pl-9 pr-3 py-2 rounded-full bg-white/70 border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-300 placeholder:text-[16px] placeholder:pl-2"
                 />
@@ -378,11 +388,17 @@ const Messages = () => {
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Chats</h3>
             {loading ? (
               <div className="text-center py-4 text-gray-500">Loading...</div>
-            ) : users.length === 0 ? (
-              <div className="text-center py-4 text-gray-500 text-xs">No users available</div>
+            ) : users.filter(u => {
+                const q = debouncedSearch.toLowerCase();
+                return !q || `${u.firstname} ${u.lastname}`.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
+              }).length === 0 ? (
+              <div className="text-center py-4 text-gray-500 text-xs">{debouncedSearch ? 'No users found' : 'No users available'}</div>
             ) : (
               <div className="space-y-1">
-                {users.map((chat) => (
+                {users.filter(u => {
+                  const q = debouncedSearch.toLowerCase();
+                  return !q || `${u.firstname} ${u.lastname}`.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
+                }).map((chat) => (
                   <div
                     key={chat._id}
                     onClick={() => setActiveChat(chat)}
