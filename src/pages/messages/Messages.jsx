@@ -314,8 +314,8 @@ const Messages = () => {
       <style>{scrollbarStyles}</style>
       <div className="min-h-screen light-background overflow-hidden">
       <div className="flex" style={{ height: 'calc(100vh - 80px)' }}>
-        {/* Sidebar Toggle Button */}
-        <div className="w-14 flex flex-col items-center justify-center space-y-6 mr-5">
+        {/* Sidebar Toggle Button - desktop only */}
+        <div className="hidden sm:flex w-14 flex-col items-center justify-center space-y-6 mr-5">
           <div className="side-trapezoid btn-blue-gradient flex flex-col items-center justify-center">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -330,19 +330,20 @@ const Messages = () => {
         </div>
 
         {/* Left Sidebar Container */}
-        {isSidebarOpen && (
-          <>
-          
-              <div className="fixed top-4.5 left-3">
-                <button
+        <>
+          {/* Fixed back button - desktop only, shown when sidebar open */}
+          {isSidebarOpen && (
+            <div className="hidden sm:block fixed top-4.5 left-3">
+              <button
                 onClick={() => navigate(-1)}
                 className="w-11 h-11 rounded-full bg-[#03045E] flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-sm flex-shrink-0"
               >
                 <IoChevronBack className="w-5 h-5 text-white" />
               </button>
-              </div>
-          
-          <div className="flex flex-col mt-4 mb-3">
+            </div>
+          )}
+
+          <div className={`flex-col mt-4 mb-3 w-full sm:w-auto px-3 sm:px-0 ${!activeChat ? 'flex' : 'hidden'} ${isSidebarOpen ? 'sm:flex' : 'sm:hidden'}`}>
             {/* Back Button and Search - Same Line */}
             <div className="flex items-center space-x-3 mb-2">
               
@@ -382,7 +383,7 @@ const Messages = () => {
             </div>
 
             {/* Chats Container */}
-            <div className="w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-tr-2xl rounded-br-2xl shadow-sm" style={{ maxHeight: '48%' }}>
+            <div className="w-full sm:w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm" style={{ maxHeight: '48%' }}>
           {/* Chats Section */}
           <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Chats</h3>
@@ -438,7 +439,7 @@ const Messages = () => {
           </div>
         </div>
 
-            <div className="w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-tr-2xl rounded-br-2xl shadow-sm mt-3" style={{ maxHeight: '48%' }}>
+            <div className="w-full sm:w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm mt-3" style={{ maxHeight: '48%' }}>
           {/* Discover Section */}
           <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
             <h3 className="text-sm font-semibold text-gray-900 mb-2">Discover</h3>
@@ -469,16 +470,22 @@ const Messages = () => {
           </div>
         </div>
       </div>
-          </>
-        )}
+        </>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col overflow-hidden ml-4 mr-4 my-4 rounded-2xl bg-white/30 backdrop-blur-sm shadow-sm">
+        <div className={`flex-1 flex-col overflow-hidden ml-0 sm:ml-4 mr-0 sm:mr-4 my-0 sm:my-4 rounded-none sm:rounded-2xl bg-white/30 backdrop-blur-sm shadow-sm ${!activeChat ? 'hidden sm:flex' : 'flex'}`}>
           {/* Chat Header */}
           <div className="bg-white/50 backdrop-blur-sm border-b border-white/50 px-5 py-3 flex-shrink-0">
             {activeChat ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
+                  {/* Back button - mobile only */}
+                  <button
+                    onClick={() => setActiveChat(null)}
+                    className="sm:hidden w-8 h-8 rounded-full bg-[#03045E] flex items-center justify-center flex-shrink-0"
+                  >
+                    <IoChevronBack className="w-4 h-4 text-white" />
+                  </button>
                   <div className="relative">
                     <img
                       src={activeChat.profilePicture || "https://i.pravatar.cc/150?img=12"}
