@@ -4,9 +4,9 @@ import apiClient from './client.js';
  * Fetch the current authenticated user's profile
  * @returns {Promise<Object>} Response containing userProfile data
  */
-export const getUserProfile = async () => {
+export const getUserProfile = async (username) => {
   try {
-    const response = await apiClient.get('/user-profiles');
+    const response = await apiClient.get(`/user-profiles/${username}`);
     if (response?.data?.data) {
       return {
         success: true,

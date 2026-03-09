@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import { selectUser } from "../../../store/userSlice";
 import { updateUserProfile } from "../../../api/profile";
 import { MdCheck, MdClose, MdCameraAlt } from "react-icons/md";
@@ -8,6 +9,7 @@ import toast from "react-hot-toast";
 
 const ProfileHeader = ({ userProfile, onProfileUpdate }) => {
   const user = useSelector(selectUser);
+  const location = useLocation();
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -104,8 +106,46 @@ const ProfileHeader = ({ userProfile, onProfileUpdate }) => {
     }
   };
 
+  const handleShareProfile = async () => {
+    // Use the username from the current URL so sharing always reflects
+    // the profile that is actually being viewed.
+    const usernameToShare =
+      location.pathname.split("/profile/")[1] || userProfile?.username || user?.username;
+
+    if (!usernameToShare) {
+      toast.error("Could not determine profile URL.");
+      return;
+    }
+
+    const url = `${window.location.origin}/profile/${usernameToShare}`;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Profile link copied to clipboard!", { duration: 3000 });
+    } catch {
+      // Clipboard API may be blocked (e.g. non-HTTPS or permissions denied)
+      // Fall back to the legacy execCommand approach
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = url;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        toast.success("Profile link copied to clipboard! 🔗", { duration: 3000 });
+      } catch {
+        toast.error("Failed to copy link. Please copy it manually: " + url, {
+          duration: 6000,
+        });
+      }
+    }
+  };
+
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 w-3/4 mx-auto rounded-xl shadow-md overflow-hidden mb-6 max-md:w-[98%]">
+    <div className="bg-gradient-to-br from-blue-50 to-blue-100 w-4/6 mx-auto rounded-xl shadow-md overflow-hidden mb-6 max-md:w-[98%]">
       {/* Main Profile Section */}
       <div className="relative px-6 pt-6 pb-4">
         {isEditing ? (
@@ -273,9 +313,9 @@ const ProfileHeader = ({ userProfile, onProfileUpdate }) => {
           /* ── VIEW MODE ── */
           <>
             <div className="flex items-start justify-between mb-4">
-              <div className="flex md:items-center space-x-6 w-full max-md:flex-col">
+              <div className="flex md:items-center space-x-6 w-full max-sm:flex-col">
                 {/* Profile Image */}
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg max-md:mb-2 flex-shrink-0">
+                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg max-md:mb-2 flex-shrink-0">
                   {profileData.profileImage ? (
                     <img
                       src={profileData.profileImage}
@@ -339,16 +379,24 @@ const ProfileHeader = ({ userProfile, onProfileUpdate }) => {
 
               {/* Action Icons */}
             </div>
-            <div className="absolute top-4 right-3 flex items-center space-x-3">
+            <div className="absolute top-4 right-3 flex items-center space-x-3 max-lg:flex-col-reverse pb-4">
               {/* Support Button */}
-              <div className="flex justify-center align-center">
-                <button className="btn-blue-gradient cursor-pointer text-white text-sm font-medium rounded-full transition-transform flex items-center space-x-2 py-2 px-4">
+              <div>
+              <div className="flex justify-center align-center ">
+                <button className="btn-blue-gradient cursor-pointer text-white text-sm font-medium rounded-full transition-transform flex items-center space-x-2 py-1.5 px-4">
                   <span>🤍</span>
                   <span>Support</span>
                 </button>
               </div>
+              </div>
+              <div>
+
               {/* Share Icon */}
-              <button className="p-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer">
+              <button
+                className="p-2 text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
+                onClick={handleShareProfile}
+                title="Share Profile"
+              >
                 <svg
                   className="w-5 h-5"
                   fill="none"
@@ -395,6 +443,7 @@ const ProfileHeader = ({ userProfile, onProfileUpdate }) => {
                   />
                 </svg>
               </button>
+              </div>
             </div>
           </>
         )}

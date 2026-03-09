@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../store/userSlice";
 import {
   PiHandsPrayingThin,
   PiUsersThree,
@@ -11,6 +13,7 @@ import PlusButton from "./PlusButton";
 const BottomNavBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const user = useSelector(selectUser);
   const [isPlusButtonOpen, setIsPlusButtonOpen] = useState(false);
 
   const getActiveTab = () => {
@@ -23,9 +26,8 @@ const BottomNavBar = () => {
         return 'create';
       case '/messages':
         return 'messages';
-      case '/profile':
-        return 'profile';
       default:
+        if (location.pathname.startsWith('/profile/')) return 'profile';
         return 'prayer-wall';
     }
   };
@@ -70,7 +72,7 @@ const BottomNavBar = () => {
           <span className="text-xs">Messages</span>
         </button>
         <button 
-          onClick={() => navigate('/profile')}
+          onClick={() => navigate(`/profile/${user?.username}`)}
           className={`flex flex-col items-center cursor-pointer justify-center flex-1 h-full text-white transition-colors duration-200 ${
             activeTab === 'profile' ? 'bg-white/20' : 'hover:bg-white/10'
           }`}

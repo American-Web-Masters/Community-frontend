@@ -216,7 +216,7 @@ const Posts = forwardRef((props, ref) => {
         ) : (
           <>
             {/* Simple grid layout for posts */}
-            <div className="grid gap-4 grid-cols-1 xl:grid-cols-2 md:w-3/4 mx-auto max-md:mx-3">
+            <div className="grid gap-4 grid-cols-1 w-full max-md:px-3">
               {prayers.map((prayer) => (
                 <div key={prayer._id}>
                   <PrayerCard
