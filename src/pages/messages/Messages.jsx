@@ -417,7 +417,6 @@ const Messages = () => {
           </div>
         </div>
 
-            {/* Discover Container */}
             <div className="w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-tr-2xl rounded-br-2xl shadow-sm mt-3" style={{ maxHeight: '48%' }}>
           {/* Discover Section */}
           <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
