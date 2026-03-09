@@ -9,6 +9,7 @@ import CommunityCard from "../communities/subcomponents/CommunityCard";
 import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu } from "react-icons/io5";
 import { IoPeopleOutline } from "react-icons/io5";
 import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead } from "../../api/messages";
+import { fetchCommunities as apiFetchCommunities } from "../../api";
 
 // Custom styles for thin scrollbars
 const scrollbarStyles = `
@@ -32,26 +33,6 @@ const scrollbarStyles = `
   }
 `;
 
-// Mock data for communities
-const mockCommunities = [
-  {
-    id: 1,
-    name: "Faith & Healing",
-    wallAssociation: "Prayer Wall",
-    category: ["Fellowship"],
-    members: 125,
-    avatar: "https://i.pravatar.cc/150?img=20",
-  },
-  {
-    id: 2,
-    name: "Faith & Healing",
-    wallAssociation: "Prayer Wall",
-    category: ["Fellowship"],
-    members: 125,
-    avatar: "https://i.pravatar.cc/150?img=21",
-  },
-];
-
 const Messages = () => {
   const user = useSelector(selectUser);
   const isLoggedIn = useSelector(selectIsLoggedIn);
@@ -66,6 +47,8 @@ const Messages = () => {
   const [messageInput, setMessageInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [discoverCommunities, setDiscoverCommunities] = useState([]);
+  const [loadingCommunities, setLoadingCommunities] = useState(false);
   
   // Socket.IO state
   const { socket, isConnected, onlineUsers } = useSocket();
@@ -97,6 +80,29 @@ const Messages = () => {
 
     if (isLoggedIn && user) {
       fetchUsers();
+    }
+  }, [isLoggedIn, user]);
+
+
+  // Fetch discovery communities
+  useEffect(() => {
+    const fetchDiscover = async () => {
+      try {
+        setLoadingCommunities(true);
+        const response = await apiFetchCommunities(user);
+        if (response.success) {
+          const notJoined = response.data.filter(c => !c.isMember && !c.isOwner);
+          setDiscoverCommunities(notJoined);
+        }
+      } catch (error) {
+        console.error('Error fetching discover communities:', error);
+      } finally {
+        setLoadingCommunities(false);
+      }
+    };
+
+    if (isLoggedIn && user) {
+      fetchDiscover();
     }
   }, [isLoggedIn, user]);
 
@@ -421,21 +427,30 @@ const Messages = () => {
           {/* Discover Section */}
           <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
             <h3 className="text-sm font-semibold text-gray-900 mb-2">Discover</h3>
-            <div className="space-y-3">
-              {mockCommunities.map((community) => (
-                <CommunityCard
-                  key={community.id}
-                  id={community.id}
-                  name={community.name}
-                  wallAssociation={community.wallAssociation}
-                  category={community.category}
-                  members={community.members}
-                  avatar={community.avatar}
-                  isJoined={false}
-                  onJoinClick={(id) => console.log("Join community:", id)}
-                />
-              ))}
-            </div>
+            {loadingCommunities ? (
+              <div className="text-center py-4 text-gray-500 text-xs">Loading...</div>
+            ) : discoverCommunities.length === 0 ? (
+              <div className="text-center py-4 text-gray-500 text-xs">No communities to discover</div>
+            ) : (
+              <div className="space-y-3">
+                {discoverCommunities.map((community) => (
+                  <CommunityCard
+                    key={community._id || community.id}
+                    id={community._id || community.id}
+                    name={community.name}
+                    wallAssociation={community.wallAssociation}
+                    category={community.tags || []}
+                    members={community.memberCount}
+                    avatar={community.coverPhoto}
+                    privacyLevel={community.privacyLevel}
+                    status={community.privacyLevel === 'private' ? 'Private' : 'Public'}
+                    isJoined={false}
+                    onJoinClick={() => navigate('/communities')}
+                    onViewClick={() => navigate('/communities')}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
