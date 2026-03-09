@@ -21,7 +21,7 @@ import InviteValidation from "../pages/invite/InviteValidation";
 import CommunitySupport from "../pages/support/CommunitySupport";
 import PaymentSuccess from "../pages/support/PaymentSuccess";
 import DemoSubscriptionManagement from "../pages/support/DemoSubscriptionManagement";
-import SubscriptionManagement from "../pages/support/SubscriptionManagement";
+// import SubscriptionManagement from "../pages/support/SubscriptionManagement"; // Moved to Profile page
 import StripeOnboardingSuccess from "../pages/communities/StripeOnboardingSuccess";
 import StripeOnboardingRefresh from "../pages/communities/StripeOnboardingRefresh";
 
@@ -158,7 +158,7 @@ const Routes = () =>{
             }
             />
             <Route
-            path="/profile"
+            path="/profile/:username"
             element={
                 <ProtectedRoute>
                     <Profile/>
@@ -203,6 +203,7 @@ const Routes = () =>{
                 </ProtectedRoute>
             }
             />
+            {/* 
             <Route
             path="/my-subscriptions"
             element={
@@ -211,6 +212,7 @@ const Routes = () =>{
                 </ProtectedRoute>
             }
             />
+            */}
         </AppRoutes>
     )
 }

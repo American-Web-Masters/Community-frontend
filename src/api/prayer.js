@@ -181,3 +181,55 @@ export const getReportedPrayers = async (communityId) => {
     throw error;
   }
 };
+
+/**
+ * Toggle prayer pin status for profile
+ */
+export const togglePrayerPinStatus = async (prayerId) => {
+  try {
+    const response = await apiClient.patch(`/prayers/${prayerId}/pin`);
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling prayer pin status:', error);
+    throw error;
+  }
+};
+
+/**
+ * Toggle prayer visibility (public/private) for profile
+ */
+export const togglePrayerVisibility = async (prayerId) => {
+  try {
+    const response = await apiClient.patch(`/prayers/${prayerId}/visibility`);
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling prayer visibility:', error);
+    throw error;
+  }
+};
+
+/**
+ * Edit / update a prayer
+ */
+export const editPrayer = async (prayerId, payload) => {
+  try {
+    const response = await apiClient.put(`/prayers/${prayerId}`, payload);
+    return response.data;
+  } catch (error) {
+    console.error('Error editing prayer:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a prayer
+ */
+export const deletePrayer = async (prayerId) => {
+  try {
+    const response = await apiClient.delete(`/prayers/${prayerId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting prayer:', error);
+    throw error;
+  }
+};

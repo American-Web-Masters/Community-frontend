@@ -206,31 +206,61 @@ useEffect(() => {
     <div className="min-h-screen light-background">
       {/* Main Content */}
       <div className="px-4 sm:px-6 lg:px-8 pb-24">
-        <div className="max-w-4xl mx-auto py-6">
+        <div className='pt-4'>
           {/* Back Button */}
           <button 
             onClick={() => navigate(`/communities/${id}`)}
-            className="flex items-center text-gray-800 hover:text-gray-900 mb-6 transition-colors"
+            className="flex items-center text-white hover:text-gray-900 mb-6 transition-colors bg-primary-500 py-2 px-2 rounded-full"
           >
             <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Back to Community
           </button>
+          </div>
+        <div className="max-w-5xl mx-auto p-10 max-sm:p-5 bg-primary-50 rounded-2xl" >
 
-          {/* Community Info */}
-          <div className="text-center mb-8 lg:mb-12">
-            <div className="w-20 h-20 lg:w-24 lg:h-24 mx-auto mb-4 rounded-full overflow-hidden shadow-lg">
-              <img 
-                src={communityInfo?.coverPhoto || '/celebration-party.png'} 
-                alt="Community"
-                className="w-full h-full object-cover"
-              />
+          {/* Community Header */}
+          <div className="flex items-center justify-center mb-5">
+            {/* Community Avatar */}
+            <div className="w-24 h-24 lg:w-28 lg:h-28 rounded-full overflow-hidden flex-shrink-0 shadow-md">
+              {communityInfo?.coverPhoto ? (
+                <img
+                  src={communityInfo.coverPhoto}
+                  alt={communityInfo?.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-3xl">
+                    {communityInfo?.name?.charAt(0).toUpperCase() || 'C'}
+                  </span>
+                </div>
+              )}
             </div>
-            <h1 className="text-2xl lg:text-3xl font-semibold text-gray-800 mb-2">
-              {communityInfo?.name || 'Community'} Support
-            </h1>
-            <p className="text-base lg:text-lg text-gray-600 max-w-md mx-auto">Send a blessing to support this community</p>
+
+            {/* Community Info */}
+            <div className="flex flex-col justify-center ml-5">
+              {/* Community Name */}
+              <h1 className="text-xl sm:text-2xl  font-semibold text-gray-900 mb-1">
+                {communityInfo?.name || 'Community'} | {communityInfo?.affiliatedOrganization}
+              </h1>
+
+              {/* Welcome Message */}
+              {communityInfo?.welcomeMessage && (
+                <p className="max-sm:text-sm text-gray-500 mb-2 leading-snug">
+                  {communityInfo.welcomeMessage}
+                </p>
+              )}
+
+              {/* Members Count */}
+              <div className="flex items-center space-x-1 text-sm text-gray-600">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>{communityInfo?.memberCount ?? 0} members</span>
+              </div>
+            </div>
           </div>
 
           {!showPaymentForm ? (
@@ -240,15 +270,15 @@ useEffect(() => {
                 <div>
                   {/* Choose Blessing Amount Section */}
                   <div className="mb-8">
-                    <h2 className="text-xl lg:text-2xl font-semibold text-gray-800 mb-6">Choose Your Blessing Amount</h2>
+                    <h2 className="text-xl  font-semibold text-gray-800 mb-3">Choose Your Blessing Amount</h2>
                     
                     {/* Predefined Amounts Grid */}
-                    <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       {predefinedAmounts.map((amount) => (
                         <button
                           key={amount.value}
                           onClick={() => handleAmountSelect(amount.value)}
-                          className={`p-5 lg:p-6 rounded-lg border text-center transition-all hover:shadow-md ${
+                          className={`p-5  rounded-lg border text-center transition-all hover:shadow-md ${
                             selectedAmount === amount.value
                               ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                               : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
@@ -262,8 +292,8 @@ useEffect(() => {
 
                     {/* Custom Amount - Hidden for recurring payments */}
                     {paymentType === 'one-time' && (
-                      <div className="mt-6">
-                        <label className="block text-base lg:text-lg font-medium text-gray-700 mb-3">
+                      <div className="mt-3">
+                        <label className="block text-base lg:text-lg font-bold text-gray-700 mb-3">
                           Custom Amount
                         </label>
                         <div className="relative">
@@ -286,8 +316,8 @@ useEffect(() => {
                 {/* Right Column */}
                 <div>
                   {/* Payment Type Selection */}
-                  <div className="mb-8">
-                    <h2 className="text-xl lg:text-2xl font-semibold text-gray-800 mb-6">Payment Type</h2>
+                  <div className="mb-4">
+                    <h2 className="text-xl font-semibold text-gray-800 mb-3">Payment Type</h2>
                     
                     <div className="space-y-3">
                       {/* One-time Payment */}
@@ -344,14 +374,14 @@ useEffect(() => {
 
                   {/* Personal Message - Hidden for recurring payments */}
                   {paymentType === 'one-time' && (
-                    <div className="mb-8">
-                      <h2 className="text-xl lg:text-2xl font-semibold text-gray-800 mb-4">Add a Personal Message or Prayer</h2>
+                    <div className="mb-4">
+                      <h2 className="text-xl font-semibold text-gray-800 mb-3">Add a Personal Message or Prayer</h2>
                       <textarea
                         value={personalMessage}
                         onChange={(e) => setPersonalMessage(e.target.value)}
                         placeholder="Write your message of support..."
                         className="w-full p-4 lg:p-5 border-1 border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none text-base lg:text-lg shadow-sm"
-                        rows="6"
+                        rows="3"
                       />
                     </div>
                   )}

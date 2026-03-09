@@ -1,126 +1,300 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
 import { useLogout } from "../../hooks/useLogout";
 import { useNavigate } from "react-router-dom";
+import { useSocket } from "../../hooks/useSocket";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import CommunityCard from "../communities/subcomponents/CommunityCard";
 import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu } from "react-icons/io5";
 import { IoPeopleOutline } from "react-icons/io5";
+import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead } from "../../api/messages";
+import { fetchCommunities as apiFetchCommunities } from "../../api";
 
-// Mock data for chats
-const mockChats = [
-  {
-    id: 1,
-    name: "David Park",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    lastMessage: "Hey Chris, Can you please review the latest work when you can?",
-    timestamp: "2m",
-    isTyping: true,
-  },
-  {
-    id: 2,
-    name: "David Park",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    lastMessage: "Thanks for sharing this with me",
-    timestamp: "1hr",
-    isTyping: false,
-  },
-  {
-    id: 3,
-    name: "David Park",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    lastMessage: "What do you think about this strategy?",
-    timestamp: "3hr",
-    isTyping: false,
-  },
-];
-
-// Mock data for messages
-const mockMessages = [
-  {
-    id: 1,
-    sender: "David Park",
-    senderAvatar: "https://i.pravatar.cc/150?img=12",
-    text: "No Worries, I'm on it!",
-    label: "Isaac Work",
-    timestamp: "11m",
-    isOutgoing: false,
-  },
-  {
-    id: 2,
-    sender: "David Park",
-    senderAvatar: "https://i.pravatar.cc/150?img=12",
-    text: "Hey Chris, Can you please review the latest work when you can?",
-    label: "Isaac Work",
-    timestamp: "5 M",
-    isOutgoing: false,
-  },
-  {
-    id: 3,
-    text: "I'm not able to bike this at the moment thankyou",
-    timestamp: "10 m",
-    isOutgoing: true,
-  },
-  {
-    id: 4,
-    sender: "David Park",
-    senderAvatar: "https://i.pravatar.cc/150?img=12",
-    text: "Hey Chris, Can you please review the latest work when you can?",
-    label: "Okay!",
-    timestamp: "5 M",
-    isOutgoing: false,
-  },
-  {
-    id: 5,
-    text: "I'm not able to bike this at the moment thankyou",
-    timestamp: "20 m",
-    isOutgoing: true,
-  },
-  {
-    id: 6,
-    sender: "David Park",
-    senderAvatar: "https://i.pravatar.cc/150?img=12",
-    text: "Hey Chris, Can you please review the latest work when you can?",
-    label: "Isaac Work",
-    timestamp: "5 M",
-    isOutgoing: false,
-  },
-  {
-    id: 7,
-    text: "I'm not able to bike this at the moment thankyou",
-    timestamp: "30 m",
-    isOutgoing: true,
-  },
-];
-
-// Mock data for communities
-const mockCommunities = [
-  {
-    id: 1,
-    name: "Faith & Healing",
-    wallAssociation: "Prayer Wall",
-    category: ["Fellowship"],
-    members: 125,
-    avatar: "https://i.pravatar.cc/150?img=20",
-  },
-  {
-    id: 2,
-    name: "Faith & Healing",
-    wallAssociation: "Prayer Wall",
-    category: ["Fellowship"],
-    members: 125,
-    avatar: "https://i.pravatar.cc/150?img=21",
-  },
-];
+// Custom styles for thin scrollbars
+const scrollbarStyles = `
+  .thin-scrollbar::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+  .thin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .thin-scrollbar::-webkit-scrollbar-thumb {
+    background: #A6D3FF;
+    border-radius: 10px;
+  }
+  .thin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #8BC1FF;
+  }
+  .thin-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #A6D3FF transparent;
+  }
+`;
 
 const Messages = () => {
   const user = useSelector(selectUser);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const navigate = useNavigate();
-  const [activeChat, setActiveChat] = useState(mockChats[0]);
+  const [activeChat, setActiveChat] = useState(null);
   const [activeTab, setActiveTab] = useState("All");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
+  // API state
+  const [users, setUsers] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [messageInput, setMessageInput] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [discoverCommunities, setDiscoverCommunities] = useState([]);
+  const [loadingCommunities, setLoadingCommunities] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const searchDebounceRef = useRef(null);
+  
+  // Socket.IO state
+  const { socket, isConnected, onlineUsers } = useSocket();
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  
+
+  // Fetch all users
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await getAllUsers();
+        if (response.data.status === 'success') {
+          const allUsers = response.data.data.users;
+          // Filter out current user
+          const otherUsers = allUsers.filter(u => u._id !== user?._id);
+          setUsers(otherUsers);
+          if (otherUsers.length > 0 && !activeChat) {
+            setActiveChat(otherUsers[0]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isLoggedIn && user) {
+      fetchUsers();
+    }
+  }, [isLoggedIn, user]);
+
+
+  useEffect(() => {
+    const fetchDiscover = async () => {
+      try {
+        setLoadingCommunities(true);
+        const response = await apiFetchCommunities(user);
+        if (response.success) {
+          const notJoined = response.data.filter(c => !c.isMember && !c.isOwner);
+          setDiscoverCommunities(notJoined);
+        }
+      } catch (error) {
+        console.error('Error fetching discover communities:', error);
+      } finally {
+        setLoadingCommunities(false);
+      }
+    };
+
+    if (isLoggedIn && user) {
+      fetchDiscover();
+    }
+  }, [isLoggedIn, user]);
+
+  // Fetch messages when active chat changes
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!activeChat) return;
+      
+      try {
+        const response = await getConversationWithUser(activeChat._id);
+        if (response.data.status === 'success') {
+          const sortedMessages = response.data.data.messages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+          setMessages(sortedMessages);
+          // Mark messages as read
+          await markConversationAsRead(activeChat._id);
+          
+          // Instantly scroll to bottom (no animation) when loading conversation
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+          }, 0);
+        }
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+        setMessages([]);
+      }
+    };
+
+    fetchMessages();
+  }, [activeChat]);
+
+  // Socket.IO event listeners
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    // Listen for new messages
+    const handleNewMessage = (messageData) => {
+      console.log('📨 New message received:', messageData);
+      
+      // Check if message is for current conversation
+      const isForCurrentChat = 
+        (messageData.sender._id === activeChat?._id && messageData.receiver._id === user?._id) ||
+        (messageData.sender._id === user?._id && messageData.receiver._id === activeChat?._id);
+      
+      if (isForCurrentChat) {
+        setMessages(prev => {
+          // Prevent duplicate messages
+          const exists = prev.some(msg => msg._id === messageData._id);
+          if (exists) return prev;
+          return [...prev, messageData];
+        });
+        
+        // Mark as read if we're the receiver
+        if (messageData.receiver._id === user?._id && activeChat) {
+          markConversationAsRead(activeChat._id).catch(console.error);
+        }
+        
+        // Scroll to bottom
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      } else {
+        // Show notification or update unread count for other conversations
+        console.log('Message from other conversation');
+      }
+    };
+
+    // Listen for typing indicators
+    const handleTypingStart = ({ userId, username }) => {
+      if (userId === activeChat?._id) {
+        console.log(`${username} is typing...`);
+        setIsTyping(true);
+      }
+    };
+
+    const handleTypingStop = ({ userId }) => {
+      if (userId === activeChat?._id) {
+        setIsTyping(false);
+      }
+    };
+
+    // Listen for message read receipts
+    const handleMessageRead = ({ messageIds, readBy }) => {
+      if (readBy !== user?._id) {
+        setMessages(prev => 
+          prev.map(msg => 
+            messageIds.includes(msg._id) ? { ...msg, isRead: true } : msg
+          )
+        );
+      }
+    };
+
+    // Listen for message deletions
+    const handleMessageDeleted = ({ messageId }) => {
+      setMessages(prev => prev.filter(msg => msg._id !== messageId));
+    };
+
+    // Attach event listeners
+    socket.on('message:new', handleNewMessage);
+    socket.on('typing:start', handleTypingStart);
+    socket.on('typing:stop', handleTypingStop);
+    socket.on('message:read', handleMessageRead);
+    socket.on('message:deleted', handleMessageDeleted);
+
+    // Cleanup
+    return () => {
+      socket.off('message:new', handleNewMessage);
+      socket.off('typing:start', handleTypingStart);
+      socket.off('typing:stop', handleTypingStop);
+      socket.off('message:read', handleMessageRead);
+      socket.off('message:deleted', handleMessageDeleted);
+    };
+  }, [socket, isConnected, activeChat, user]);
+
+  // Handle typing with debounce
+  const handleTyping = (value) => {
+    setMessageInput(value);
+    
+    if (!socket || !isConnected || !activeChat) return;
+
+    // Emit typing start
+    socket.emit('typing:start', { receiverId: activeChat._id });
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set timeout to emit typing stop
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit('typing:stop', { receiverId: activeChat._id });
+    }, 2000);
+  };
+
+  // Send message handler
+  const handleSendMessage = async () => {
+    if (!messageInput.trim() || !activeChat || sendingMessage) return;
+
+    setSendingMessage(true);
+    try {
+      const response = await sendMessage({
+        receiverId: activeChat._id,
+        content: messageInput.trim(),
+        messageType: 'text'
+      });
+
+      if (response.data.status === 'success') {
+        // Message will be received via Socket.IO, but update local state for immediate feedback
+        const newMessage = response.data.data.message;
+        setMessages(prev => {
+          const exists = prev.some(msg => msg._id === newMessage._id);
+          if (exists) return prev;
+          return [...prev, newMessage];
+        });
+        setMessageInput('');
+        
+        // Stop typing indicator
+        if (socket && isConnected) {
+          socket.emit('typing:stop', { receiverId: activeChat._id });
+        }
+        
+        // Clear typing timeout
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        }
+        
+        // Scroll to bottom after sending
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      console.error('Error details:', error.response?.data);
+      
+      // Show error to user
+      const errorMessage = error.response?.data?.message || 'Failed to send message. Please try again.';
+      alert(errorMessage);
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  // Format timestamp
+  const formatTimestamp = (date) => {
+    const now = new Date();
+    const messageDate = new Date(date);
+    const diffMs = now - messageDate;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'now';
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h`;
+    return `${Math.floor(diffMins / 1440)}d`;
+  };
 
   if (!isLoggedIn || !user) {
     return (
@@ -136,210 +310,321 @@ const Messages = () => {
   }
 
   return (
-    <div className="min-h-screen light-background overflow-hidden">
+    <>
+      <style>{scrollbarStyles}</style>
+      <div className="min-h-screen light-background overflow-hidden">
       <div className="flex" style={{ height: 'calc(100vh - 80px)' }}>
-        {/* Sidebar Toggle Button */}
-        <div className="w-14 flex flex-col items-center justify-center space-y-6 mr-3">
+        {/* Sidebar Toggle Button - desktop only */}
+        <div className="hidden sm:flex w-14 flex-col items-center justify-center space-y-6 mr-5">
+          <div className="side-trapezoid btn-blue-gradient flex flex-col items-center justify-center">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="w-12 h-12 rounded-full btn-blue-gradient flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md"
+            className="flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md"
           >
             <IoMenu className="w-6 h-6 text-white" />
           </button>
-          <button className="w-12 h-12 rounded-full btn-blue-gradient flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md">
+          <button className="flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md">
             <IoPeopleOutline className="w-6 h-6 text-white" />
           </button>
         </div>
+        </div>
 
         {/* Left Sidebar Container */}
-        {isSidebarOpen && (
-          <div className="flex flex-col mt-4">
-            {/* Back Button - Outside above sidebar */}
-            <button
-              onClick={() => navigate(-1)}
-              className="w-10 h-10 rounded-full bg-[#03045E] flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-sm mb-3 ml-4"
-            >
-              <IoChevronBack className="w-5 h-5 text-white" />
-            </button>
+        <>
+          {/* Fixed back button - desktop only, shown when sidebar open */}
+          {isSidebarOpen && (
+            <div className="hidden sm:block fixed top-4.5 left-3">
+              <button
+                onClick={() => navigate(-1)}
+                className="w-11 h-11 rounded-full bg-[#03045E] flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-sm flex-shrink-0"
+              >
+                <IoChevronBack className="w-5 h-5 text-white" />
+              </button>
+            </div>
+          )}
 
-            {/* Sidebar */}
-            <div className="w-80 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-tr-2xl rounded-br-2xl shadow-sm flex-1">
-              {/* Search and Filters */}
-              <div className="p-4 space-y-3 flex-shrink-0">
-                {/* Search Input */}
-                <div className="relative">
-                  <IoSearchOutline className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="search"
-                    className="w-full pl-9 pr-3 py-2 rounded-full bg-white/70 border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-300"
-                  />
-                </div>
-
-                {/* Filter Tabs */}
-                <div className="flex space-x-1">
-                  {["All", "Unread", "Communities"].map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
-                        activeTab === tab
-                          ? "btn-blue-gradient text-white shadow-sm"
-                          : "bg-white/70 text-gray-700 hover:bg-white/90"
-                      }`}
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
+          <div className={`flex-col mt-4 mb-3 w-full sm:w-auto px-3 sm:px-0 ${!activeChat ? 'flex' : 'hidden'} ${isSidebarOpen ? 'sm:flex' : 'sm:hidden'}`}>
+            {/* Back Button and Search - Same Line */}
+            <div className="flex items-center space-x-3 mb-2">
+              
+              {/* Search Input */}
+              <div className="relative flex-1">
+                <IoSearchOutline className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6 " />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSearchQuery(val);
+                    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+                    searchDebounceRef.current = setTimeout(() => setDebouncedSearch(val), 300);
+                  }}
+                  placeholder="search"
+                  className="w-full h-11 pl-9 pr-3 py-2 rounded-full bg-white/70 border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-300 placeholder:text-[16px] placeholder:pl-2"
+                />
               </div>
+            </div>
 
-          {/* Chats Section */}
-          <div className="flex-1 overflow-y-auto px-4 py-3" style={{ maxHeight: '45%' }}>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Chats</h3>
-            <div className="space-y-1">
-              {mockChats.map((chat) => (
-                <div
-                  key={chat.id}
-                  onClick={() => setActiveChat(chat)}
-                  className={`flex items-start space-x-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 ${
-                    activeChat.id === chat.id
-                      ? "bg-white shadow-sm"
-                      : "hover:bg-white/50"
+            {/* Filter Tabs - Below Search */}
+            <div className="flex space-x-2 mb-3 ">
+              {["All", "Unread", "Communities"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 ${
+                    activeTab === tab
+                      ? "btn-blue-gradient text-white shadow-sm"
+                      : "bg-white/70 text-gray-700 hover:bg-white/90"
                   }`}
                 >
-                  <img
-                    src={chat.avatar}
-                    alt={chat.name}
-                    className="w-10 h-10 rounded-full flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <h4 className="text-sm font-semibold text-gray-900 truncate">
-                        {chat.name}
-                      </h4>
-                      <span className="text-[11px] text-gray-400 ml-2 flex-shrink-0">
-                        {chat.timestamp}
-                      </span>
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* Chats Container */}
+            <div className="w-full sm:w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm" style={{ maxHeight: '48%' }}>
+          {/* Chats Section */}
+          <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Chats</h3>
+            {loading ? (
+              <div className="text-center py-4 text-gray-500">Loading...</div>
+            ) : users.filter(u => {
+                const q = debouncedSearch.toLowerCase();
+                return !q || `${u.firstname} ${u.lastname}`.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
+              }).length === 0 ? (
+              <div className="text-center py-4 text-gray-500 text-xs">{debouncedSearch ? 'No users found' : 'No users available'}</div>
+            ) : (
+              <div className="space-y-1">
+                {users.filter(u => {
+                  const q = debouncedSearch.toLowerCase();
+                  return !q || `${u.firstname} ${u.lastname}`.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
+                }).map((chat) => (
+                  <div
+                    key={chat._id}
+                    onClick={() => setActiveChat(chat)}
+                    className={`flex items-start space-x-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 ${
+                      activeChat?._id === chat._id
+                        ? "bg-white shadow-sm"
+                        : "hover:bg-white/50"
+                    }`}
+                  >
+                    <div className="relative">
+                      <img
+                        src={chat.profilePicture || "https://i.pravatar.cc/150?img=12"}
+                        alt={`${chat.firstname} ${chat.lastname}`}
+                        className="w-10 h-10 rounded-full flex-shrink-0"
+                      />
+                      {onlineUsers.has(chat._id) && (
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                      )}
                     </div>
-                    {chat.isTyping ? (
-                      <p className="text-xs text-blue-600 font-medium">typing...</p>
-                    ) : (
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <h4 className="text-sm font-semibold text-gray-900 truncate">
+                          {chat.firstname} {chat.lastname}
+                        </h4>
+                        <span className="text-[11px] text-gray-400 ml-2 flex-shrink-0">
+                          @{chat.username}
+                        </span>
+                      </div>
                       <p className="text-xs text-gray-500 truncate leading-tight">
-                        {chat.lastMessage}
+                        {chat.email}
                       </p>
-                    )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
+        </div>
 
-          {/* Separator */}
-          <div className="px-4 py-2">
-            <div className="border-t border-gray-200"></div>
-          </div>
-
+            <div className="w-full sm:w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm mt-3" style={{ maxHeight: '48%' }}>
           {/* Discover Section */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 pb-4" style={{ maxHeight: '45%' }}>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Discover</h3>
-            <div className="space-y-3">
-              {mockCommunities.map((community) => (
-                <CommunityCard
-                  key={community.id}
-                  id={community.id}
-                  name={community.name}
-                  wallAssociation={community.wallAssociation}
-                  category={community.category}
-                  members={community.members}
-                  avatar={community.avatar}
-                  isJoined={false}
-                  onJoinClick={(id) => console.log("Join community:", id)}
-                />
-              ))}
-            </div>
+          <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Discover</h3>
+            {loadingCommunities ? (
+              <div className="text-center py-4 text-gray-500 text-xs">Loading...</div>
+            ) : discoverCommunities.length === 0 ? (
+              <div className="text-center py-4 text-gray-500 text-xs">No communities to discover</div>
+            ) : (
+              <div className="space-y-3">
+                {discoverCommunities.map((community) => (
+                  <CommunityCard
+                    key={community._id || community.id}
+                    id={community._id || community.id}
+                    name={community.name}
+                    wallAssociation={community.wallAssociation}
+                    category={community.tags || []}
+                    members={community.memberCount}
+                    avatar={community.coverPhoto}
+                    privacyLevel={community.privacyLevel}
+                    status={community.privacyLevel === 'private' ? 'Private' : 'Public'}
+                    isJoined={false}
+                    onJoinClick={() => navigate('/communities')}
+                    onViewClick={() => navigate('/communities')}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
-        )}
+        </>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col overflow-hidden ml-4 mr-4 my-4 rounded-2xl bg-white/30 backdrop-blur-sm shadow-sm">
+        <div className={`flex-1 flex-col overflow-hidden ml-0 sm:ml-4 mr-0 sm:mr-4 my-0 sm:my-4 rounded-none sm:rounded-2xl bg-white/30 backdrop-blur-sm shadow-sm ${!activeChat ? 'hidden sm:flex' : 'flex'}`}>
           {/* Chat Header */}
           <div className="bg-white/50 backdrop-blur-sm border-b border-white/50 px-5 py-3 flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <img
-                  src={activeChat.avatar}
-                  alt={activeChat.name}
-                  className="w-11 h-11 rounded-full"
-                />
-                <div>
-                  <h2 className="text-sm font-semibold text-gray-900">
-                    {activeChat.name}
-                  </h2>
-                  {activeChat.isTyping && (
-                    <p className="text-[11px] text-blue-600 font-medium">typing...</p>
+            {activeChat ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  {/* Back button - mobile only */}
+                  <button
+                    onClick={() => setActiveChat(null)}
+                    className="sm:hidden w-8 h-8 rounded-full bg-[#03045E] flex items-center justify-center flex-shrink-0"
+                  >
+                    <IoChevronBack className="w-4 h-4 text-white" />
+                  </button>
+                  <div className="relative">
+                    <img
+                      src={activeChat.profilePicture || "https://i.pravatar.cc/150?img=12"}
+                      alt={`${activeChat.firstname} ${activeChat.lastname}`}
+                      className="w-11 h-11 rounded-full"
+                    />
+                    {onlineUsers.has(activeChat._id) && (
+                      <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-semibold text-gray-900">
+                      {activeChat.firstname} {activeChat.lastname}
+                    </h2>
+                    <p className="text-[11px] text-gray-500">
+                      @{activeChat.username}
+                      {onlineUsers.has(activeChat._id) ? (
+                        <span className="text-green-500 ml-2">● Online</span>
+                      ) : (
+                        <span className="text-gray-400 ml-2">● Offline</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  {isConnected ? (
+                    <span className="text-[10px] text-green-500 flex items-center">
+                      <span className="w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
+                      Connected
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-red-500 flex items-center">
+                      <span className="w-2 h-2 bg-red-500 rounded-full mr-1.5"></span>
+                      Reconnecting...
+                    </span>
                   )}
+                  <button className="text-gray-600 hover:text-gray-900 transition-colors">
+                    <IoEllipsisVertical className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
-              <button className="text-gray-600 hover:text-gray-900 transition-colors">
-                <IoEllipsisVertical className="w-5 h-5" />
-              </button>
-            </div>
+            ) : (
+              <div className="text-center text-gray-500">Select a user to start messaging</div>
+            )}
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
-            {mockMessages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex items-start gap-3 ${
-                  message.isOutgoing ? "justify-end" : "justify-start"
-                }`}
-              >
-                {!message.isOutgoing && message.senderAvatar && (
-                  <img
-                    src={message.senderAvatar}
-                    alt={message.sender}
-                    className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
-                  />
-                )}
-                <div className="flex flex-col space-y-1 max-w-md">
-                  <div
-                    className={`px-4 py-2.5 rounded-2xl ${
-                      message.isOutgoing
-                        ? "btn-blue-gradient text-white"
-                        : "bg-white/80 text-gray-900 shadow-sm"
-                    }`}
-                  >
-                    <p className="text-[13px] leading-relaxed">{message.text}</p>
-                  </div>
-                  <div className="flex items-center gap-3 px-1">
-                    {message.label && (
-                      <span className="text-[11px] text-gray-600 font-medium">
-                        {message.label}
-                      </span>
-                    )}
-                    <span className="text-[10px] text-gray-400">
-                      {message.timestamp}
-                    </span>
-                  </div>
-                </div>
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5 thin-scrollbar">
+            {!activeChat ? (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                Select a user to view messages
               </div>
-            ))}
+            ) : messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No messages yet. Start the conversation!
+              </div>
+            ) : (
+              <>
+                {messages.map((message) => {
+                  const isOutgoing = message.sender._id === user._id;
+                  return (
+                    <div
+                      key={message._id}
+                      className={`flex items-start gap-3 ${
+                        isOutgoing ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      {!isOutgoing && (
+                        <img
+                          src={message.sender.profilePicture || "https://i.pravatar.cc/150?img=12"}
+                          alt={`${message.sender.firstname} ${message.sender.lastname}`}
+                          className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
+                        />
+                      )}
+                      <div className="flex flex-col space-y-1 max-w-md">
+                        <div
+                          className={`px-4 py-2.5 rounded-2xl ${
+                            isOutgoing
+                              ? "btn-blue-gradient text-white"
+                              : "bg-white/80 text-gray-900 shadow-sm"
+                          }`}
+                        >
+                          <p className="text-[13px] leading-relaxed">{message.content}</p>
+                        </div>
+                        <div className="flex items-center gap-3 px-1">
+                          <span className="text-[10px] text-gray-400">
+                            {formatTimestamp(message.createdAt)}
+                          </span>
+                          {message.isRead && isOutgoing && (
+                            <span className="text-[10px] text-blue-500">Read</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {isTyping && (
+                  <div className="flex items-start gap-3 justify-start">
+                    <img
+                      src={activeChat.profilePicture || "https://i.pravatar.cc/150?img=12"}
+                      alt={`${activeChat.firstname} ${activeChat.lastname}`}
+                      className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
+                    />
+                    <div className="bg-white/80 px-4 py-3 rounded-2xl shadow-sm">
+                      <div className="flex space-x-1.5">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </>
+            )}
           </div>
 
           {/* Input Area */}
-          <div className="bg-white/50 backdrop-blur-sm border-t border-white/50 px-6 py-4 flex-shrink-0">
+          <div className="px-6 py-4 flex-shrink-0">
             <div className="flex items-center space-x-2">
               <input
                 type="text"
-                placeholder="Reply to David"
-                className="flex-1 px-4 py-2.5 rounded-full bg-white/70 border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-300"
+                value={messageInput}
+                onChange={(e) => handleTyping(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                placeholder={activeChat ? `Reply to ${activeChat.firstname}` : "Select a user to start messaging"}
+                disabled={!activeChat || sendingMessage}
+                className="flex-1 px-4 py-2.5 rounded-full bg-white/70 border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
               />
-              <button className="btn-blue-gradient w-11 h-11 rounded-full flex items-center justify-center shadow-md hover:opacity-90 transition-all duration-200 flex-shrink-0">
-                <IoSend className="w-4 h-4 text-white" />
+              <button 
+                onClick={handleSendMessage}
+                disabled={!activeChat || !messageInput.trim() || sendingMessage}
+                className="btn-blue-gradient w-11 h-11 rounded-full flex items-center justify-center shadow-md hover:opacity-90 transition-all duration-200 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sendingMessage ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <IoSend className="w-4 h-4 text-white" />
+                )}
               </button>
             </div>
           </div>
@@ -347,7 +632,8 @@ const Messages = () => {
       </div>
 
       <BottomNavBar />
-    </div>
+      </div>
+    </>
   );
 };
 
