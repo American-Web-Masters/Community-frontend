@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useSocket } from "../../hooks/useSocket";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import CommunityCard from "../communities/subcomponents/CommunityCard";
-import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu } from "react-icons/io5";
+import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu, IoArrowUndoSharp, IoClose } from "react-icons/io5";
 import { IoPeopleOutline } from "react-icons/io5";
 import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead, addReaction, removeReaction } from "../../api/messages";
 import { fetchCommunities as apiFetchCommunities } from "../../api";
@@ -64,6 +64,9 @@ const Messages = () => {
   const [reactingToMessage, setReactingToMessage] = useState(null);
   const reactionPickerRef = useRef(null);
   const commonEmojis = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+  
+  // Reply state
+  const [replyingTo, setReplyingTo] = useState(null);
   
 
   // Fetch all users
@@ -285,11 +288,18 @@ const Messages = () => {
 
     setSendingMessage(true);
     try {
-      const response = await sendMessage({
+      const payload = {
         receiverId: activeChat._id,
         content: messageInput.trim(),
         messageType: 'text'
-      });
+      };
+      
+      // Add replyTo if replying to a message
+      if (replyingTo) {
+        payload.replyTo = replyingTo._id;
+      }
+      
+      const response = await sendMessage(payload);
 
       if (response.data.status === 'success') {
         // Message will be received via Socket.IO, but update local state for immediate feedback
@@ -300,6 +310,7 @@ const Messages = () => {
           return [...prev, newMessage];
         });
         setMessageInput('');
+        setReplyingTo(null); // Clear reply state
         
         // Stop typing indicator
         if (socket && isConnected) {
@@ -366,19 +377,28 @@ const Messages = () => {
     }
   };
 
-  // Toggle reaction (add if not present, remove if present)
-  const handleToggleReaction = (messageId, emoji) => {
+  // Toggle reaction (replace if different, remove if same)
+  const handleToggleReaction = async (messageId, emoji) => {
     const message = messages.find(msg => msg._id === messageId);
     if (!message) return;
 
-    const userReaction = message.reactions?.find(
-      r => r.user._id === user._id && r.emoji === emoji
+    // Find any existing reaction from this user
+    const existingReaction = message.reactions?.find(
+      r => r.user._id === user._id
     );
 
-    if (userReaction) {
-      handleRemoveReaction(messageId, emoji);
+    if (existingReaction) {
+      // If clicking the same emoji, remove it (toggle off)
+      if (existingReaction.emoji === emoji) {
+        await handleRemoveReaction(messageId, emoji);
+      } else {
+        // If clicking a different emoji, replace the old one
+        await handleRemoveReaction(messageId, existingReaction.emoji);
+        await handleAddReaction(messageId, emoji);
+      }
     } else {
-      handleAddReaction(messageId, emoji);
+      // No existing reaction, just add the new one
+      await handleAddReaction(messageId, emoji);
     }
   };
 
@@ -691,16 +711,42 @@ const Messages = () => {
                                 : "bg-white/80 text-gray-900 shadow-sm"
                             }`}
                           >
+                            {/* Show replied-to message if exists */}
+                            {message.replyTo && !message.replyTo.isDeletedForEveryone && (
+                              <div className={`mb-2 pb-2 border-l-2 pl-2 ${
+                                isOutgoing ? 'border-white/50' : 'border-gray-300'
+                              }`}>
+                                <p className={`text-[10px] font-medium mb-0.5 ${
+                                  isOutgoing ? 'text-white/80' : 'text-gray-600'
+                                }`}>
+                                  {message.replyTo.sender._id === user._id ? 'You' : `${message.replyTo.sender.firstname} ${message.replyTo.sender.lastname}`}
+                                </p>
+                                <p className={`text-[11px] line-clamp-2 ${
+                                  isOutgoing ? 'text-white/70' : 'text-gray-500'
+                                }`}>
+                                  {message.replyTo.content}
+                                </p>
+                              </div>
+                            )}
                             <p className="text-[13px] leading-relaxed">{message.content}</p>
                           </div>
+                          
+                          {/* Reply Button - shows on hover (left for outgoing, right for incoming) */}
+                          <button
+                            onClick={() => setReplyingTo(message)}
+                            className={`absolute -bottom-2 ${isOutgoing ? 'left-2' : 'right-2'} w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:bg-gray-50`}
+                            title="Reply to message"
+                          >
+                            <IoArrowUndoSharp className="w-3.5 h-3.5" />
+                          </button>
                           
                           {/* Reaction Button - shows on hover */}
                           <button
                             onClick={() => setShowReactionPickerFor(showReactionPickerFor === message._id ? null : message._id)}
-                            className="absolute -bottom-2 right-2 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:bg-gray-50"
+                            className={`absolute -bottom-2 ${isOutgoing ? 'right-2' : 'left-2'} w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:bg-gray-50`}
                             title="Add reaction"
                           >
-                            <span className="text-sm">😊</span>
+                            <span className="text-xl">☺</span>
                           </button>
 
                           {/* Reaction Picker */}
@@ -786,6 +832,27 @@ const Messages = () => {
 
           {/* Input Area */}
           <div className="px-6 py-4 flex-shrink-0">
+            {/* Reply Preview */}
+            {replyingTo && (
+              <div className="mb-2 bg-blue-50 border border-blue-200 rounded-lg p-2.5 flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <IoArrowUndoSharp className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                    <p className="text-[11px] font-medium text-blue-600">
+                      Replying to {replyingTo.sender._id === user._id ? 'yourself' : `${replyingTo.sender.firstname} ${replyingTo.sender.lastname}`}
+                    </p>
+                  </div>
+                  <p className="text-[12px] text-gray-600 line-clamp-1 ml-5">{replyingTo.content}</p>
+                </div>
+                <button
+                  onClick={() => setReplyingTo(null)}
+                  className="text-gray-400 hover:text-gray-600 ml-2 flex-shrink-0"
+                >
+                  <IoClose className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+            
             <div className="flex items-center space-x-2">
               <input
                 type="text"
