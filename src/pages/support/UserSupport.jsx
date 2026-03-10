@@ -6,6 +6,7 @@ import { getUserProfile, getUserPaymentStatus } from '../../api/profile';
 import BottomNavBar from '../../components/ui/BottomNavBar';
 import StripePaymentForm from '../../components/ui/StripePaymentForm';
 import RecurringPaymentForm from '../../components/ui/RecurringPaymentForm';
+import UserStripeStatusBanner from '../../components/ui/UserStripeStatusBanner';
 import toast from 'react-hot-toast';
 
 const UserSupport = () => {
@@ -141,6 +142,9 @@ const UserSupport = () => {
     ? `${userInfo.firstname || ''} ${userInfo.lastname || ''}`.trim()
     : username;
 
+  // True when the logged-in user is viewing their own support page
+  const isOwner = currentUser?.username === username;
+
   // ---------- Loading ----------
   if (checkingStripe) {
     return (
@@ -183,6 +187,9 @@ const UserSupport = () => {
               </svg>
               Back to Profile
             </button>
+
+            {/* Owner-only: Stripe connect banner */}
+            <UserStripeStatusBanner isOwner={isOwner} />
 
             <div className="max-w-lg mx-auto text-center py-12">
               <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">

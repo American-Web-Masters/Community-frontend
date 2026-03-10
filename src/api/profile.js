@@ -82,8 +82,38 @@ export const getUserPaymentStatus = async (username) => {
   }
 };
 
+/**
+ * Get Stripe account status for the current authenticated user
+ * @returns {Promise<Object>} Response with Stripe account status
+ */
+export const getUserStripeAccountStatus = async () => {
+  try {
+    const response = await apiClient.get('/payments/user-stripe-account-status');
+    return response.data;
+  } catch (error) {
+    console.error('Error getting user Stripe account status:', error);
+    throw error;
+  }
+};
+
+/**
+ * Connect Stripe account for the current authenticated user
+ * @returns {Promise<Object>} Response with Stripe onboarding URL
+ */
+export const connectUserStripe = async () => {
+  try {
+    const response = await apiClient.post('/payments/create-user-stripe-account');
+    return response.data;
+  } catch (error) {
+    console.error('Error connecting user Stripe:', error);
+    throw error;
+  }
+};
+
 export default {
   getUserProfile,
   updateUserProfile,
   getUserPaymentStatus,
+  getUserStripeAccountStatus,
+  connectUserStripe,
 };
