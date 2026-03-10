@@ -78,6 +78,24 @@ export const getAllUsers = () => {
   return apiClient.get('/users/allusers');
 };
 
+/**
+ * Add a reaction to a message
+ * @param {string} messageId
+ * @param {{emoji: string}} payload
+ */
+export const addReaction = (messageId, payload) => {
+  return apiClient.post(`/messages/${messageId}/reactions`, payload);
+};
+
+/**
+ * Remove a reaction from a message
+ * @param {string} messageId
+ * @param {{emoji: string}} payload
+ */
+export const removeReaction = (messageId, payload) => {
+  return apiClient.delete(`/messages/${messageId}/reactions`, { data: payload });
+};
+
 export default {
   sendMessage,
   getConversations,
@@ -89,4 +107,6 @@ export default {
   deleteMessage,
   deleteConversation,
   getAllUsers,
+  addReaction,
+  removeReaction,
 };

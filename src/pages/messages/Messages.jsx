@@ -8,7 +8,7 @@ import BottomNavBar from "../../components/ui/BottomNavBar";
 import CommunityCard from "../communities/subcomponents/CommunityCard";
 import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu } from "react-icons/io5";
 import { IoPeopleOutline } from "react-icons/io5";
-import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead } from "../../api/messages";
+import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead, addReaction, removeReaction } from "../../api/messages";
 import { fetchCommunities as apiFetchCommunities } from "../../api";
 
 // Custom styles for thin scrollbars
@@ -58,6 +58,12 @@ const Messages = () => {
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef(null);
   const messagesEndRef = useRef(null);
+  
+  // Reaction state
+  const [showReactionPickerFor, setShowReactionPickerFor] = useState(null);
+  const [reactingToMessage, setReactingToMessage] = useState(null);
+  const reactionPickerRef = useRef(null);
+  const commonEmojis = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
   
 
   // Fetch all users
@@ -199,12 +205,47 @@ const Messages = () => {
       setMessages(prev => prev.filter(msg => msg._id !== messageId));
     };
 
+    // Listen for reaction added
+    const handleReactionAdded = ({ messageId, reaction }) => {
+      setMessages(prev => 
+        prev.map(msg => {
+          if (msg._id === messageId) {
+            const reactions = msg.reactions || [];
+            // Check if reaction already exists
+            const exists = reactions.some(
+              r => r.user._id === reaction.user._id && r.emoji === reaction.emoji
+            );
+            if (exists) return msg;
+            return { ...msg, reactions: [...reactions, reaction] };
+          }
+          return msg;
+        })
+      );
+    };
+
+    // Listen for reaction removed
+    const handleReactionRemoved = ({ messageId, userId, emoji }) => {
+      setMessages(prev => 
+        prev.map(msg => {
+          if (msg._id === messageId) {
+            const reactions = (msg.reactions || []).filter(
+              r => !(r.user._id === userId && r.emoji === emoji)
+            );
+            return { ...msg, reactions };
+          }
+          return msg;
+        })
+      );
+    };
+
     // Attach event listeners
     socket.on('message:new', handleNewMessage);
     socket.on('typing:start', handleTypingStart);
     socket.on('typing:stop', handleTypingStop);
     socket.on('message:read', handleMessageRead);
     socket.on('message:deleted', handleMessageDeleted);
+    socket.on('message:reaction-added', handleReactionAdded);
+    socket.on('message:reaction-removed', handleReactionRemoved);
 
     // Cleanup
     return () => {
@@ -213,6 +254,8 @@ const Messages = () => {
       socket.off('typing:stop', handleTypingStop);
       socket.off('message:read', handleMessageRead);
       socket.off('message:deleted', handleMessageDeleted);
+      socket.off('message:reaction-added', handleReactionAdded);
+      socket.off('message:reaction-removed', handleReactionRemoved);
     };
   }, [socket, isConnected, activeChat, user]);
 
@@ -282,6 +325,74 @@ const Messages = () => {
       setSendingMessage(false);
     }
   };
+
+  // Handle adding reaction
+  const handleAddReaction = async (messageId, emoji) => {
+    try {
+      const response = await addReaction(messageId, { emoji });
+      if (response.data.status === 'success') {
+        // Update local state
+        setMessages(prev => 
+          prev.map(msg => 
+            msg._id === messageId 
+              ? { ...msg, reactions: response.data.data.reactions }
+              : msg
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+    } finally {
+      setShowReactionPickerFor(null);
+    }
+  };
+
+  // Handle removing reaction
+  const handleRemoveReaction = async (messageId, emoji) => {
+    try {
+      const response = await removeReaction(messageId, { emoji });
+      if (response.data.status === 'success') {
+        // Update local state
+        setMessages(prev => 
+          prev.map(msg => 
+            msg._id === messageId 
+              ? { ...msg, reactions: response.data.data.reactions }
+              : msg
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error removing reaction:', error);
+    }
+  };
+
+  // Toggle reaction (add if not present, remove if present)
+  const handleToggleReaction = (messageId, emoji) => {
+    const message = messages.find(msg => msg._id === messageId);
+    if (!message) return;
+
+    const userReaction = message.reactions?.find(
+      r => r.user._id === user._id && r.emoji === emoji
+    );
+
+    if (userReaction) {
+      handleRemoveReaction(messageId, emoji);
+    } else {
+      handleAddReaction(messageId, emoji);
+    }
+  };
+
+  // Close reaction picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (reactionPickerRef.current && !reactionPickerRef.current.contains(event.target)) {
+        setShowReactionPickerFor(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Format timestamp
   const formatTimestamp = (date) => {
@@ -546,6 +657,17 @@ const Messages = () => {
               <>
                 {messages.map((message) => {
                   const isOutgoing = message.sender._id === user._id;
+                  const messageReactions = message.reactions || [];
+                  
+                  // Group reactions by emoji
+                  const groupedReactions = messageReactions.reduce((acc, reaction) => {
+                    if (!acc[reaction.emoji]) {
+                      acc[reaction.emoji] = [];
+                    }
+                    acc[reaction.emoji].push(reaction);
+                    return acc;
+                  }, {});
+
                   return (
                     <div
                       key={message._id}
@@ -560,16 +682,75 @@ const Messages = () => {
                           className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
                         />
                       )}
-                      <div className="flex flex-col space-y-1 max-w-md">
-                        <div
-                          className={`px-4 py-2.5 rounded-2xl ${
-                            isOutgoing
-                              ? "btn-blue-gradient text-white"
-                              : "bg-white/80 text-gray-900 shadow-sm"
-                          }`}
-                        >
-                          <p className="text-[13px] leading-relaxed">{message.content}</p>
+                      <div className="flex flex-col space-y-1 max-w-md relative">
+                        <div className="relative group">
+                          <div
+                            className={`px-4 py-2.5 rounded-2xl ${
+                              isOutgoing
+                                ? "btn-blue-gradient text-white"
+                                : "bg-white/80 text-gray-900 shadow-sm"
+                            }`}
+                          >
+                            <p className="text-[13px] leading-relaxed">{message.content}</p>
+                          </div>
+                          
+                          {/* Reaction Button - shows on hover */}
+                          <button
+                            onClick={() => setShowReactionPickerFor(showReactionPickerFor === message._id ? null : message._id)}
+                            className="absolute -bottom-2 right-2 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:bg-gray-50"
+                            title="Add reaction"
+                          >
+                            <span className="text-sm">😊</span>
+                          </button>
+
+                          {/* Reaction Picker */}
+                          {showReactionPickerFor === message._id && (
+                            <div
+                              ref={reactionPickerRef}
+                              className={`absolute ${isOutgoing ? 'right-0' : 'left-0'} top-full mt-2 z-10 bg-white rounded-full shadow-lg px-2 py-1.5 flex gap-1`}
+                            >
+                              {commonEmojis.map(emoji => (
+                                <button
+                                  key={emoji}
+                                  onClick={() => handleToggleReaction(message._id, emoji)}
+                                  className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-lg transition-all hover:scale-110"
+                                  title={`React with ${emoji}`}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
+
+                        {/* Display Reactions */}
+                        {Object.keys(groupedReactions).length > 0 && (
+                          <div className={`flex flex-wrap gap-1 px-1 ${isOutgoing ? 'justify-end' : 'justify-start'}`}>
+                            {Object.entries(groupedReactions).map(([emoji, reactions]) => {
+                              const userHasReacted = reactions.some(r => r.user._id === user._id);
+                              const reactionCount = reactions.length;
+                              
+                              return (
+                                <button
+                                  key={emoji}
+                                  onClick={() => handleToggleReaction(message._id, emoji)}
+                                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-all hover:scale-105 ${
+                                    userHasReacted 
+                                      ? 'bg-blue-100 border border-blue-300' 
+                                      : 'bg-gray-100 border border-gray-200'
+                                  }`}
+                                  title={reactions.map(r => `${r.user.firstname} ${r.user.lastname}`).join(', ')}
+                                >
+                                  <span>{emoji}</span>
+                                  <span className={userHasReacted ? 'text-blue-600 font-medium' : 'text-gray-600'}>
+                                    {reactionCount}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
                         <div className="flex items-center gap-3 px-1">
                           <span className="text-[10px] text-gray-400">
                             {formatTimestamp(message.createdAt)}
