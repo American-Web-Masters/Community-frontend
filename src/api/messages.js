@@ -79,7 +79,7 @@ export const getAllUsers = () => {
 };
 
 /**
- * Add a reaction to a message
+ * Add a reaction to messages
  * @param {string} messageId
  * @param {{emoji: string}} payload
  */
