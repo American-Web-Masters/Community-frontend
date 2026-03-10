@@ -6,9 +6,9 @@ import { useNavigate } from "react-router-dom";
 import { useSocket } from "../../hooks/useSocket";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import CommunityCard from "../communities/subcomponents/CommunityCard";
-import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu, IoArrowUndoSharp, IoClose } from "react-icons/io5";
+import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu, IoArrowUndoSharp, IoClose, IoTrash } from "react-icons/io5";
 import { IoPeopleOutline } from "react-icons/io5";
-import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead, addReaction, removeReaction } from "../../api/messages";
+import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead, addReaction, removeReaction, deleteMessageForEveryone } from "../../api/messages";
 import { fetchCommunities as apiFetchCommunities } from "../../api";
 
 // Custom styles for thin scrollbars
@@ -67,6 +67,9 @@ const Messages = () => {
   
   // Reply state
   const [replyingTo, setReplyingTo] = useState(null);
+  
+  // Delete state
+  const [deletingMessage, setDeletingMessage] = useState(null);
   
 
   // Fetch all users
@@ -241,6 +244,17 @@ const Messages = () => {
       );
     };
 
+    // Listen for message deleted for everyone
+    const handleMessageDeletedForEveryone = ({ messageId }) => {
+      setMessages(prev => 
+        prev.map(msg => 
+          msg._id === messageId 
+            ? { ...msg, isDeletedForEveryone: true }
+            : msg
+        )
+      );
+    };
+
     // Attach event listeners
     socket.on('message:new', handleNewMessage);
     socket.on('typing:start', handleTypingStart);
@@ -249,6 +263,7 @@ const Messages = () => {
     socket.on('message:deleted', handleMessageDeleted);
     socket.on('message:reaction-added', handleReactionAdded);
     socket.on('message:reaction-removed', handleReactionRemoved);
+    socket.on('message:deleted-for-everyone', handleMessageDeletedForEveryone);
 
     // Cleanup
     return () => {
@@ -259,6 +274,7 @@ const Messages = () => {
       socket.off('message:deleted', handleMessageDeleted);
       socket.off('message:reaction-added', handleReactionAdded);
       socket.off('message:reaction-removed', handleReactionRemoved);
+      socket.off('message:deleted-for-everyone', handleMessageDeletedForEveryone);
     };
   }, [socket, isConnected, activeChat, user]);
 
@@ -413,6 +429,51 @@ const Messages = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Handle deleting message for everyone
+  const handleDeleteForEveryone = async (messageId) => {
+    const message = messages.find(msg => msg._id === messageId);
+    if (!message) return;
+
+    // Check if user is the sender
+    if (message.sender._id !== user._id) {
+      alert('You can only delete your own messages');
+      return;
+    }
+
+    // Check if message is within 1 hour
+    const messageTime = new Date(message.createdAt);
+    const now = new Date();
+    const hoursDiff = (now - messageTime) / (1000 * 60 * 60);
+    
+    if (hoursDiff > 1) {
+      alert('Messages can only be deleted for everyone within 1 hour of sending');
+      return;
+    }
+
+    if (!confirm('Delete this message for everyone?')) return;
+
+    setDeletingMessage(messageId);
+    try {
+      const response = await deleteMessageForEveryone(messageId);
+      if (response.data.status === 'success') {
+        // Update local state to mark as deleted
+        setMessages(prev => 
+          prev.map(msg => 
+            msg._id === messageId 
+              ? { ...msg, isDeletedForEveryone: true }
+              : msg
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to delete message';
+      alert(errorMessage);
+    } finally {
+      setDeletingMessage(null);
+    }
+  };
 
   // Format timestamp
   const formatTimestamp = (date) => {
@@ -678,6 +739,13 @@ const Messages = () => {
                 {messages.map((message) => {
                   const isOutgoing = message.sender._id === user._id;
                   const messageReactions = message.reactions || [];
+                  const isDeleted = message.isDeletedForEveryone;
+                  
+                  // Check if message can be deleted (within 1 hour, sender only)
+                  const messageTime = new Date(message.createdAt);
+                  const now = new Date();
+                  const hoursDiff = (now - messageTime) / (1000 * 60 * 60);
+                  const canDelete = isOutgoing && hoursDiff <= 1 && !isDeleted;
                   
                   // Group reactions by emoji
                   const groupedReactions = messageReactions.reduce((acc, reaction) => {
@@ -691,7 +759,7 @@ const Messages = () => {
                   return (
                     <div
                       key={message._id}
-                      className={`flex items-start gap-3 ${
+                      className={`flex items-start gap-3 group ${
                         isOutgoing ? "justify-end" : "justify-start"
                       }`}
                     >
@@ -702,8 +770,50 @@ const Messages = () => {
                           className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
                         />
                       )}
+                      
+                      {/* Action Buttons Row - centered with message, shows on hover */}
+                      {!isDeleted && (
+                        <div className={`flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${
+                          isOutgoing ? 'order-first' : 'order-last'
+                        }`}>
+                          {/* Reply Button */}
+                          <button
+                            onClick={() => setReplyingTo(message)}
+                            className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50"
+                            title="Reply to message"
+                          >
+                            <IoArrowUndoSharp className="w-3.5 h-3.5" />
+                          </button>
+                          
+                          {/* Reaction Button */}
+                          <button
+                            onClick={() => setShowReactionPickerFor(showReactionPickerFor === message._id ? null : message._id)}
+                            className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50"
+                            title="Add reaction"
+                          >
+                            <span className="text-sm">😊</span>
+                          </button>
+                          
+                          {/* Delete Button - only for sender within 1 hour */}
+                          {canDelete && (
+                            <button
+                              onClick={() => handleDeleteForEveryone(message._id)}
+                              disabled={deletingMessage === message._id}
+                              className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-red-600 hover:bg-red-50 disabled:opacity-50"
+                              title="Delete for everyone"
+                            >
+                              {deletingMessage === message._id ? (
+                                <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                              ) : (
+                                <IoTrash className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      
                       <div className="flex flex-col space-y-1 max-w-md relative">
-                        <div className="relative group">
+                        <div className="relative">
                           <div
                             className={`px-4 py-2.5 rounded-2xl ${
                               isOutgoing
@@ -711,46 +821,36 @@ const Messages = () => {
                                 : "bg-white/80 text-gray-900 shadow-sm"
                             }`}
                           >
-                            {/* Show replied-to message if exists */}
-                            {message.replyTo && !message.replyTo.isDeletedForEveryone && (
-                              <div className={`mb-2 pb-2 border-l-2 pl-2 ${
-                                isOutgoing ? 'border-white/50' : 'border-gray-300'
-                              }`}>
-                                <p className={`text-[10px] font-medium mb-0.5 ${
-                                  isOutgoing ? 'text-white/80' : 'text-gray-600'
-                                }`}>
-                                  {message.replyTo.sender._id === user._id ? 'You' : `${message.replyTo.sender.firstname} ${message.replyTo.sender.lastname}`}
-                                </p>
-                                <p className={`text-[11px] line-clamp-2 ${
-                                  isOutgoing ? 'text-white/70' : 'text-gray-500'
-                                }`}>
-                                  {message.replyTo.content}
-                                </p>
-                              </div>
+                            {isDeleted ? (
+                              <p className="text-[13px] italic opacity-60">
+                                🚫 This message was deleted
+                              </p>
+                            ) : (
+                              <>
+                                {/* Show replied-to message if exists */}
+                                {message.replyTo && !message.replyTo.isDeletedForEveryone && (
+                                  <div className={`mb-2 pb-2 border-l-2 pl-2 ${
+                                    isOutgoing ? 'border-white/50' : 'border-gray-300'
+                                  }`}>
+                                    <p className={`text-[10px] font-medium mb-0.5 ${
+                                      isOutgoing ? 'text-white/80' : 'text-gray-600'
+                                    }`}>
+                                      {message.replyTo.sender._id === user._id ? 'You' : `${message.replyTo.sender.firstname} ${message.replyTo.sender.lastname}`}
+                                    </p>
+                                    <p className={`text-[11px] line-clamp-2 ${
+                                      isOutgoing ? 'text-white/70' : 'text-gray-500'
+                                    }`}>
+                                      {message.replyTo.isDeletedForEveryone ? '🚫 This message was deleted' : message.replyTo.content}
+                                    </p>
+                                  </div>
+                                )}
+                                <p className="text-[13px] leading-relaxed">{message.content}</p>
+                              </>
                             )}
-                            <p className="text-[13px] leading-relaxed">{message.content}</p>
                           </div>
-                          
-                          {/* Reply Button - shows on hover (left for outgoing, right for incoming) */}
-                          <button
-                            onClick={() => setReplyingTo(message)}
-                            className={`absolute -bottom-2 ${isOutgoing ? 'left-2' : 'right-2'} w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:bg-gray-50`}
-                            title="Reply to message"
-                          >
-                            <IoArrowUndoSharp className="w-3.5 h-3.5" />
-                          </button>
-                          
-                          {/* Reaction Button - shows on hover */}
-                          <button
-                            onClick={() => setShowReactionPickerFor(showReactionPickerFor === message._id ? null : message._id)}
-                            className={`absolute -bottom-2 ${isOutgoing ? 'right-2' : 'left-2'} w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:bg-gray-50`}
-                            title="Add reaction"
-                          >
-                            <span className="text-xl">☺</span>
-                          </button>
 
                           {/* Reaction Picker */}
-                          {showReactionPickerFor === message._id && (
+                          {showReactionPickerFor === message._id && !isDeleted && (
                             <div
                               ref={reactionPickerRef}
                               className={`absolute ${isOutgoing ? 'right-0' : 'left-0'} top-full mt-2 z-10 bg-white rounded-full shadow-lg px-2 py-1.5 flex gap-1`}
@@ -770,7 +870,7 @@ const Messages = () => {
                         </div>
 
                         {/* Display Reactions */}
-                        {Object.keys(groupedReactions).length > 0 && (
+                        {!isDeleted && Object.keys(groupedReactions).length > 0 && (
                           <div className={`flex flex-wrap gap-1 px-1 ${isOutgoing ? 'justify-end' : 'justify-start'}`}>
                             {Object.entries(groupedReactions).map(([emoji, reactions]) => {
                               const userHasReacted = reactions.some(r => r.user._id === user._id);

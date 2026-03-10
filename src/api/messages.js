@@ -96,6 +96,14 @@ export const removeReaction = (messageId, payload) => {
   return apiClient.delete(`/messages/${messageId}/reactions`, { data: payload });
 };
 
+/**
+ * Delete a message for everyone
+ * @param {string} messageId
+ */
+export const deleteMessageForEveryone = (messageId) => {
+  return apiClient.delete(`/messages/${messageId}/for-everyone`);
+};
+
 export default {
   sendMessage,
   getConversations,
@@ -109,4 +117,5 @@ export default {
   getAllUsers,
   addReaction,
   removeReaction,
+  deleteMessageForEveryone,
 };
