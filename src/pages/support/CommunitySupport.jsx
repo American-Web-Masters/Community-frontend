@@ -278,7 +278,7 @@ useEffect(() => {
                         <button
                           key={amount.value}
                           onClick={() => handleAmountSelect(amount.value)}
-                          className={`p-5  rounded-lg border text-center transition-all hover:shadow-md ${
+                          className={`p-5  rounded-2xl border text-center transition-all hover:shadow-md ${
                             selectedAmount === amount.value
                               ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                               : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'

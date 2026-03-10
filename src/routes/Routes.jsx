@@ -19,6 +19,7 @@ import UpdatePrayers from "../pages/update_prayers/UpdatePrayers";
 import AnsweredPrayers from "../pages/answered_prayer/AnsweredPrayers";
 import InviteValidation from "../pages/invite/InviteValidation";
 import CommunitySupport from "../pages/support/CommunitySupport";
+import UserSupport from "../pages/support/UserSupport";
 import PaymentSuccess from "../pages/support/PaymentSuccess";
 import DemoSubscriptionManagement from "../pages/support/DemoSubscriptionManagement";
 // import SubscriptionManagement from "../pages/support/SubscriptionManagement"; // Moved to Profile page
@@ -162,6 +163,14 @@ const Routes = () =>{
             element={
                 <ProtectedRoute>
                     <Profile/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/profile/:username/support"
+            element={
+                <ProtectedRoute>
+                    <UserSupport/>
                 </ProtectedRoute>
             }
             />

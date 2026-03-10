@@ -20,7 +20,7 @@ const UserSupport = () => {
   const [paymentType, setPaymentType] = useState('one-time'); // 'one-time' or 'recurring'
   const [recurringInterval] = useState('month'); // Fixed to monthly only
   const [userInfo, setUserInfo] = useState(null);
-  const [paymentAvailable, setPaymentAvailable] = useState(true);
+  const [paymentAvailable, setPaymentAvailable] = useState(false);
   const [checkingStripe, setCheckingStripe] = useState(true);
 
   const predefinedAmounts = [
@@ -56,13 +56,13 @@ const UserSupport = () => {
         }
 
         // Check payment availability
-        // try {
-        //   const stripeResponse = await getUserPaymentStatus(username);
-        //   setPaymentAvailable(stripeResponse.data?.paymentsEnabled || false);
-        // } catch (stripeError) {
-        //   console.error('Payment status check failed:', stripeError);
-        //   setPaymentAvailable(false);
-        // }
+        try {
+          const stripeResponse = await getUserPaymentStatus(username);
+          setPaymentAvailable(stripeResponse.data?.paymentsEnabled || false);
+        } catch (stripeError) {
+          console.error('Payment status check failed:', stripeError);
+          setPaymentAvailable(false);
+        }
       } catch (error) {
         toast.error('Failed to load user information.');
       } finally {
