@@ -51,6 +51,7 @@ const UserSupport = () => {
       try {
         const profileResult = await getUserProfile(username);
         if (profileResult.success) {
+            console.log(profileResult.data)
           setUserInfo(profileResult.data);
         } else {
           toast.error('Failed to load user information.');
@@ -420,7 +421,7 @@ const UserSupport = () => {
             paymentType === 'one-time' ? (
               <StripePaymentForm
                 amount={selectedAmount}
-                communityId={null}
+                recipientUserId={userInfo?.user?._id}
                 personalMessage={personalMessage}
                 onSuccess={handlePaymentSuccess}
                 onCancel={handlePaymentCancel}
