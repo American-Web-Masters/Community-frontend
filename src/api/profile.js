@@ -86,9 +86,9 @@ export const getUserPaymentStatus = async (username) => {
  * Get Stripe account status for the current authenticated user
  * @returns {Promise<Object>} Response with Stripe account status
  */
-export const getUserStripeAccountStatus = async () => {
+export const getUserStripeAccountStatus = async (username) => {
   try {
-    const response = await apiClient.get('/payments/user-stripe-account-status');
+    const response = await apiClient.get(`/payments/user-stripe-account-status/${username}`);
     return response.data;
   } catch (error) {
     console.error('Error getting user Stripe account status:', error);

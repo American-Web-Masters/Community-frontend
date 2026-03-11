@@ -59,7 +59,7 @@ const UserSupport = () => {
 
         // Check payment availability
         try {
-          const stripeResponse = await getUserStripeAccountStatus();
+          const stripeResponse = await getUserStripeAccountStatus(username);
           console.log(stripeResponse)
           setPaymentAvailable(stripeResponse.data?.chargesEnabled || false);
         } catch (stripeError) {
