@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useSocket } from "../../hooks/useSocket";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import CommunityCard from "../communities/subcomponents/CommunityCard";
-import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu, IoArrowUndoSharp, IoClose, IoTrash } from "react-icons/io5";
+import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu, IoArrowUndoSharp, IoClose, IoTrash, IoCopyOutline } from "react-icons/io5";
 import { IoPeopleOutline } from "react-icons/io5";
 import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead, addReaction, removeReaction, deleteMessageForEveryone } from "../../api/messages";
 import { fetchCommunities as apiFetchCommunities } from "../../api";
@@ -475,6 +475,24 @@ const Messages = () => {
     }
   };
 
+  // Handle copying message to clipboard
+  const handleCopyMessage = async (messageContent) => {
+    try {
+      await navigator.clipboard.writeText(messageContent);
+      // Optional: Show a brief success message (you could use a toast notification library)
+      // For now, we'll use a simple temporary alert
+      const copyButton = document.activeElement;
+      const originalTitle = copyButton.getAttribute('title');
+      copyButton.setAttribute('title', 'Copied!');
+      setTimeout(() => {
+        copyButton.setAttribute('title', originalTitle);
+      }, 1500);
+    } catch (error) {
+      console.error('Error copying message:', error);
+      alert('Failed to copy message');
+    }
+  };
+
   // Format timestamp
   const formatTimestamp = (date) => {
     const now = new Date();
@@ -779,7 +797,7 @@ const Messages = () => {
                           {/* Reply Button */}
                           <button
                             onClick={() => setReplyingTo(message)}
-                            className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50"
+                            className="w-6 h-6 rounded-full bg-white cursor-pointer shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50"
                             title="Reply to message"
                           >
                             <IoArrowUndoSharp className="w-3.5 h-3.5" />
@@ -788,10 +806,19 @@ const Messages = () => {
                           {/* Reaction Button */}
                           <button
                             onClick={() => setShowReactionPickerFor(showReactionPickerFor === message._id ? null : message._id)}
-                            className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50"
+                            className="w-6 h-6 rounded-full cursor-pointer bg-white shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50"
                             title="Add reaction"
                           >
                             <span className="text-sm">😊</span>
+                          </button>
+                          
+                          {/* Copy Button */}
+                          <button
+                            onClick={() => handleCopyMessage(message.content)}
+                            className="w-6 h-6 rounded-full bg-white cursor-pointer shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50"
+                            title="Copy message"
+                          >
+                            <IoCopyOutline className="w-3.5 h-3.5" />
                           </button>
                           
                           {/* Delete Button - only for sender within 1 hour */}
@@ -799,11 +826,11 @@ const Messages = () => {
                             <button
                               onClick={() => handleDeleteForEveryone(message._id)}
                               disabled={deletingMessage === message._id}
-                              className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-red-600 hover:bg-red-50 disabled:opacity-50"
+                              className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-gray-50 text-gray-600 cursor-pointerdisabled:opacity-50"
                               title="Delete for everyone"
                             >
                               {deletingMessage === message._id ? (
-                                <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                                <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin"></div>
                               ) : (
                                 <IoTrash className="w-3.5 h-3.5" />
                               )}
