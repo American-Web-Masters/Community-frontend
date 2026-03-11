@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/userSlice';
-import { getUserProfile, getUserPaymentStatus } from '../../api/profile';
+import { getUserProfile, getUserStripeAccountStatus } from '../../api/profile';
 import BottomNavBar from '../../components/ui/BottomNavBar';
 import StripePaymentForm from '../../components/ui/StripePaymentForm';
 import RecurringPaymentForm from '../../components/ui/RecurringPaymentForm';
@@ -58,8 +58,9 @@ const UserSupport = () => {
 
         // Check payment availability
         try {
-          const stripeResponse = await getUserPaymentStatus(username);
-          setPaymentAvailable(stripeResponse.data?.paymentsEnabled || false);
+          const stripeResponse = await getUserStripeAccountStatus();
+          console.log(stripeResponse)
+          setPaymentAvailable(stripeResponse.data?.chargesEnabled || false);
         } catch (stripeError) {
           console.error('Payment status check failed:', stripeError);
           setPaymentAvailable(false);

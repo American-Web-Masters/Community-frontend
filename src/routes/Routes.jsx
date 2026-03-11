@@ -25,6 +25,7 @@ import DemoSubscriptionManagement from "../pages/support/DemoSubscriptionManagem
 // import SubscriptionManagement from "../pages/support/SubscriptionManagement"; // Moved to Profile page
 import StripeOnboardingSuccess from "../pages/communities/StripeOnboardingSuccess";
 import StripeOnboardingRefresh from "../pages/communities/StripeOnboardingRefresh";
+import { UserStripeOnboardingRefresh, UserStripeOnboardingSuccess } from "../pages/profile/subcomponents";
 
 const Routes = () =>{
     return(
@@ -131,6 +132,22 @@ const Routes = () =>{
             element={
                 <ProtectedRoute>
                     <StripeOnboardingRefresh/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/user/stripe/success"
+            element={
+                <ProtectedRoute>
+                    <UserStripeOnboardingSuccess/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/user/stripe/refresh"
+            element={
+                <ProtectedRoute>
+                    <UserStripeOnboardingRefresh/>
                 </ProtectedRoute>
             }
             />

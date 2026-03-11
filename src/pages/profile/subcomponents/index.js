@@ -4,3 +4,5 @@ export { default as Communities } from './Communities';
 export { default as Testimony } from './Testimony';
 export { default as Journal } from './Journal';
 export { default as SubscriptionMgt } from './SubscriptionMgt';
+export { default as UserStripeOnboardingSuccess } from './UserStripeOnboardingSuccess';
+export { default as UserStripeOnboardingRefresh } from './UserStripeOnboardingRefresh';
