@@ -10,6 +10,7 @@ import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu, IoA
 import { IoPeopleOutline } from "react-icons/io5";
 import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead, addReaction, removeReaction, deleteMessageForEveryone } from "../../api/messages";
 import { fetchCommunities as apiFetchCommunities } from "../../api";
+import toast from 'react-hot-toast';
 
 // Custom styles for thin scrollbars
 const scrollbarStyles = `
@@ -484,6 +485,7 @@ const Messages = () => {
       const copyButton = document.activeElement;
       const originalTitle = copyButton.getAttribute('title');
       copyButton.setAttribute('title', 'Copied!');
+      toast.success('Message copied to clipboard');
       setTimeout(() => {
         copyButton.setAttribute('title', originalTitle);
       }, 1500);
