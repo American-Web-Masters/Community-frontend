@@ -110,10 +110,32 @@ export const connectUserStripe = async () => {
   }
 };
 
+/**
+ * Create a payment intent for a user-to-user payment
+ * @param {number} amount - Amount in cents
+ * @param {string} recipientUserId - The recipient user's MongoDB _id
+ * @param {string} personalMessage - Optional personal message
+ * @returns {Promise<Object>} Response with clientSecret, paymentId, platformFee, recipientAmount
+ */
+export const createUserPaymentIntent = async (amount, recipientUserId, personalMessage) => {
+  try {
+    const response = await apiClient.post('/payments/user/create-payment-intent', {
+      amount,
+      recipientUserId,
+      personalMessage,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error creating user payment intent:', error);
+    throw error;
+  }
+};
+
 export default {
   getUserProfile,
   updateUserProfile,
   getUserPaymentStatus,
   getUserStripeAccountStatus,
   connectUserStripe,
+  createUserPaymentIntent,
 };
