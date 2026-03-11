@@ -24,6 +24,7 @@ import DemoSubscriptionManagement from "../pages/support/DemoSubscriptionManagem
 // import SubscriptionManagement from "../pages/support/SubscriptionManagement"; // Moved to Profile page
 import StripeOnboardingSuccess from "../pages/communities/StripeOnboardingSuccess";
 import StripeOnboardingRefresh from "../pages/communities/StripeOnboardingRefresh";
+import Messages from "../pages/messages/Messages";
 
 const Routes = () =>{
     return(
