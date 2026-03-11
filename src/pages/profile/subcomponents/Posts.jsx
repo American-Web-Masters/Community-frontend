@@ -11,6 +11,8 @@ import { formatComments, formatTimeAgo, getPrayerStatus } from '../../../utils/p
 import { FaTrash, FaExclamationTriangle } from 'react-icons/fa';
 
 const Posts = forwardRef((props, ref) => {
+  console.log(props?.userProfile?.user?._id);
+  const userId = props?.userProfile?.user?._id;
   const user = useSelector(selectUser);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
@@ -36,7 +38,7 @@ const Posts = forwardRef((props, ref) => {
   // Function to fetch user's prayers from API with pagination
   const fetchMyPrayers = useCallback(async (page, limit) => {
     try {
-      const response = await apiClient.get(`/prayers/user/${user?._id}?page=${page}&limit=${limit}`);
+      const response = await apiClient.get(`/prayers/user/${userId}?page=${page}&limit=${limit}`);
       console.log('Fetched my prayers:', response);
       
       if (response.data.success) {
@@ -48,7 +50,7 @@ const Posts = forwardRef((props, ref) => {
       console.error('Error fetching my prayers:', err);
       throw new Error('Failed to fetch my prayers');
     }
-  }, [user?._id]);
+  }, [userId]);
 
   // Use infinite scroll hook for prayers
   const {
@@ -60,7 +62,7 @@ const Posts = forwardRef((props, ref) => {
     refresh
   } = useInfiniteScroll(fetchMyPrayers, {
     limit: 20,
-    enabledCondition: user?._id
+    enabledCondition: !!userId
   });
 
   // Profile-specific handlers
