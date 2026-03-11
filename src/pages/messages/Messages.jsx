@@ -6,9 +6,9 @@ import { useNavigate } from "react-router-dom";
 import { useSocket } from "../../hooks/useSocket";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import CommunityCard from "../communities/subcomponents/CommunityCard";
-import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu } from "react-icons/io5";
+import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu, IoArrowUndoSharp, IoClose, IoTrash } from "react-icons/io5";
 import { IoPeopleOutline } from "react-icons/io5";
-import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead } from "../../api/messages";
+import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead, addReaction, removeReaction, deleteMessageForEveryone } from "../../api/messages";
 import { fetchCommunities as apiFetchCommunities } from "../../api";
 
 // Custom styles for thin scrollbars
@@ -58,6 +58,18 @@ const Messages = () => {
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef(null);
   const messagesEndRef = useRef(null);
+  
+  // Reaction state
+  const [showReactionPickerFor, setShowReactionPickerFor] = useState(null);
+  const [reactingToMessage, setReactingToMessage] = useState(null);
+  const reactionPickerRef = useRef(null);
+  const commonEmojis = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+  
+  // Reply state
+  const [replyingTo, setReplyingTo] = useState(null);
+  
+  // Delete state
+  const [deletingMessage, setDeletingMessage] = useState(null);
   
 
   // Fetch all users
@@ -199,12 +211,59 @@ const Messages = () => {
       setMessages(prev => prev.filter(msg => msg._id !== messageId));
     };
 
+    // Listen for reaction added
+    const handleReactionAdded = ({ messageId, reaction }) => {
+      setMessages(prev => 
+        prev.map(msg => {
+          if (msg._id === messageId) {
+            const reactions = msg.reactions || [];
+            // Check if reaction already exists
+            const exists = reactions.some(
+              r => r.user._id === reaction.user._id && r.emoji === reaction.emoji
+            );
+            if (exists) return msg;
+            return { ...msg, reactions: [...reactions, reaction] };
+          }
+          return msg;
+        })
+      );
+    };
+
+    // Listen for reaction removed
+    const handleReactionRemoved = ({ messageId, userId, emoji }) => {
+      setMessages(prev => 
+        prev.map(msg => {
+          if (msg._id === messageId) {
+            const reactions = (msg.reactions || []).filter(
+              r => !(r.user._id === userId && r.emoji === emoji)
+            );
+            return { ...msg, reactions };
+          }
+          return msg;
+        })
+      );
+    };
+
+    // Listen for message deleted for everyone
+    const handleMessageDeletedForEveryone = ({ messageId }) => {
+      setMessages(prev => 
+        prev.map(msg => 
+          msg._id === messageId 
+            ? { ...msg, isDeletedForEveryone: true }
+            : msg
+        )
+      );
+    };
+
     // Attach event listeners
     socket.on('message:new', handleNewMessage);
     socket.on('typing:start', handleTypingStart);
     socket.on('typing:stop', handleTypingStop);
     socket.on('message:read', handleMessageRead);
     socket.on('message:deleted', handleMessageDeleted);
+    socket.on('message:reaction-added', handleReactionAdded);
+    socket.on('message:reaction-removed', handleReactionRemoved);
+    socket.on('message:deleted-for-everyone', handleMessageDeletedForEveryone);
 
     // Cleanup
     return () => {
@@ -213,6 +272,9 @@ const Messages = () => {
       socket.off('typing:stop', handleTypingStop);
       socket.off('message:read', handleMessageRead);
       socket.off('message:deleted', handleMessageDeleted);
+      socket.off('message:reaction-added', handleReactionAdded);
+      socket.off('message:reaction-removed', handleReactionRemoved);
+      socket.off('message:deleted-for-everyone', handleMessageDeletedForEveryone);
     };
   }, [socket, isConnected, activeChat, user]);
 
@@ -242,11 +304,18 @@ const Messages = () => {
 
     setSendingMessage(true);
     try {
-      const response = await sendMessage({
+      const payload = {
         receiverId: activeChat._id,
         content: messageInput.trim(),
         messageType: 'text'
-      });
+      };
+      
+      // Add replyTo if replying to a message
+      if (replyingTo) {
+        payload.replyTo = replyingTo._id;
+      }
+      
+      const response = await sendMessage(payload);
 
       if (response.data.status === 'success') {
         // Message will be received via Socket.IO, but update local state for immediate feedback
@@ -257,6 +326,7 @@ const Messages = () => {
           return [...prev, newMessage];
         });
         setMessageInput('');
+        setReplyingTo(null); // Clear reply state
         
         // Stop typing indicator
         if (socket && isConnected) {
@@ -280,6 +350,128 @@ const Messages = () => {
       alert(errorMessage);
     } finally {
       setSendingMessage(false);
+    }
+  };
+
+  // Handle adding reaction
+  const handleAddReaction = async (messageId, emoji) => {
+    try {
+      const response = await addReaction(messageId, { emoji });
+      if (response.data.status === 'success') {
+        // Update local state
+        setMessages(prev => 
+          prev.map(msg => 
+            msg._id === messageId 
+              ? { ...msg, reactions: response.data.data.reactions }
+              : msg
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+    } finally {
+      setShowReactionPickerFor(null);
+    }
+  };
+
+  // Handle removing reaction
+  const handleRemoveReaction = async (messageId, emoji) => {
+    try {
+      const response = await removeReaction(messageId, { emoji });
+      if (response.data.status === 'success') {
+        // Update local state
+        setMessages(prev => 
+          prev.map(msg => 
+            msg._id === messageId 
+              ? { ...msg, reactions: response.data.data.reactions }
+              : msg
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error removing reaction:', error);
+    }
+  };
+
+  // Toggle reaction (replace if different, remove if same)
+  const handleToggleReaction = async (messageId, emoji) => {
+    const message = messages.find(msg => msg._id === messageId);
+    if (!message) return;
+
+    // Find any existing reaction from this user
+    const existingReaction = message.reactions?.find(
+      r => r.user._id === user._id
+    );
+
+    if (existingReaction) {
+      // If clicking the same emoji, remove it (toggle off)
+      if (existingReaction.emoji === emoji) {
+        await handleRemoveReaction(messageId, emoji);
+      } else {
+        // If clicking a different emoji, replace the old one
+        await handleRemoveReaction(messageId, existingReaction.emoji);
+        await handleAddReaction(messageId, emoji);
+      }
+    } else {
+      // No existing reaction, just add the new one
+      await handleAddReaction(messageId, emoji);
+    }
+  };
+
+  // Close reaction picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (reactionPickerRef.current && !reactionPickerRef.current.contains(event.target)) {
+        setShowReactionPickerFor(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Handle deleting message for everyone
+  const handleDeleteForEveryone = async (messageId) => {
+    const message = messages.find(msg => msg._id === messageId);
+    if (!message) return;
+
+    // Check if user is the sender
+    if (message.sender._id !== user._id) {
+      alert('You can only delete your own messages');
+      return;
+    }
+
+    // Check if message is within 1 hour
+    const messageTime = new Date(message.createdAt);
+    const now = new Date();
+    const hoursDiff = (now - messageTime) / (1000 * 60 * 60);
+    
+    if (hoursDiff > 1) {
+      alert('Messages can only be deleted for everyone within 1 hour of sending');
+      return;
+    }
+
+    if (!confirm('Delete this message for everyone?')) return;
+
+    setDeletingMessage(messageId);
+    try {
+      const response = await deleteMessageForEveryone(messageId);
+      if (response.data.status === 'success') {
+        // Update local state to mark as deleted
+        setMessages(prev => 
+          prev.map(msg => 
+            msg._id === messageId 
+              ? { ...msg, isDeletedForEveryone: true }
+              : msg
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to delete message';
+      alert(errorMessage);
+    } finally {
+      setDeletingMessage(null);
     }
   };
 
@@ -546,10 +738,28 @@ const Messages = () => {
               <>
                 {messages.map((message) => {
                   const isOutgoing = message.sender._id === user._id;
+                  const messageReactions = message.reactions || [];
+                  const isDeleted = message.isDeletedForEveryone;
+                  
+                  // Check if message can be deleted (within 1 hour, sender only)
+                  const messageTime = new Date(message.createdAt);
+                  const now = new Date();
+                  const hoursDiff = (now - messageTime) / (1000 * 60 * 60);
+                  const canDelete = isOutgoing && hoursDiff <= 1 && !isDeleted;
+                  
+                  // Group reactions by emoji
+                  const groupedReactions = messageReactions.reduce((acc, reaction) => {
+                    if (!acc[reaction.emoji]) {
+                      acc[reaction.emoji] = [];
+                    }
+                    acc[reaction.emoji].push(reaction);
+                    return acc;
+                  }, {});
+
                   return (
                     <div
                       key={message._id}
-                      className={`flex items-start gap-3 ${
+                      className={`flex items-start gap-3 group ${
                         isOutgoing ? "justify-end" : "justify-start"
                       }`}
                     >
@@ -560,16 +770,133 @@ const Messages = () => {
                           className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
                         />
                       )}
-                      <div className="flex flex-col space-y-1 max-w-md">
-                        <div
-                          className={`px-4 py-2.5 rounded-2xl ${
-                            isOutgoing
-                              ? "btn-blue-gradient text-white"
-                              : "bg-white/80 text-gray-900 shadow-sm"
-                          }`}
-                        >
-                          <p className="text-[13px] leading-relaxed">{message.content}</p>
+                      
+                      {/* Action Buttons Row - centered with message, shows on hover */}
+                      {!isDeleted && (
+                        <div className={`flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${
+                          isOutgoing ? 'order-first' : 'order-last'
+                        }`}>
+                          {/* Reply Button */}
+                          <button
+                            onClick={() => setReplyingTo(message)}
+                            className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50"
+                            title="Reply to message"
+                          >
+                            <IoArrowUndoSharp className="w-3.5 h-3.5" />
+                          </button>
+                          
+                          {/* Reaction Button */}
+                          <button
+                            onClick={() => setShowReactionPickerFor(showReactionPickerFor === message._id ? null : message._id)}
+                            className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50"
+                            title="Add reaction"
+                          >
+                            <span className="text-sm">😊</span>
+                          </button>
+                          
+                          {/* Delete Button - only for sender within 1 hour */}
+                          {canDelete && (
+                            <button
+                              onClick={() => handleDeleteForEveryone(message._id)}
+                              disabled={deletingMessage === message._id}
+                              className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-red-600 hover:bg-red-50 disabled:opacity-50"
+                              title="Delete for everyone"
+                            >
+                              {deletingMessage === message._id ? (
+                                <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                              ) : (
+                                <IoTrash className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          )}
                         </div>
+                      )}
+                      
+                      <div className="flex flex-col space-y-1 max-w-md relative">
+                        <div className="relative">
+                          <div
+                            className={`px-4 py-2.5 rounded-2xl ${
+                              isOutgoing
+                                ? "btn-blue-gradient text-white"
+                                : "bg-white/80 text-gray-900 shadow-sm"
+                            }`}
+                          >
+                            {isDeleted ? (
+                              <p className="text-[13px] italic opacity-60">
+                                🚫 This message was deleted
+                              </p>
+                            ) : (
+                              <>
+                                {/* Show replied-to message if exists */}
+                                {message.replyTo && !message.replyTo.isDeletedForEveryone && (
+                                  <div className={`mb-2 pb-2 border-l-2 pl-2 ${
+                                    isOutgoing ? 'border-white/50' : 'border-gray-300'
+                                  }`}>
+                                    <p className={`text-[10px] font-medium mb-0.5 ${
+                                      isOutgoing ? 'text-white/80' : 'text-gray-600'
+                                    }`}>
+                                      {message.replyTo.sender._id === user._id ? 'You' : `${message.replyTo.sender.firstname} ${message.replyTo.sender.lastname}`}
+                                    </p>
+                                    <p className={`text-[11px] line-clamp-2 ${
+                                      isOutgoing ? 'text-white/70' : 'text-gray-500'
+                                    }`}>
+                                      {message.replyTo.isDeletedForEveryone ? '🚫 This message was deleted' : message.replyTo.content}
+                                    </p>
+                                  </div>
+                                )}
+                                <p className="text-[13px] leading-relaxed">{message.content}</p>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Reaction Picker */}
+                          {showReactionPickerFor === message._id && !isDeleted && (
+                            <div
+                              ref={reactionPickerRef}
+                              className={`absolute ${isOutgoing ? 'right-0' : 'left-0'} top-full mt-2 z-10 bg-white rounded-full shadow-lg px-2 py-1.5 flex gap-1`}
+                            >
+                              {commonEmojis.map(emoji => (
+                                <button
+                                  key={emoji}
+                                  onClick={() => handleToggleReaction(message._id, emoji)}
+                                  className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-lg transition-all hover:scale-110"
+                                  title={`React with ${emoji}`}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Display Reactions */}
+                        {!isDeleted && Object.keys(groupedReactions).length > 0 && (
+                          <div className={`flex flex-wrap gap-1 px-1 ${isOutgoing ? 'justify-end' : 'justify-start'}`}>
+                            {Object.entries(groupedReactions).map(([emoji, reactions]) => {
+                              const userHasReacted = reactions.some(r => r.user._id === user._id);
+                              const reactionCount = reactions.length;
+                              
+                              return (
+                                <button
+                                  key={emoji}
+                                  onClick={() => handleToggleReaction(message._id, emoji)}
+                                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-all hover:scale-105 ${
+                                    userHasReacted 
+                                      ? 'bg-blue-100 border border-blue-300' 
+                                      : 'bg-gray-100 border border-gray-200'
+                                  }`}
+                                  title={reactions.map(r => `${r.user.firstname} ${r.user.lastname}`).join(', ')}
+                                >
+                                  <span>{emoji}</span>
+                                  <span className={userHasReacted ? 'text-blue-600 font-medium' : 'text-gray-600'}>
+                                    {reactionCount}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
                         <div className="flex items-center gap-3 px-1">
                           <span className="text-[10px] text-gray-400">
                             {formatTimestamp(message.createdAt)}
@@ -605,6 +932,27 @@ const Messages = () => {
 
           {/* Input Area */}
           <div className="px-6 py-4 flex-shrink-0">
+            {/* Reply Preview */}
+            {replyingTo && (
+              <div className="mb-2 bg-blue-50 border border-blue-200 rounded-lg p-2.5 flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <IoArrowUndoSharp className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                    <p className="text-[11px] font-medium text-blue-600">
+                      Replying to {replyingTo.sender._id === user._id ? 'yourself' : `${replyingTo.sender.firstname} ${replyingTo.sender.lastname}`}
+                    </p>
+                  </div>
+                  <p className="text-[12px] text-gray-600 line-clamp-1 ml-5">{replyingTo.content}</p>
+                </div>
+                <button
+                  onClick={() => setReplyingTo(null)}
+                  className="text-gray-400 hover:text-gray-600 ml-2 flex-shrink-0"
+                >
+                  <IoClose className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+            
             <div className="flex items-center space-x-2">
               <input
                 type="text"
