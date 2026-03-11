@@ -6,7 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { useSocket } from "../../hooks/useSocket";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import CommunityCard from "../communities/subcomponents/CommunityCard";
-import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu, IoArrowUndoSharp, IoClose, IoTrash, IoCopyOutline, IoPinSharp, IoPinOutline } from "react-icons/io5";
+import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu, IoArrowUndoSharp, IoClose, IoTrash, IoCopyOutline} from "react-icons/io5";
+import { MdOutlinePushPin } from "react-icons/md"
 import { IoPeopleOutline } from "react-icons/io5";
 import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead, addReaction, removeReaction, deleteMessageForEveryone, pinUser, unpinUser, getPinnedUsers } from "../../api/messages";
 import { fetchCommunities as apiFetchCommunities } from "../../api";
@@ -717,7 +718,7 @@ const Messages = () => {
                             {chat.firstname} {chat.lastname}
                           </h4>
                           {isPinned && (
-                            <IoPinSharp className="w-3 h-3 text-blue-500 flex-shrink-0" title="Pinned" />
+                            <MdOutlinePushPin className="w-3 h-3 text-blue-500 flex-shrink-0" title="Pinned" />
                           )}
                         </div>
                         <span className="text-[11px] text-gray-400 ml-2 flex-shrink-0">
@@ -738,9 +739,9 @@ const Messages = () => {
                       {pinningUserId === chat._id ? (
                         <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                       ) : isPinned ? (
-                        <IoPinSharp className="w-4 h-4 text-blue-500" />
+                        <MdOutlinePushPin className="w-4 h-4 text-blue-500" />
                       ) : (
-                        <IoPinOutline className="w-4 h-4 text-gray-600" />
+                        <MdOutlinePushPin className="w-4 h-4 text-gray-600" />
                       )}
                     </button>
                   </div>
