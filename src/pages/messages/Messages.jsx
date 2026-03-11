@@ -6,9 +6,9 @@ import { useNavigate } from "react-router-dom";
 import { useSocket } from "../../hooks/useSocket";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import CommunityCard from "../communities/subcomponents/CommunityCard";
-import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu, IoArrowUndoSharp, IoClose, IoTrash, IoCopyOutline } from "react-icons/io5";
+import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu, IoArrowUndoSharp, IoClose, IoTrash, IoCopyOutline, IoPinSharp, IoPinOutline } from "react-icons/io5";
 import { IoPeopleOutline } from "react-icons/io5";
-import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead, addReaction, removeReaction, deleteMessageForEveryone } from "../../api/messages";
+import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead, addReaction, removeReaction, deleteMessageForEveryone, pinUser, unpinUser, getPinnedUsers } from "../../api/messages";
 import { fetchCommunities as apiFetchCommunities } from "../../api";
 import toast from 'react-hot-toast';
 
@@ -72,8 +72,12 @@ const Messages = () => {
   // Delete state
   const [deletingMessage, setDeletingMessage] = useState(null);
   
+  // Pin state
+  const [pinnedUserIds, setPinnedUserIds] = useState(new Set());
+  const [pinningUserId, setPinningUserId] = useState(null);
+  
 
-  // Fetch all users
+  // Fetch all users and pinned users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -94,8 +98,23 @@ const Messages = () => {
       }
     };
 
+    const fetchPinnedUsers = async () => {
+      try {
+        const response = await getPinnedUsers();
+        if (response.data.status === 'success') {
+          const pinnedIds = new Set(
+            response.data.data.pinnedUsers.map(u => u._id)
+          );
+          setPinnedUserIds(pinnedIds);
+        }
+      } catch (error) {
+        console.error('Error fetching pinned users:', error);
+      }
+    };
+
     if (isLoggedIn && user) {
       fetchUsers();
+      fetchPinnedUsers();
     }
   }, [isLoggedIn, user]);
 
@@ -495,6 +514,62 @@ const Messages = () => {
     }
   };
 
+  // Handle pinning user
+  const handlePinUser = async (userId, e) => {
+    e.stopPropagation(); // Prevent chat selection
+    
+    if (pinnedUserIds.has(userId)) {
+      // Unpin
+      setPinningUserId(userId);
+      try {
+        const response = await unpinUser(userId);
+        if (response.data.status === 'success') {
+          setPinnedUserIds(prev => {
+            const updated = new Set(prev);
+            updated.delete(userId);
+            return updated;
+          });
+          toast.success('Conversation unpinned');
+        }
+      } catch (error) {
+        console.error('Error unpinning user:', error);
+        toast.error(error.response?.data?.message || 'Failed to unpin conversation');
+      } finally {
+        setPinningUserId(null);
+      }
+    } else {
+      // Pin
+      setPinningUserId(userId);
+      try {
+        const response = await pinUser(userId);
+        if (response.data.status === 'success') {
+          setPinnedUserIds(prev => new Set([...prev, userId]));
+          toast.success('Conversation pinned');
+        }
+      } catch (error) {
+        console.error('Error pinning user:', error);
+        toast.error(error.response?.data?.message || 'Failed to pin conversation');
+      } finally {
+        setPinningUserId(null);
+      }
+    }
+  };
+
+  // Sort users: pinned first, then by name
+  const sortUsers = (usersList) => {
+    return [...usersList].sort((a, b) => {
+      const aIsPinned = pinnedUserIds.has(a._id);
+      const bIsPinned = pinnedUserIds.has(b._id);
+      
+      // Pinned users come first
+      if (aIsPinned && !bIsPinned) return -1;
+      if (!aIsPinned && bIsPinned) return 1;
+      
+      // Then sort alphabetically by firstname
+      return a.firstname.localeCompare(b.firstname);
+    });
+  };
+
   // Format timestamp
   const formatTimestamp = (date) => {
     const now = new Date();
@@ -608,17 +683,21 @@ const Messages = () => {
               <div className="text-center py-4 text-gray-500 text-xs">{debouncedSearch ? 'No users found' : 'No users available'}</div>
             ) : (
               <div className="space-y-1">
-                {users.filter(u => {
+                {sortUsers(users.filter(u => {
                   const q = debouncedSearch.toLowerCase();
                   return !q || `${u.firstname} ${u.lastname}`.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
-                }).map((chat) => (
+                })).map((chat) => {
+                  const isPinned = pinnedUserIds.has(chat._id);
+                  return (
                   <div
                     key={chat._id}
                     onClick={() => setActiveChat(chat)}
-                    className={`flex items-start space-x-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 ${
+                    className={`flex items-start space-x-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 group relative ${
                       activeChat?._id === chat._id
                         ? "bg-white shadow-sm"
                         : "hover:bg-white/50"
+                    } ${
+                      isPinned ? "border-l-2 border-blue-500" : ""
                     }`}
                   >
                     <div className="relative">
@@ -633,9 +712,14 @@ const Messages = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-0.5">
-                        <h4 className="text-sm font-semibold text-gray-900 truncate">
-                          {chat.firstname} {chat.lastname}
-                        </h4>
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="text-sm font-semibold text-gray-900 truncate">
+                            {chat.firstname} {chat.lastname}
+                          </h4>
+                          {isPinned && (
+                            <IoPinSharp className="w-3 h-3 text-blue-500 flex-shrink-0" title="Pinned" />
+                          )}
+                        </div>
                         <span className="text-[11px] text-gray-400 ml-2 flex-shrink-0">
                           @{chat.username}
                         </span>
@@ -644,8 +728,23 @@ const Messages = () => {
                         {chat.email}
                       </p>
                     </div>
+                    {/* Pin Button - shows on hover */}
+                    <button
+                      onClick={(e) => handlePinUser(chat._id, e)}
+                      disabled={pinningUserId === chat._id}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
+                      title={isPinned ? 'Unpin conversation' : 'Pin conversation'}
+                    >
+                      {pinningUserId === chat._id ? (
+                        <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      ) : isPinned ? (
+                        <IoPinSharp className="w-4 h-4 text-blue-500" />
+                      ) : (
+                        <IoPinOutline className="w-4 h-4 text-gray-600" />
+                      )}
+                    </button>
                   </div>
-                ))}
+                );})}
               </div>
             )}
           </div>
