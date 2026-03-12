@@ -1,15 +1,31 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
-import { useLogout } from "../../hooks/useLogout";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../../hooks/useSocket";
 import BottomNavBar from "../../components/ui/BottomNavBar";
-import CommunityCard from "../communities/subcomponents/CommunityCard";
-import { IoSearchOutline, IoSend, IoEllipsisVertical, IoChevronBack, IoMenu, IoArrowUndoSharp, IoClose, IoTrash } from "react-icons/io5";
+import { IoMenu } from "react-icons/io5";
 import { IoPeopleOutline } from "react-icons/io5";
-import { getAllUsers, getConversationWithUser, sendMessage, markConversationAsRead, addReaction, removeReaction, deleteMessageForEveryone } from "../../api/messages";
+import { 
+  getAllUsers, 
+  getConversationWithUser, 
+  sendMessage, 
+  markConversationAsRead, 
+  addReaction, 
+  removeReaction, 
+  deleteMessageForEveryone, 
+  pinUser, 
+  unpinUser, 
+  getPinnedUsers 
+} from "../../api/messages";
 import { fetchCommunities as apiFetchCommunities } from "../../api";
+import toast from 'react-hot-toast';
+
+// Import subcomponents
+import MessagesSidebar from './subcomponents/MessagesSidebar';
+import ChatHeader from './subcomponents/ChatHeader';
+import MessageList from './subcomponents/MessageList';
+import MessageInput from './subcomponents/MessageInput';
 
 // Custom styles for thin scrollbars
 const scrollbarStyles = `
@@ -71,8 +87,12 @@ const Messages = () => {
   // Delete state
   const [deletingMessage, setDeletingMessage] = useState(null);
   
+  // Pin state
+  const [pinnedUserIds, setPinnedUserIds] = useState(new Set());
+  const [pinningUserId, setPinningUserId] = useState(null);
+  
 
-  // Fetch all users
+  // Fetch all users and pinned users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -93,8 +113,23 @@ const Messages = () => {
       }
     };
 
+    const fetchPinnedUsers = async () => {
+      try {
+        const response = await getPinnedUsers();
+        if (response.data.status === 'success') {
+          const pinnedIds = new Set(
+            response.data.data.pinnedUsers.map(u => u._id)
+          );
+          setPinnedUserIds(pinnedIds);
+        }
+      } catch (error) {
+        console.error('Error fetching pinned users:', error);
+      }
+    };
+
     if (isLoggedIn && user) {
       fetchUsers();
+      fetchPinnedUsers();
     }
   }, [isLoggedIn, user]);
 
@@ -475,6 +510,79 @@ const Messages = () => {
     }
   };
 
+  // Handle copying message to clipboard
+  const handleCopyMessage = async (messageContent) => {
+    try {
+      await navigator.clipboard.writeText(messageContent);
+      const copyButton = document.activeElement;
+      const originalTitle = copyButton.getAttribute('title');
+      copyButton.setAttribute('title', 'Copied!');
+      toast.success('Message copied to clipboard');
+      setTimeout(() => {
+        copyButton.setAttribute('title', originalTitle);
+      }, 1500);
+    } catch (error) {
+      console.error('Error copying message:', error);
+      alert('Failed to copy message');
+    }
+  };
+
+  // Handle pinning user
+  const handlePinUser = async (userId, e) => {
+    e.stopPropagation(); // Prevent chat selection
+    
+    if (pinnedUserIds.has(userId)) {
+      // Unpin
+      setPinningUserId(userId);
+      try {
+        const response = await unpinUser(userId);
+        if (response.data.status === 'success') {
+          setPinnedUserIds(prev => {
+            const updated = new Set(prev);
+            updated.delete(userId);
+            return updated;
+          });
+          toast.success('Conversation unpinned');
+        }
+      } catch (error) {
+        console.error('Error unpinning user:', error);
+        toast.error(error.response?.data?.message || 'Failed to unpin conversation');
+      } finally {
+        setPinningUserId(null);
+      }
+    } else {
+      // Pin
+      setPinningUserId(userId);
+      try {
+        const response = await pinUser(userId);
+        if (response.data.status === 'success') {
+          setPinnedUserIds(prev => new Set([...prev, userId]));
+          toast.success('Conversation pinned');
+        }
+      } catch (error) {
+        console.error('Error pinning user:', error);
+        toast.error(error.response?.data?.message || 'Failed to pin conversation');
+      } finally {
+        setPinningUserId(null);
+      }
+    }
+  };
+
+  // Sort users: pinned first, then by name
+  const sortUsers = (usersList) => {
+    return [...usersList].sort((a, b) => {
+      const aIsPinned = pinnedUserIds.has(a._id);
+      const bIsPinned = pinnedUserIds.has(b._id);
+      
+      // Pinned users come first
+      if (aIsPinned && !bIsPinned) return -1;
+      if (!aIsPinned && bIsPinned) return 1;
+      
+      // Then sort alphabetically by firstname
+      return a.firstname.localeCompare(b.firstname);
+    });
+  };
+
   // Format timestamp
   const formatTimestamp = (date) => {
     const now = new Date();
@@ -505,481 +613,89 @@ const Messages = () => {
     <>
       <style>{scrollbarStyles}</style>
       <div className="min-h-screen light-background overflow-hidden">
-      <div className="flex" style={{ height: 'calc(100vh - 80px)' }}>
-        {/* Sidebar Toggle Button - desktop only */}
-        <div className="hidden sm:flex w-14 flex-col items-center justify-center space-y-6 mr-5">
-          <div className="side-trapezoid btn-blue-gradient flex flex-col items-center justify-center">
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md"
-          >
-            <IoMenu className="w-6 h-6 text-white" />
-          </button>
-          <button className="flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md">
-            <IoPeopleOutline className="w-6 h-6 text-white" />
-          </button>
-        </div>
-        </div>
-
-        {/* Left Sidebar Container */}
-        <>
-          {/* Fixed back button - desktop only, shown when sidebar open */}
-          {isSidebarOpen && (
-            <div className="hidden sm:block fixed top-4.5 left-3">
+        <div className="flex" style={{ height: 'calc(100vh - 80px)' }}>
+          {/* Sidebar Toggle Button - desktop only */}
+          <div className="hidden sm:flex w-14 flex-col items-center justify-center space-y-6 mr-5">
+            <div className="side-trapezoid btn-blue-gradient flex flex-col items-center justify-center">
               <button
-                onClick={() => navigate(-1)}
-                className="w-11 h-11 rounded-full bg-[#03045E] flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-sm flex-shrink-0"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md"
               >
-                <IoChevronBack className="w-5 h-5 text-white" />
+                <IoMenu className="w-6 h-6 text-white" />
               </button>
-            </div>
-          )}
-
-          <div className={`flex-col mt-4 mb-3 w-full sm:w-auto px-3 sm:px-0 ${!activeChat ? 'flex' : 'hidden'} ${isSidebarOpen ? 'sm:flex' : 'sm:hidden'}`}>
-            {/* Back Button and Search - Same Line */}
-            <div className="flex items-center space-x-3 mb-2">
-              
-              {/* Search Input */}
-              <div className="relative flex-1">
-                <IoSearchOutline className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6 " />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setSearchQuery(val);
-                    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-                    searchDebounceRef.current = setTimeout(() => setDebouncedSearch(val), 300);
-                  }}
-                  placeholder="search"
-                  className="w-full h-11 pl-9 pr-3 py-2 rounded-full bg-white/70 border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-300 placeholder:text-[16px] placeholder:pl-2"
-                />
-              </div>
-            </div>
-
-            {/* Filter Tabs - Below Search */}
-            <div className="flex space-x-2 mb-3 ">
-              {["All", "Unread", "Communities"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 ${
-                    activeTab === tab
-                      ? "btn-blue-gradient text-white shadow-sm"
-                      : "bg-white/70 text-gray-700 hover:bg-white/90"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-
-            {/* Chats Container */}
-            <div className="w-full sm:w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm" style={{ maxHeight: '48%' }}>
-          {/* Chats Section */}
-          <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Chats</h3>
-            {loading ? (
-              <div className="text-center py-4 text-gray-500">Loading...</div>
-            ) : users.filter(u => {
-                const q = debouncedSearch.toLowerCase();
-                return !q || `${u.firstname} ${u.lastname}`.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
-              }).length === 0 ? (
-              <div className="text-center py-4 text-gray-500 text-xs">{debouncedSearch ? 'No users found' : 'No users available'}</div>
-            ) : (
-              <div className="space-y-1">
-                {users.filter(u => {
-                  const q = debouncedSearch.toLowerCase();
-                  return !q || `${u.firstname} ${u.lastname}`.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
-                }).map((chat) => (
-                  <div
-                    key={chat._id}
-                    onClick={() => setActiveChat(chat)}
-                    className={`flex items-start space-x-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 ${
-                      activeChat?._id === chat._id
-                        ? "bg-white shadow-sm"
-                        : "hover:bg-white/50"
-                    }`}
-                  >
-                    <div className="relative">
-                      <img
-                        src={chat.profilePicture || "https://i.pravatar.cc/150?img=12"}
-                        alt={`${chat.firstname} ${chat.lastname}`}
-                        className="w-10 h-10 rounded-full flex-shrink-0"
-                      />
-                      {onlineUsers.has(chat._id) && (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <h4 className="text-sm font-semibold text-gray-900 truncate">
-                          {chat.firstname} {chat.lastname}
-                        </h4>
-                        <span className="text-[11px] text-gray-400 ml-2 flex-shrink-0">
-                          @{chat.username}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 truncate leading-tight">
-                        {chat.email}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-            <div className="w-full sm:w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm mt-3" style={{ maxHeight: '48%' }}>
-          {/* Discover Section */}
-          <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Discover</h3>
-            {loadingCommunities ? (
-              <div className="text-center py-4 text-gray-500 text-xs">Loading...</div>
-            ) : discoverCommunities.length === 0 ? (
-              <div className="text-center py-4 text-gray-500 text-xs">No communities to discover</div>
-            ) : (
-              <div className="space-y-3">
-                {discoverCommunities.map((community) => (
-                  <CommunityCard
-                    key={community._id || community.id}
-                    id={community._id || community.id}
-                    name={community.name}
-                    wallAssociation={community.wallAssociation}
-                    category={community.tags || []}
-                    members={community.memberCount}
-                    avatar={community.coverPhoto}
-                    privacyLevel={community.privacyLevel}
-                    status={community.privacyLevel === 'private' ? 'Private' : 'Public'}
-                    isJoined={false}
-                    onJoinClick={() => navigate('/communities')}
-                    onViewClick={() => navigate('/communities')}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-        </>
-
-        {/* Main Chat Area */}
-        <div className={`flex-1 flex-col overflow-hidden ml-0 sm:ml-4 mr-0 sm:mr-4 my-0 sm:my-4 rounded-none sm:rounded-2xl bg-white/30 backdrop-blur-sm shadow-sm ${!activeChat ? 'hidden sm:flex' : 'flex'}`}>
-          {/* Chat Header */}
-          <div className="bg-white/50 backdrop-blur-sm border-b border-white/50 px-5 py-3 flex-shrink-0">
-            {activeChat ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  {/* Back button - mobile only */}
-                  <button
-                    onClick={() => setActiveChat(null)}
-                    className="sm:hidden w-8 h-8 rounded-full bg-[#03045E] flex items-center justify-center flex-shrink-0"
-                  >
-                    <IoChevronBack className="w-4 h-4 text-white" />
-                  </button>
-                  <div className="relative">
-                    <img
-                      src={activeChat.profilePicture || "https://i.pravatar.cc/150?img=12"}
-                      alt={`${activeChat.firstname} ${activeChat.lastname}`}
-                      className="w-11 h-11 rounded-full"
-                    />
-                    {onlineUsers.has(activeChat._id) && (
-                      <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
-                    )}
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-semibold text-gray-900">
-                      {activeChat.firstname} {activeChat.lastname}
-                    </h2>
-                    <p className="text-[11px] text-gray-500">
-                      @{activeChat.username}
-                      {onlineUsers.has(activeChat._id) ? (
-                        <span className="text-green-500 ml-2">● Online</span>
-                      ) : (
-                        <span className="text-gray-400 ml-2">● Offline</span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  {isConnected ? (
-                    <span className="text-[10px] text-green-500 flex items-center">
-                      <span className="w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
-                      Connected
-                    </span>
-                  ) : (
-                    <span className="text-[10px] text-red-500 flex items-center">
-                      <span className="w-2 h-2 bg-red-500 rounded-full mr-1.5"></span>
-                      Reconnecting...
-                    </span>
-                  )}
-                  <button className="text-gray-600 hover:text-gray-900 transition-colors">
-                    <IoEllipsisVertical className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center text-gray-500">Select a user to start messaging</div>
-            )}
-          </div>
-
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5 thin-scrollbar">
-            {!activeChat ? (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                Select a user to view messages
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                No messages yet. Start the conversation!
-              </div>
-            ) : (
-              <>
-                {messages.map((message) => {
-                  const isOutgoing = message.sender._id === user._id;
-                  const messageReactions = message.reactions || [];
-                  const isDeleted = message.isDeletedForEveryone;
-                  
-                  // Check if message can be deleted (within 1 hour, sender only)
-                  const messageTime = new Date(message.createdAt);
-                  const now = new Date();
-                  const hoursDiff = (now - messageTime) / (1000 * 60 * 60);
-                  const canDelete = isOutgoing && hoursDiff <= 1 && !isDeleted;
-                  
-                  // Group reactions by emoji
-                  const groupedReactions = messageReactions.reduce((acc, reaction) => {
-                    if (!acc[reaction.emoji]) {
-                      acc[reaction.emoji] = [];
-                    }
-                    acc[reaction.emoji].push(reaction);
-                    return acc;
-                  }, {});
-
-                  return (
-                    <div
-                      key={message._id}
-                      className={`flex items-start gap-3 group ${
-                        isOutgoing ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      {!isOutgoing && (
-                        <img
-                          src={message.sender.profilePicture || "https://i.pravatar.cc/150?img=12"}
-                          alt={`${message.sender.firstname} ${message.sender.lastname}`}
-                          className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
-                        />
-                      )}
-                      
-                      {/* Action Buttons Row - centered with message, shows on hover */}
-                      {!isDeleted && (
-                        <div className={`flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${
-                          isOutgoing ? 'order-first' : 'order-last'
-                        }`}>
-                          {/* Reply Button */}
-                          <button
-                            onClick={() => setReplyingTo(message)}
-                            className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50"
-                            title="Reply to message"
-                          >
-                            <IoArrowUndoSharp className="w-3.5 h-3.5" />
-                          </button>
-                          
-                          {/* Reaction Button */}
-                          <button
-                            onClick={() => setShowReactionPickerFor(showReactionPickerFor === message._id ? null : message._id)}
-                            className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50"
-                            title="Add reaction"
-                          >
-                            <span className="text-sm">😊</span>
-                          </button>
-                          
-                          {/* Delete Button - only for sender within 1 hour */}
-                          {canDelete && (
-                            <button
-                              onClick={() => handleDeleteForEveryone(message._id)}
-                              disabled={deletingMessage === message._id}
-                              className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-red-600 hover:bg-red-50 disabled:opacity-50"
-                              title="Delete for everyone"
-                            >
-                              {deletingMessage === message._id ? (
-                                <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                              ) : (
-                                <IoTrash className="w-3.5 h-3.5" />
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                      
-                      <div className="flex flex-col space-y-1 max-w-md relative">
-                        <div className="relative">
-                          <div
-                            className={`px-4 py-2.5 rounded-2xl ${
-                              isOutgoing
-                                ? "btn-blue-gradient text-white"
-                                : "bg-white/80 text-gray-900 shadow-sm"
-                            }`}
-                          >
-                            {isDeleted ? (
-                              <p className="text-[13px] italic opacity-60">
-                                🚫 This message was deleted
-                              </p>
-                            ) : (
-                              <>
-                                {/* Show replied-to message if exists */}
-                                {message.replyTo && !message.replyTo.isDeletedForEveryone && (
-                                  <div className={`mb-2 pb-2 border-l-2 pl-2 ${
-                                    isOutgoing ? 'border-white/50' : 'border-gray-300'
-                                  }`}>
-                                    <p className={`text-[10px] font-medium mb-0.5 ${
-                                      isOutgoing ? 'text-white/80' : 'text-gray-600'
-                                    }`}>
-                                      {message.replyTo.sender._id === user._id ? 'You' : `${message.replyTo.sender.firstname} ${message.replyTo.sender.lastname}`}
-                                    </p>
-                                    <p className={`text-[11px] line-clamp-2 ${
-                                      isOutgoing ? 'text-white/70' : 'text-gray-500'
-                                    }`}>
-                                      {message.replyTo.isDeletedForEveryone ? '🚫 This message was deleted' : message.replyTo.content}
-                                    </p>
-                                  </div>
-                                )}
-                                <p className="text-[13px] leading-relaxed">{message.content}</p>
-                              </>
-                            )}
-                          </div>
-
-                          {/* Reaction Picker */}
-                          {showReactionPickerFor === message._id && !isDeleted && (
-                            <div
-                              ref={reactionPickerRef}
-                              className={`absolute ${isOutgoing ? 'right-0' : 'left-0'} top-full mt-2 z-10 bg-white rounded-full shadow-lg px-2 py-1.5 flex gap-1`}
-                            >
-                              {commonEmojis.map(emoji => (
-                                <button
-                                  key={emoji}
-                                  onClick={() => handleToggleReaction(message._id, emoji)}
-                                  className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-lg transition-all hover:scale-110"
-                                  title={`React with ${emoji}`}
-                                >
-                                  {emoji}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Display Reactions */}
-                        {!isDeleted && Object.keys(groupedReactions).length > 0 && (
-                          <div className={`flex flex-wrap gap-1 px-1 ${isOutgoing ? 'justify-end' : 'justify-start'}`}>
-                            {Object.entries(groupedReactions).map(([emoji, reactions]) => {
-                              const userHasReacted = reactions.some(r => r.user._id === user._id);
-                              const reactionCount = reactions.length;
-                              
-                              return (
-                                <button
-                                  key={emoji}
-                                  onClick={() => handleToggleReaction(message._id, emoji)}
-                                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-all hover:scale-105 ${
-                                    userHasReacted 
-                                      ? 'bg-blue-100 border border-blue-300' 
-                                      : 'bg-gray-100 border border-gray-200'
-                                  }`}
-                                  title={reactions.map(r => `${r.user.firstname} ${r.user.lastname}`).join(', ')}
-                                >
-                                  <span>{emoji}</span>
-                                  <span className={userHasReacted ? 'text-blue-600 font-medium' : 'text-gray-600'}>
-                                    {reactionCount}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-3 px-1">
-                          <span className="text-[10px] text-gray-400">
-                            {formatTimestamp(message.createdAt)}
-                          </span>
-                          {message.isRead && isOutgoing && (
-                            <span className="text-[10px] text-blue-500">Read</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                {isTyping && (
-                  <div className="flex items-start gap-3 justify-start">
-                    <img
-                      src={activeChat.profilePicture || "https://i.pravatar.cc/150?img=12"}
-                      alt={`${activeChat.firstname} ${activeChat.lastname}`}
-                      className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
-                    />
-                    <div className="bg-white/80 px-4 py-3 rounded-2xl shadow-sm">
-                      <div className="flex space-x-1.5">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </>
-            )}
-          </div>
-
-          {/* Input Area */}
-          <div className="px-6 py-4 flex-shrink-0">
-            {/* Reply Preview */}
-            {replyingTo && (
-              <div className="mb-2 bg-blue-50 border border-blue-200 rounded-lg p-2.5 flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <IoArrowUndoSharp className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-                    <p className="text-[11px] font-medium text-blue-600">
-                      Replying to {replyingTo.sender._id === user._id ? 'yourself' : `${replyingTo.sender.firstname} ${replyingTo.sender.lastname}`}
-                    </p>
-                  </div>
-                  <p className="text-[12px] text-gray-600 line-clamp-1 ml-5">{replyingTo.content}</p>
-                </div>
-                <button
-                  onClick={() => setReplyingTo(null)}
-                  className="text-gray-400 hover:text-gray-600 ml-2 flex-shrink-0"
-                >
-                  <IoClose className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-            
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={messageInput}
-                onChange={(e) => handleTyping(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                placeholder={activeChat ? `Reply to ${activeChat.firstname}` : "Select a user to start messaging"}
-                disabled={!activeChat || sendingMessage}
-                className="flex-1 px-4 py-2.5 rounded-full bg-white/70 border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-              <button 
-                onClick={handleSendMessage}
-                disabled={!activeChat || !messageInput.trim() || sendingMessage}
-                className="btn-blue-gradient w-11 h-11 rounded-full flex items-center justify-center shadow-md hover:opacity-90 transition-all duration-200 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {sendingMessage ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <IoSend className="w-4 h-4 text-white" />
-                )}
+              <button className="flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md">
+                <IoPeopleOutline className="w-6 h-6 text-white" />
               </button>
             </div>
           </div>
-        </div>
-      </div>
 
-      <BottomNavBar />
+          {/* Left Sidebar */}
+          <MessagesSidebar
+            isSidebarOpen={isSidebarOpen}
+            activeChat={activeChat}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            searchDebounceRef={searchDebounceRef}
+            setDebouncedSearch={setDebouncedSearch}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            loading={loading}
+            users={users}
+            debouncedSearch={debouncedSearch}
+            sortUsers={sortUsers}
+            pinnedUserIds={pinnedUserIds}
+            setActiveChat={setActiveChat}
+            onlineUsers={onlineUsers}
+            handlePinUser={handlePinUser}
+            pinningUserId={pinningUserId}
+            loadingCommunities={loadingCommunities}
+            discoverCommunities={discoverCommunities}
+          />
+
+          {/* Main Chat Area */}
+          <div className={`flex-1 flex-col overflow-hidden ml-0 sm:ml-4 mr-0 sm:mr-4 my-0 sm:my-4 rounded-none sm:rounded-2xl bg-white/30 backdrop-blur-sm shadow-sm ${!activeChat ? 'hidden sm:flex' : 'flex'}`}>
+            {/* Chat Header */}
+            <ChatHeader
+              activeChat={activeChat}
+              onlineUsers={onlineUsers}
+              isConnected={isConnected}
+              onBackClick={() => setActiveChat(null)}
+            />
+
+            {/* Messages List */}
+            <MessageList
+              activeChat={activeChat}
+              messages={messages}
+              user={user}
+              formatTimestamp={formatTimestamp}
+              setReplyingTo={setReplyingTo}
+              showReactionPickerFor={showReactionPickerFor}
+              setShowReactionPickerFor={setShowReactionPickerFor}
+              handleCopyMessage={handleCopyMessage}
+              handleDeleteForEveryone={handleDeleteForEveryone}
+              deletingMessage={deletingMessage}
+              reactionPickerRef={reactionPickerRef}
+              commonEmojis={commonEmojis}
+              handleToggleReaction={handleToggleReaction}
+              isTyping={isTyping}
+              messagesEndRef={messagesEndRef}
+            />
+
+            {/* Message Input */}
+            <MessageInput
+              activeChat={activeChat}
+              replyingTo={replyingTo}
+              setReplyingTo={setReplyingTo}
+              user={user}
+              messageInput={messageInput}
+              handleTyping={handleTyping}
+              handleSendMessage={handleSendMessage}
+              sendingMessage={sendingMessage}
+            />
+          </div>
+        </div>
+
+        <BottomNavBar />
       </div>
     </>
   );

@@ -104,6 +104,29 @@ export const deleteMessageForEveryone = (messageId) => {
   return apiClient.delete(`/messages/${messageId}/for-everyone`);
 };
 
+/**
+ * Pin a user conversation
+ * @param {string} userId
+ */
+export const pinUser = (userId) => {
+  return apiClient.post(`/messages/pin/${userId}`);
+};
+
+/**
+ * Unpin a user conversation
+ * @param {string} userId
+ */
+export const unpinUser = (userId) => {
+  return apiClient.delete(`/messages/pin/${userId}`);
+};
+
+/**
+ * Get all pinned users
+ */
+export const getPinnedUsers = () => {
+  return apiClient.get('/messages/pinned');
+};
+
 export default {
   sendMessage,
   getConversations,
@@ -118,4 +141,7 @@ export default {
   addReaction,
   removeReaction,
   deleteMessageForEveryone,
+  pinUser,
+  unpinUser,
+  getPinnedUsers,
 };
