@@ -229,7 +229,7 @@ const Profile = () => {
         {/* Tab Content */}
         <div className="max-sm:min-w-[95%] md:w-4/6 mx-auto overflow-x-hidden">
           {activeTab === "Posts" ? (
-            <Posts ref={postsRef} />
+            <Posts ref={postsRef} userProfile={userProfile} />
           ) : (
             <ActiveComponent />
           )}

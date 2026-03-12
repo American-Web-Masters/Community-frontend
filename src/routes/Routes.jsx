@@ -19,11 +19,13 @@ import UpdatePrayers from "../pages/update_prayers/UpdatePrayers";
 import AnsweredPrayers from "../pages/answered_prayer/AnsweredPrayers";
 import InviteValidation from "../pages/invite/InviteValidation";
 import CommunitySupport from "../pages/support/CommunitySupport";
+import UserSupport from "../pages/support/UserSupport";
 import PaymentSuccess from "../pages/support/PaymentSuccess";
 import DemoSubscriptionManagement from "../pages/support/DemoSubscriptionManagement";
 // import SubscriptionManagement from "../pages/support/SubscriptionManagement"; // Moved to Profile page
 import StripeOnboardingSuccess from "../pages/communities/StripeOnboardingSuccess";
 import StripeOnboardingRefresh from "../pages/communities/StripeOnboardingRefresh";
+import { UserStripeOnboardingRefresh, UserStripeOnboardingSuccess } from "../pages/profile/subcomponents";
 
 const Routes = () =>{
     return(
@@ -134,6 +136,22 @@ const Routes = () =>{
             }
             />
             <Route
+            path="/user/stripe/success"
+            element={
+                <ProtectedRoute>
+                    <UserStripeOnboardingSuccess/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/user/stripe/refresh"
+            element={
+                <ProtectedRoute>
+                    <UserStripeOnboardingRefresh/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
             path="/payment-success"
             element={
                 <ProtectedRoute>
@@ -162,6 +180,14 @@ const Routes = () =>{
             element={
                 <ProtectedRoute>
                     <Profile/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/profile/:username/support"
+            element={
+                <ProtectedRoute>
+                    <UserSupport/>
                 </ProtectedRoute>
             }
             />

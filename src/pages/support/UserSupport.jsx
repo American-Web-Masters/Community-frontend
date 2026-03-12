@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/userSlice';
-import { fetchCommunityById, getCommunityPaymentStatus } from '../../api/communities';
+import { getUserProfile, getUserStripeAccountStatus } from '../../api/profile';
 import BottomNavBar from '../../components/ui/BottomNavBar';
 import StripePaymentForm from '../../components/ui/StripePaymentForm';
 import RecurringPaymentForm from '../../components/ui/RecurringPaymentForm';
-import toast from 'react-hot-toast';  
+import UserStripeStatusBanner from '../../components/ui/UserStripeStatusBanner';
+import toast from 'react-hot-toast';
 
-const CommunitySupport = () => {
-  const { id } = useParams();
+const UserSupport = () => {
+  const { username } = useParams();
   const navigate = useNavigate();
-  const user = useSelector(selectUser);
-  
+  const currentUser = useSelector(selectUser);
+
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [customAmount, setCustomAmount] = useState('');
   const [personalMessage, setPersonalMessage] = useState('');
   const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
   const [paymentType, setPaymentType] = useState('one-time'); // 'one-time' or 'recurring'
   const [recurringInterval] = useState('month'); // Fixed to monthly only
-  const [communityInfo, setCommunityInfo] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
   const [paymentAvailable, setPaymentAvailable] = useState(false);
   const [checkingStripe, setCheckingStripe] = useState(true);
 
@@ -28,7 +28,7 @@ const CommunitySupport = () => {
     { label: '$10', value: 1000, description: 'Small Blessing' },
     { label: '$25', value: 2500, description: 'Kind Gift' },
     { label: '$50', value: 5000, description: 'Generous Donation' },
-    { label: '$100', value: 10000, description: 'Major Support' }
+    { label: '$100', value: 10000, description: 'Major Support' },
   ];
 
   const handleAmountSelect = (amount) => {
@@ -46,88 +46,82 @@ const CommunitySupport = () => {
     }
   };
 
-useEffect(() => {
-  const loadCommunity = async () => {
-    try {
-      const community = await fetchCommunityById(id, user);
-      setCommunityInfo(community?.data || null);
-      
-      // Check payment availability for all users
+  useEffect(() => {
+    const loadUser = async () => {
       try {
-        const stripeResponse = await getCommunityPaymentStatus(id);
-        setPaymentAvailable(stripeResponse.data?.paymentsEnabled || false);
-      } catch (stripeError) {
-        console.error('Payment status check failed:', stripeError);
-        setPaymentAvailable(false);
+        const profileResult = await getUserProfile(username);
+        if (profileResult.success) {
+            console.log(profileResult.data)
+          setUserInfo(profileResult.data);
+        } else {
+          toast.error('Failed to load user information.');
+        }
+
+        // Check payment availability
+        try {
+          const stripeResponse = await getUserStripeAccountStatus(username);
+          console.log(stripeResponse)
+          setPaymentAvailable(stripeResponse.data?.chargesEnabled || false);
+        } catch (stripeError) {
+          console.error('Payment status check failed:', stripeError);
+          setPaymentAvailable(false);
+        }
+      } catch (error) {
+        toast.error('Failed to load user information.');
+      } finally {
+        setCheckingStripe(false);
       }
-    } catch (error) {
-      toast.error("Failed to load community information.");
-    } finally {
-      setCheckingStripe(false);
+    };
+
+    if (username) {
+      loadUser();
     }
-  };
-
-  if (id && user) {
-    loadCommunity();
-  }
-}, [id, user]);
-
-
+  }, [username]);
 
   const handleSendSupport = () => {
-    if (!selectedAmount || selectedAmount < 50) { // Minimum $0.50
+    if (!selectedAmount || selectedAmount < 50) {
       return;
     }
-    
-    // Store payment data in localStorage for success page fallback
+
     if (paymentType === 'recurring') {
-      localStorage.setItem('pendingPayment', JSON.stringify({
+      const storagePayload = JSON.stringify({
         paymentType,
         amount: selectedAmount,
         interval: recurringInterval,
-        communityName: communityInfo?.name,
-        communityId: id
-      }));
-      
-      // Also store in sessionStorage as backup
-      sessionStorage.setItem('paymentDetails', JSON.stringify({
-        paymentType,
-        amount: selectedAmount,
-        interval: recurringInterval,
-        communityName: communityInfo?.name,
-        communityId: id
-      }));
+        communityName: userInfo
+          ? `${userInfo.firstname || ''} ${userInfo.lastname || ''}`.trim()
+          : username,
+        recipientUsername: username,
+        username,
+      });
+
+      localStorage.setItem('pendingPayment', storagePayload);
+      sessionStorage.setItem('paymentDetails', storagePayload);
     }
-    
+
     setShowPaymentForm(true);
   };
 
   const handlePaymentSuccess = (paymentIntent) => {
-    // Handle successful payment
     setShowPaymentForm(false);
     if (paymentType === 'recurring') {
       toast.success('Recurring payment set up successfully!');
     } else {
       toast.success('Payment sent successfully!');
     }
-    
-    // Debug logging
-    console.log('CommunitySupport - Payment success:', {
-      paymentType,
-      selectedAmount,
-      recurringInterval,
-      paymentIntent
-    });
-    
-    // Navigate to success page or back to community
+
     navigate('/payment-success', {
       state: {
         paymentType,
         amount: selectedAmount,
         interval: recurringInterval,
-        communityName: communityInfo?.name,
-        paymentIntent
-      }
+        communityName:
+          userInfo
+            ? `${userInfo.firstname || ''} ${userInfo.lastname || ''}`.trim()
+            : username,
+        paymentIntent,
+        recipientUsername: username,
+      },
     });
   };
 
@@ -135,22 +129,29 @@ useEffect(() => {
     setShowPaymentForm(false);
   };
 
-  // Show loading state while checking Stripe
+  const displayName = userInfo
+    ? `${userInfo.firstname || ''} ${userInfo.lastname || ''}`.trim()
+    : username;
+
+  // True when the logged-in user is viewing their own support page
+  const isOwner = currentUser?.username === username;
+
+  // ---------- Loading ----------
   if (checkingStripe) {
     return (
       <div className="min-h-screen light-background">
         <div className="px-4 sm:px-6 lg:px-8 pb-24">
           <div className="max-w-4xl mx-auto py-6">
-            <button 
-              onClick={() => navigate(`/communities/${id}`)}
+            <button
+              onClick={() => navigate(`/profile/${username}`)}
               className="flex items-center text-gray-800 hover:text-gray-900 mb-6 transition-colors"
             >
               <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              Back to Community
+              Back to Profile
             </button>
-            
+
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
               <p className="text-gray-600">Checking payment availability...</p>
@@ -162,22 +163,25 @@ useEffect(() => {
     );
   }
 
-  // Show error if payments are not available
+  // ---------- Payments not available ----------
   if (!paymentAvailable) {
     return (
       <div className="min-h-screen light-background">
         <div className="px-4 sm:px-6 lg:px-8 pb-24">
           <div className="max-w-4xl mx-auto py-6">
-            <button 
-              onClick={() => navigate(`/communities/${id}`)}
+            <button
+              onClick={() => navigate(`/profile/${username}`)}
               className="flex items-center text-gray-800 hover:text-gray-900 mb-6 transition-colors"
             >
               <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              Back to Community
+              Back to Profile
             </button>
-            
+
+            {/* Owner-only: Stripe connect banner */}
+            <UserStripeStatusBanner isOwner={isOwner} />
+
             <div className="max-w-lg mx-auto text-center py-12">
               <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
                 <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,13 +190,13 @@ useEffect(() => {
               </div>
               <h2 className="text-xl font-semibold text-gray-800 mb-2">Payment Support Unavailable</h2>
               <p className="text-gray-600 mb-6">
-                This community has not set up payment support yet. Community donations are currently unavailable.
+                This user has not set up payment support yet. Donations are currently unavailable.
               </p>
-              <button 
-                onClick={() => navigate(`/communities/${id}`)}
+              <button
+                onClick={() => navigate(`/profile/${username}`)}
                 className="btn-blue-gradient px-6 py-3 rounded-lg font-medium"
               >
-                Back to Community
+                Back to Profile
               </button>
             </div>
           </div>
@@ -202,64 +206,60 @@ useEffect(() => {
     );
   }
 
+  // ---------- Main Page ----------
   return (
     <div className="min-h-screen light-background">
-      {/* Main Content */}
       <div className="px-4 sm:px-6 lg:px-8 pb-24">
-        <div className='pt-4'>
+        <div className="pt-4">
           {/* Back Button */}
-          <button 
-            onClick={() => navigate(`/communities/${id}`)}
+          <button
+            onClick={() => navigate(`/profile/${username}`)}
             className="flex items-center text-white hover:text-gray-900 mb-6 transition-colors bg-primary-500 py-2 px-2 rounded-full"
           >
             <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back to Community
+            Back to Profile
           </button>
-          </div>
-        <div className="max-w-5xl mx-auto p-10 max-sm:p-5 bg-primary-50 rounded-2xl" >
+        </div>
 
-          {/* Community Header */}
+        <div className="max-w-5xl mx-auto p-10 max-sm:p-5 bg-primary-50 rounded-2xl">
+
+          {/* User Header */}
           <div className="flex items-center justify-center mb-5">
-            {/* Community Avatar */}
+            {/* Avatar */}
             <div className="w-24 h-24 lg:w-28 lg:h-28 rounded-full overflow-hidden flex-shrink-0 shadow-md">
-              {communityInfo?.coverPhoto ? (
+              {userInfo?.profilePicture ? (
                 <img
-                  src={communityInfo.coverPhoto}
-                  alt={communityInfo?.name}
+                  src={userInfo.profilePicture}
+                  alt={displayName}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
                   <span className="text-white font-bold text-3xl">
-                    {communityInfo?.name?.charAt(0).toUpperCase() || 'C'}
+                    {displayName?.charAt(0)?.toUpperCase() || 'U'}
                   </span>
                 </div>
               )}
             </div>
 
-            {/* Community Info */}
-            <div className="flex flex-col justify-center ml-5">
-              {/* Community Name */}
-              <h1 className="text-xl sm:text-2xl  font-semibold text-gray-900 mb-1">
-                {communityInfo?.name || 'Community'} | {communityInfo?.affiliatedOrganization}
+            {/* User Info */}
+            <div className="flex flex-col justify-center ml-5 ">
+              {/* Full Name */}
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1">
+                {displayName}
               </h1>
 
-              {/* Welcome Message */}
-              {communityInfo?.welcomeMessage && (
-                <p className="max-sm:text-sm text-gray-500 mb-2 leading-snug">
-                  {communityInfo.welcomeMessage}
-                </p>
-              )}
+              {/* Username */}
+              <p className="text-sm text-gray-500 mb-2">@{userInfo?.username || username}</p>
 
-              {/* Members Count */}
-              <div className="flex items-center space-x-1 text-sm text-gray-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span>{communityInfo?.memberCount ?? 0} members</span>
-              </div>
+              {/* Verse */}
+              {userInfo?.verse && (
+                <div className="btn-blue-gradient text-white px-3 py-1.5 rounded-md max-w-xs">
+                  <p className="text-sm font-medium italic truncate">{userInfo.verse}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -270,15 +270,15 @@ useEffect(() => {
                 <div>
                   {/* Choose Blessing Amount Section */}
                   <div className="mb-8">
-                    <h2 className="text-xl  font-semibold text-gray-800 mb-3">Choose Your Blessing Amount</h2>
-                    
+                    <h2 className="text-xl font-semibold text-gray-800 mb-3">Choose Your Blessing Amount</h2>
+
                     {/* Predefined Amounts Grid */}
                     <div className="grid grid-cols-2 gap-4">
                       {predefinedAmounts.map((amount) => (
                         <button
                           key={amount.value}
                           onClick={() => handleAmountSelect(amount.value)}
-                          className={`p-5  rounded-2xl border text-center transition-all hover:shadow-md ${
+                          className={`p-5 rounded-2xl border text-center transition-all hover:shadow-md ${
                             selectedAmount === amount.value
                               ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                               : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
@@ -318,14 +318,14 @@ useEffect(() => {
                   {/* Payment Type Selection */}
                   <div className="mb-4">
                     <h2 className="text-xl font-semibold text-gray-800 mb-3">Payment Type</h2>
-                    
+
                     <div className="space-y-3">
                       {/* One-time Payment */}
                       <button
                         onClick={() => setPaymentType('one-time')}
                         className={`w-full flex items-center justify-between p-4 lg:p-5 bg-white rounded-lg border transition-all ${
-                          paymentType === 'one-time' 
-                            ? 'border-blue-500 bg-blue-50' 
+                          paymentType === 'one-time'
+                            ? 'border-blue-500 bg-blue-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
@@ -349,8 +349,8 @@ useEffect(() => {
                       <button
                         onClick={() => setPaymentType('recurring')}
                         className={`w-full flex items-center justify-between p-4 lg:p-5 bg-white rounded-lg border transition-all ${
-                          paymentType === 'recurring' 
-                            ? 'border-blue-500 bg-blue-50' 
+                          paymentType === 'recurring'
+                            ? 'border-blue-500 bg-blue-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
@@ -387,31 +387,30 @@ useEffect(() => {
                   )}
                 </div>
 
-              {/* Send Support Button */}
-              <div className="lg:col-span-2">
-                <button
-                  onClick={handleSendSupport}
-                  disabled={!selectedAmount || selectedAmount < 50}
-                  className={`w-full py-5 lg:py-6 rounded-lg font-semibold text-white text-lg lg:text-xl transition-all shadow-lg hover:shadow-xl ${
-                    selectedAmount && selectedAmount >= 50
-                      ? 'btn-blue-gradient hover:opacity-90'
-                      : 'bg-blue-700/50 cursor-not-allowed'
-                  }`}
-                >
-                  {paymentType === 'recurring' 
-                    ? `Set Up Monthly Payment (${selectedAmount ? `$${(selectedAmount / 100).toFixed(2)}` : '$0.00'})`
-                    : `Send Support (${selectedAmount ? `$${(selectedAmount / 100).toFixed(2)}` : '$0.00'})`
-                  }
-                </button>
+                {/* Send Support Button */}
+                <div className="lg:col-span-2">
+                  <button
+                    onClick={handleSendSupport}
+                    disabled={!selectedAmount || selectedAmount < 50}
+                    className={`w-full py-5 lg:py-6 rounded-lg font-semibold text-white text-lg lg:text-xl transition-all shadow-lg hover:shadow-xl ${
+                      selectedAmount && selectedAmount >= 50
+                        ? 'btn-blue-gradient hover:opacity-90'
+                        : 'bg-blue-700/50 cursor-not-allowed'
+                    }`}
+                  >
+                    {paymentType === 'recurring'
+                      ? `Set Up Monthly Payment (${selectedAmount ? `$${(selectedAmount / 100).toFixed(2)}` : '$0.00'})`
+                      : `Send Support (${selectedAmount ? `$${(selectedAmount / 100).toFixed(2)}` : '$0.00'})`}
+                  </button>
+                </div>
               </div>
-            </div>
             </>
           ) : (
             /* Payment Form - Choose based on payment type */
             paymentType === 'one-time' ? (
               <StripePaymentForm
                 amount={selectedAmount}
-                communityId={id}
+                recipientUserId={userInfo?.user?._id}
                 personalMessage={personalMessage}
                 onSuccess={handlePaymentSuccess}
                 onCancel={handlePaymentCancel}
@@ -420,8 +419,8 @@ useEffect(() => {
               <RecurringPaymentForm
                 amount={selectedAmount}
                 interval={recurringInterval}
-                communityId={id}
-                description={`Monthly support for ${communityInfo?.name || 'community'}`}
+                recipientUserId={userInfo?.user?._id}
+                description={`Monthly support for ${displayName}`}
                 onSuccess={handlePaymentSuccess}
                 onCancel={handlePaymentCancel}
               />
@@ -435,4 +434,4 @@ useEffect(() => {
   );
 };
 
-export default CommunitySupport;
+export default UserSupport;

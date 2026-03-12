@@ -4,7 +4,8 @@ import apiClient from '../../api/client';
 
 const RecurringPaymentForm = ({ 
   amount,
-  communityId = null, 
+  communityId = null,
+  recipientUserId = null,
   onSuccess, 
   onCancel 
 }) => {
@@ -19,28 +20,44 @@ const RecurringPaymentForm = ({
     setIsLoading(true);
 
     try {
-      // Store payment data in URL hash before redirect
-      const paymentData = {
-        amount: amount,
-        paymentType: 'recurring',
-        interval: interval,
-        communityId: communityId
-      };
-      const encodedData = btoa(JSON.stringify(paymentData));
-      window.location.hash = encodedData;
-      
-      const response = await apiClient.post('/subscriptions/create', {
-        communityId,
-        amount: dollarAmount,
-        interval
-      });
+      if (recipientUserId) {
+        // User-to-user recurring subscription
+        const response = await apiClient.post('/subscriptions/user/create-subscripition', {
+          amount: dollarAmount,
+          recipientUserId,
+          interval,
+        });
 
-      // Backend returns sessionUrl for Stripe Checkout
-      if (response.data?.data?.sessionUrl) {
-        // Redirect to Stripe Checkout
-        window.location.href = response.data.data.sessionUrl;
+        // Backend returns sessionUrl for Stripe Checkout
+        if (response.data?.data?.sessionUrl) {
+          window.location.href = response.data.data.sessionUrl;
+        } else {
+          throw new Error('No session URL received from server');
+        }
       } else {
-        throw new Error('No session URL received from server');
+        // Community recurring subscription
+        // Store payment data in URL hash before redirect
+        const paymentData = {
+          amount: amount,
+          paymentType: 'recurring',
+          interval: interval,
+          communityId: communityId
+        };
+        const encodedData = btoa(JSON.stringify(paymentData));
+        window.location.hash = encodedData;
+
+        const response = await apiClient.post('/subscriptions/create', {
+          communityId,
+          amount: dollarAmount,
+          interval
+        });
+
+        // Backend returns sessionUrl for Stripe Checkout
+        if (response.data?.data?.sessionUrl) {
+          window.location.href = response.data.data.sessionUrl;
+        } else {
+          throw new Error('No session URL received from server');
+        }
       }
     } catch (error) {
       console.error('Subscription error:', error);

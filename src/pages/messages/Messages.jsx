@@ -92,7 +92,7 @@ const Messages = () => {
   const [pinningUserId, setPinningUserId] = useState(null);
   
 
-  // Fetch all users and pinned users
+  // Fetch all users and pinned users.
   useEffect(() => {
     const fetchUsers = async () => {
       try {

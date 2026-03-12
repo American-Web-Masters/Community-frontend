@@ -12,7 +12,7 @@ import apiClient from '../../api/client';
 // Initialize Stripe - Replace with your actual publishable key
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key_here');
 
-const CheckoutForm = ({ amount, communityId, personalMessage, onSuccess, onCancel }) => {
+const CheckoutForm = ({ amount, communityId, recipientUserId, personalMessage, onSuccess, onCancel }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isLoading, setIsLoading] = useState(false);
@@ -47,11 +47,22 @@ const CheckoutForm = ({ amount, communityId, personalMessage, onSuccess, onCance
       }
 
       // Create the PaymentIntent using axios with proper credentials
-      const response = await apiClient.post('/payments/create-payment-intent', {
-        amount,
-        communityId,
-        personalMessage,
-      });
+      let response;
+      if (recipientUserId) {
+        // User-to-user payment
+        response = await apiClient.post('/payments/user/create-payment-intent', {
+          amount,
+          recipientUserId,
+          personalMessage,
+        });
+      } else {
+        // Community payment
+        response = await apiClient.post('/payments/create-payment-intent', {
+          amount,
+          communityId,
+          personalMessage,
+        });
+      }
 
       console.log('Payment intent response:', response.data);
 
@@ -216,7 +227,7 @@ const CheckoutForm = ({ amount, communityId, personalMessage, onSuccess, onCance
   );
 };
 
-const StripePaymentForm = ({ amount, communityId, personalMessage, onSuccess, onCancel }) => {
+const StripePaymentForm = ({ amount, communityId, recipientUserId, personalMessage, onSuccess, onCancel }) => {
   const options = {
     mode: 'payment',
     amount: amount,
@@ -252,6 +263,7 @@ const StripePaymentForm = ({ amount, communityId, personalMessage, onSuccess, on
       <CheckoutForm
         amount={amount}
         communityId={communityId}
+        recipientUserId={recipientUserId}
         personalMessage={personalMessage}
         onSuccess={onSuccess}
         onCancel={onCancel}

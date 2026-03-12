@@ -1,5 +1,3 @@
-import React from 'react';
-
 const TypingIndicator = ({ activeChat }) => {
   return (
     <div className="flex items-start gap-3 justify-start">

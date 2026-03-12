@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { selectUser } from "../../../store/userSlice";
 import { updateUserProfile } from "../../../api/profile";
 import { MdCheck, MdClose, MdCameraAlt } from "react-icons/md";
@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 const ProfileHeader = ({ userProfile, onProfileUpdate }) => {
   const user = useSelector(selectUser);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -383,7 +384,9 @@ const ProfileHeader = ({ userProfile, onProfileUpdate }) => {
               {/* Support Button */}
               <div>
               <div className="flex justify-center align-center ">
-                <button className="btn-blue-gradient cursor-pointer text-white text-sm font-medium rounded-full transition-transform flex items-center space-x-2 py-1.5 px-4">
+                <button
+                  onClick={() => navigate(`/profile/${userProfile?.username || location.pathname.split('/profile/')[1]}/support`)}
+                  className="btn-blue-gradient cursor-pointer text-white text-sm font-medium rounded-full transition-transform flex items-center space-x-2 py-1.5 px-4">
                   <span>🤍</span>
                   <span>Support</span>
                 </button>
