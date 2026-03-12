@@ -15,7 +15,7 @@ const PaymentSuccess = () => {
   const [loading, setLoading] = useState(false);
   
   // Get payment data from navigation state
-  const { paymentType, amount, interval, communityName, paymentIntent } = location.state || {};
+  const { paymentType, amount, interval, communityName, paymentIntent, recipientUsername } = location.state || {};
 
   // Debug logging
   console.log('PaymentSuccess - Received data:', { paymentType, amount, interval, communityName, paymentIntent });
@@ -88,20 +88,27 @@ const PaymentSuccess = () => {
   const displayPaymentType = paymentDetails?.paymentType || paymentType || 'one-time';
   const displayInterval = paymentDetails?.interval || interval || 'month';
   const displayCommunityName = paymentDetails?.communityName || communityName || 'Community';
+  // Resolve recipient username — present for user-profile payments (both one-time and recurring)
+  const displayRecipientUsername = recipientUsername || paymentDetails?.recipientUsername || null;
   
   console.log('PaymentSuccess - Display amount:', displayAmount);
 
   useEffect(() => {
-    // Auto-redirect to communities after 5 seconds
+    // Auto-redirect after 5 seconds — go to user profile or communities depending on context
+    const redirectTo = displayRecipientUsername ? `/profile/${displayRecipientUsername}` : '/communities';
     const timer = setTimeout(() => {
-      navigate('/communities');
+      navigate(redirectTo);
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [navigate]);
+  }, [navigate, displayRecipientUsername]);
 
   const handleContinue = () => {
-    navigate('/communities');
+    if (displayRecipientUsername) {
+      navigate(`/profile/${displayRecipientUsername}`);
+    } else {
+      navigate('/communities');
+    }
   };
 
   const formatInterval = (interval) => {
@@ -148,8 +155,8 @@ const PaymentSuccess = () => {
               </h1>
               <p className="text-lg text-white/90 max-w-xl mx-auto">
                 {displayPaymentType === 'recurring' 
-                  ? 'Thank you for setting up recurring support! Your ongoing blessings will continuously strengthen our community.'
-                  : 'Thank you for your generous blessing! Your support will strengthen our community.'
+                  ? `Thank you for setting up recurring support! Your ongoing blessings will continuously strengthen ${displayRecipientUsername ? 'this person' : 'our community'}.`
+                  : `Thank you for your generous blessing! Your support will strengthen ${displayRecipientUsername ? 'this person' : 'our community'}.`
                 }
               </p>
             </div>
@@ -192,10 +199,10 @@ const PaymentSuccess = () => {
                           <p className="text-green-600 capitalize">{formatInterval(displayInterval)}</p>
                         </div>
                       )}
-                      {displayCommunityName && (
+                      {(displayCommunityName || displayRecipientUsername) && (
                         <div>
                           <p className="font-medium text-green-800">Supporting:</p>
-                          <p className="text-green-600">{displayCommunityName}</p>
+                          <p className="text-green-600">{displayRecipientUsername || displayCommunityName}</p>
                         </div>
                       )}
                       <div>
@@ -232,7 +239,7 @@ const PaymentSuccess = () => {
                     onClick={handleContinue}
                     className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 px-8 rounded-xl font-bold text-lg hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl mb-3"
                   >
-                    Continue to Communities
+                    {displayRecipientUsername ? `Back to ${displayCommunityName}'s Profile` : 'Continue to Communities'}
                   </button>
                   
                   <div className="flex items-center justify-center space-x-2 text-gray-500">

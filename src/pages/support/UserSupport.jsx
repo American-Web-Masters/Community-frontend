@@ -84,31 +84,19 @@ const UserSupport = () => {
     }
 
     if (paymentType === 'recurring') {
-      localStorage.setItem(
-        'pendingPayment',
-        JSON.stringify({
-          paymentType,
-          amount: selectedAmount,
-          interval: recurringInterval,
-          recipientName: userInfo
-            ? `${userInfo.firstname || ''} ${userInfo.lastname || ''}`.trim()
-            : username,
-          username,
-        })
-      );
+      const storagePayload = JSON.stringify({
+        paymentType,
+        amount: selectedAmount,
+        interval: recurringInterval,
+        communityName: userInfo
+          ? `${userInfo.firstname || ''} ${userInfo.lastname || ''}`.trim()
+          : username,
+        recipientUsername: username,
+        username,
+      });
 
-      sessionStorage.setItem(
-        'paymentDetails',
-        JSON.stringify({
-          paymentType,
-          amount: selectedAmount,
-          interval: recurringInterval,
-          recipientName: userInfo
-            ? `${userInfo.firstname || ''} ${userInfo.lastname || ''}`.trim()
-            : username,
-          username,
-        })
-      );
+      localStorage.setItem('pendingPayment', storagePayload);
+      sessionStorage.setItem('paymentDetails', storagePayload);
     }
 
     setShowPaymentForm(true);
@@ -132,6 +120,7 @@ const UserSupport = () => {
             ? `${userInfo.firstname || ''} ${userInfo.lastname || ''}`.trim()
             : username,
         paymentIntent,
+        recipientUsername: username,
       },
     });
   };
@@ -430,7 +419,7 @@ const UserSupport = () => {
               <RecurringPaymentForm
                 amount={selectedAmount}
                 interval={recurringInterval}
-                communityId={null}
+                recipientUserId={userInfo?.user?._id}
                 description={`Monthly support for ${displayName}`}
                 onSuccess={handlePaymentSuccess}
                 onCancel={handlePaymentCancel}
