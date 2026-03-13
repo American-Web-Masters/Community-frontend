@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { getMySubscriptions, cancelSubscription, getMyReceivedSubscriptions } from '../../../api/subscriptions';
+import ConfirmModal from './ConfirmModal';
 
 const SubscriptionMgt = () => {
   const navigate = useNavigate();
@@ -11,6 +12,8 @@ const SubscriptionMgt = () => {
   const [loading, setLoading] = useState(true);
   const [receivedLoading, setReceivedLoading] = useState(false);
   const [cancelingId, setCancelingId] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedToCancel, setSelectedToCancel] = useState(null);
 
   useEffect(() => {
     fetchSubscriptions();
@@ -97,18 +100,22 @@ const SubscriptionMgt = () => {
   };
 
   const handleCancelSubscription = async (subscription) => {
-    const confirmMessage = `Are you sure you want to cancel your $${subscription.amount}/${subscription.interval} subscription to "${subscription.communityName}"?\n\nNote: Your subscription will remain active until the end of the current billing period.`;
-    
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
+    // open confirm modal for this subscription
+    setSelectedToCancel(subscription);
+    setConfirmOpen(true);
+  };
+
+  const confirmCancel = async () => {
+    const subscription = selectedToCancel;
+    if (!subscription) return;
 
     try {
       setCancelingId(subscription.id);
-      
+      setConfirmOpen(false);
+
       // Call the cancel API with database subscription ID
       const response = await cancelSubscription(subscription.id);
-      
+
       // Update local state with the response data
       if (response.data?.subscription) {
         setSubscriptions(prev => 
@@ -126,12 +133,14 @@ const SubscriptionMgt = () => {
           )
         );
       }
-      
+
       toast.success(response.message || 'Subscription will be canceled at the end of the current billing period');
     } catch (error) {
       toast.error('Failed to cancel subscription. Please try again.');
     } finally {
       setCancelingId(null);
+      setSelectedToCancel(null);
+      setConfirmOpen(false);
     }
   };
 
@@ -473,6 +482,15 @@ const SubscriptionMgt = () => {
 
       {/* Tab Content */}
       {activeTab === 'my' ? renderMySubscriptions() : renderReceivedSubscriptions()}
+      <ConfirmModal
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={confirmCancel}
+        title="Cancel Subscription"
+        description={selectedToCancel ? `Are you sure you want to cancel your $${selectedToCancel.amount}/${selectedToCancel.interval} subscription to "${selectedToCancel.subscriptionType === 'community' ? selectedToCancel.communityName : (selectedToCancel.recipientName || selectedToCancel.recipientUsername || 'User')}"?\n\nYou'll keep access until the end of the current billing period.` : ''}
+        confirmLabel="Cancel Subscription"
+        cancelLabel="Keep Subscription"
+      />
     </div>
   );
 };
