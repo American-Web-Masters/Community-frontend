@@ -103,8 +103,10 @@ const Profile = () => {
     },
   ];
 
-  const ActiveComponent = tabs.find(tab => tab.name === activeTab)?.component || Posts;
-  const activeTabData = tabs.find(tab => tab.name === activeTab);
+  const filterTabs = tabs.filter(tab => !(tab.name === "Subscriptions" && user?.username !== username));
+
+  const ActiveComponent = filterTabs.find(tab => tab.name === activeTab)?.component || Posts;
+  const activeTabData = filterTabs.find(tab => tab.name === activeTab);
 
   return (
     <div className="min-h-screen light-background overflow-x-hidden">
@@ -128,7 +130,7 @@ const Profile = () => {
             <div className="hidden lg:flex lg:items-center lg:justify-between lg:gap-4">
               {/* Tab Navigation */}
               <div className="flex items-center bg-white/90 rounded-full p-0.5 backdrop-blur-sm">
-                {tabs.map((tab) => (
+                {filterTabs.map((tab) => (
                   <button
                     key={tab.name}
                     onClick={() => setActiveTab(tab.name)}
@@ -161,7 +163,7 @@ const Profile = () => {
             <div className="hidden sm:flex lg:hidden flex-col items-stretch space-y-3">
               <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm w-full overflow-x-hidden">
                 <div className="flex w-full">
-                  {tabs.map((tab) => (
+                  {filterTabs.map((tab) => (
                     <button
                       key={tab.name}
                       onClick={() => setActiveTab(tab.name)}
@@ -196,7 +198,7 @@ const Profile = () => {
             {/* Tab Navigation - Mobile (full width, centered) */}
             <div className="flex sm:hidden w-full">
               <div className="flex items-center bg-white/90 rounded-full p-1 backdrop-blur-sm w-full overflow-x-auto">
-                {tabs.map((tab) => (
+                {filterTabs.map((tab) => (
                   <button
                     key={tab.name}
                     onClick={() => setActiveTab(tab.name)}

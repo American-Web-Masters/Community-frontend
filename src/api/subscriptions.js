@@ -59,6 +59,19 @@ export const cancelSubscription = async (subscriptionId) => {
 };
 
 /**
+ * Get subscriptions received by the current authenticated user
+ * @returns {Promise} - Promise resolving to received subscriptions
+ */
+export const getMyReceivedSubscriptions = async () => {
+  try {
+    const response = await apiClient.get('/subscriptions/my-received-subscriptions');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
  * Confirm subscription payment
  * @param {string} paymentIntentId - Payment intent ID from Stripe
  * @returns {Promise} - Promise resolving to subscription details
