@@ -26,6 +26,7 @@ const SubscriptionMgt = () => {
     try {
       setLoading(true);
       const response = await getMySubscriptions();
+      console.log(response.data?.subscriptions)
       
       // Map the response to only necessary fields
       const mappedSubscriptions = response.data?.subscriptions?.map(sub => ({
@@ -34,8 +35,14 @@ const SubscriptionMgt = () => {
         amount: sub.amount,
         interval: sub.interval,
         status: sub.status,
-        communityName: sub.communityId?.name || 'Unknown Community',
-        communityId: sub.communityId?._id,
+  subscriptionType: sub.subscriptionType,
+  // Community fields (when subscriptionType === 'community')
+  communityName: sub.communityId?.name || (sub.metadata?.communityName ?? 'Unknown Community'),
+  communityId: sub.communityId?._id,
+  // Recipient / user fields (when subscriptionType === 'user')
+  recipientId: sub.recipientProfileId?._id || null,
+  recipientName: sub.recipientProfileId?.fullname || sub.metadata?.recipientName || null,
+  recipientUsername: sub.recipientProfileId?.username || sub.metadata?.recipientUsername || null,
         startDate: sub.startDate,
         canceledAt: sub.canceledAt,
         endDate: sub.endDate,
@@ -69,6 +76,9 @@ const SubscriptionMgt = () => {
         status: sub.status,
         communityName: sub.communityId?.name || null,
         subscriptionType: sub.subscriptionType,
+  // recipient info (if this is a subscription TO a user)
+  recipientId: sub.recipientProfileId?._id || null,
+  recipientUsername: sub.recipientProfileId?.username || sub.metadata?.recipientUsername || null,
         startDate: sub.startDate,
         canceledAt: sub.canceledAt,
         endDate: sub.endDate,
@@ -236,7 +246,18 @@ const SubscriptionMgt = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-xl font-semibold text-gray-900">{subscription.communityName}</h3>
+                      {/* Title: community name or recipient name for user subscriptions */}
+                      <div className="min-w-0">
+                        <h3 className="text-xl font-semibold text-gray-900 truncate">
+                          {subscription.subscriptionType === 'user'
+                            ? (subscription.recipientName || subscription.recipientUsername || 'User')
+                            : subscription.communityName}
+                        </h3>
+                        {subscription.subscriptionType === 'user' && subscription.recipientUsername && (
+                          <p className="text-sm text-gray-500">@{subscription.recipientUsername}</p>
+                        )}
+                      </div>
+
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(subscription.status, subscription.cancelAtPeriodEnd)}`}>
                         {getStatusText(subscription.status, subscription.cancelAtPeriodEnd)}
                       </span>
@@ -249,12 +270,22 @@ const SubscriptionMgt = () => {
 
                   {/* Action Buttons */}
                   <div className="flex space-x-3 mt-4 sm:mt-0">
-                    <button
-                      onClick={() => navigate(`/communities/${subscription.communityId}`)}
-                      className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
-                    >
-                      View Community
-                    </button>
+                    {/* Primary action: community or user profile */}
+                    {subscription.subscriptionType === 'community' ? (
+                      <button
+                        onClick={() => navigate(`/communities/${subscription.communityId}`)}
+                        className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
+                      >
+                        View Community
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => navigate(`/profile/${subscription.recipientUsername || subscription.recipientId}`)}
+                        className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
+                      >
+                        Show Profile
+                      </button>
+                    )}
                     {subscription.status === 'active' && !subscription.cancelAtPeriodEnd && (
                       <button
                         onClick={() => handleCancelSubscription(subscription)}
