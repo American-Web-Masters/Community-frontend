@@ -11,6 +11,7 @@ import {
 } from "react-icons/pi";
 import { BsSend } from "react-icons/bs";
 import React, { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import { useSelector } from "react-redux";
 import { selectUser } from "../../store/userSlice";
 import {CommentsModal, TimelineModal} from "../../pages/home/subcomponents";
@@ -81,6 +82,7 @@ const PrayerCard = ({
   onProfileDelete = null, // Profile-specific delete handler
 }) => {
   const currentUser = useSelector(selectUser);
+  const navigate = useNavigate();
   const [showComments, setShowComments] = useState(false);
   const [commentReactions, setCommentReactions] = useState({});
   const [newComment, setNewComment] = useState("");
@@ -108,7 +110,7 @@ const PrayerCard = ({
     const dateB = new Date(b.createdAt);
     return dateB - dateA; // Descending order (most recent first)
   });
-  
+  console.log(prayer);
   const handleToggleExpand = () => {
     console.log("PrayerCard toggle clicked for user:", user?.name);
     onToggleExpand();
@@ -357,6 +359,12 @@ const PrayerCard = ({
 
   const urgencyMeter = getUrgencyMeter(urgency);
 
+  const handleMoveToProfile = () => {
+    if (prayer?.user?.username) {
+      // Navigate to the user's profile page using react-router
+      navigate(`/profile/${prayer.user.username}`);
+    }
+  };
   return (
     <>
       {/* Comments Modal */}
@@ -405,7 +413,7 @@ const PrayerCard = ({
           </div>
           <div>
             <div className="w-full flex items-center justify-between space-x-2">
-              <h3 className="font-medium text-gray-900">
+              <h3 className="font-medium text-gray-900 cursor-pointer hover:underline" onClick={handleMoveToProfile}>
                 {user?.name || "Anonymous"}
               </h3>
               
