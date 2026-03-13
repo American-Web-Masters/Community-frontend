@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { getMySubscriptions, cancelSubscription, getMyReceivedSubscriptions } from '../../../api/subscriptions';
-import ConfirmModal from './ConfirmModal';
 
 const SubscriptionMgt = () => {
   const navigate = useNavigate();
@@ -79,9 +78,6 @@ const SubscriptionMgt = () => {
         status: sub.status,
         communityName: sub.communityId?.name || null,
         subscriptionType: sub.subscriptionType,
-  // recipient info (if this is a subscription TO a user)
-  recipientId: sub.recipientProfileId?._id || null,
-  recipientUsername: sub.recipientProfileId?.username || sub.metadata?.recipientUsername || null,
         startDate: sub.startDate,
         canceledAt: sub.canceledAt,
         endDate: sub.endDate,
@@ -96,6 +92,14 @@ const SubscriptionMgt = () => {
       toast.error('Failed to load received subscriptions');
     } finally {
       setReceivedLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async (subscription) => {
+    const confirmMessage = `Are you sure you want to cancel your $${subscription.amount}/${subscription.interval} subscription to "${subscription.communityName}"?\n\nNote: Your subscription will remain active until the end of the current billing period.`;
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
     }
   };
 
@@ -255,18 +259,7 @@ const SubscriptionMgt = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
-                      {/* Title: community name or recipient name for user subscriptions */}
-                      <div className="min-w-0">
-                        <h3 className="text-xl font-semibold text-gray-900 truncate">
-                          {subscription.subscriptionType === 'user'
-                            ? (subscription.recipientName || subscription.recipientUsername || 'User')
-                            : subscription.communityName}
-                        </h3>
-                        {subscription.subscriptionType === 'user' && subscription.recipientUsername && (
-                          <p className="text-sm text-gray-500">@{subscription.recipientUsername}</p>
-                        )}
-                      </div>
-
+                      <h3 className="text-xl font-semibold text-gray-900">{subscription.communityName}</h3>
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(subscription.status, subscription.cancelAtPeriodEnd)}`}>
                         {getStatusText(subscription.status, subscription.cancelAtPeriodEnd)}
                       </span>
@@ -279,22 +272,12 @@ const SubscriptionMgt = () => {
 
                   {/* Action Buttons */}
                   <div className="flex space-x-3 mt-4 sm:mt-0">
-                    {/* Primary action: community or user profile */}
-                    {subscription.subscriptionType === 'community' ? (
-                      <button
-                        onClick={() => navigate(`/communities/${subscription.communityId}`)}
-                        className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
-                      >
-                        View Community
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => navigate(`/profile/${subscription.recipientUsername || subscription.recipientId}`)}
-                        className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
-                      >
-                        Show Profile
-                      </button>
-                    )}
+                    <button
+                      onClick={() => navigate(`/communities/${subscription.communityId}`)}
+                      className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
+                    >
+                      View Community
+                    </button>
                     {subscription.status === 'active' && !subscription.cancelAtPeriodEnd && (
                       <button
                         onClick={() => handleCancelSubscription(subscription)}
@@ -482,15 +465,6 @@ const SubscriptionMgt = () => {
 
       {/* Tab Content */}
       {activeTab === 'my' ? renderMySubscriptions() : renderReceivedSubscriptions()}
-      <ConfirmModal
-        isOpen={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
-        onConfirm={confirmCancel}
-        title="Cancel Subscription"
-        description={selectedToCancel ? `Are you sure you want to cancel your $${selectedToCancel.amount}/${selectedToCancel.interval} subscription to "${selectedToCancel.subscriptionType === 'community' ? selectedToCancel.communityName : (selectedToCancel.recipientName || selectedToCancel.recipientUsername || 'User')}"?\n\nYou'll keep access until the end of the current billing period.` : ''}
-        confirmLabel="Cancel Subscription"
-        cancelLabel="Keep Subscription"
-      />
     </div>
   );
 };
