@@ -1,4 +1,3 @@
-import React from 'react';
 import { IoChevronBack, IoEllipsisVertical } from 'react-icons/io5';
 
 const ChatHeader = ({ activeChat, onlineUsers, isConnected, onBackClick }) => {

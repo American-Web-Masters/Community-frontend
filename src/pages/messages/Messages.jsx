@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +26,8 @@ import MessagesSidebar from './subcomponents/MessagesSidebar';
 import ChatHeader from './subcomponents/ChatHeader';
 import MessageList from './subcomponents/MessageList';
 import MessageInput from './subcomponents/MessageInput';
+
+const MESSAGES_LIMIT = 30;
 
 // Custom styles for thin scrollbars
 const scrollbarStyles = `
@@ -68,12 +70,17 @@ const Messages = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchDebounceRef = useRef(null);
-  
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const messageListRef = useRef(null);
+
   // Socket.IO state
   const { socket, isConnected, onlineUsers } = useSocket();
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef(null);
-  const messagesEndRef = useRef(null);
   
   // Reaction state
   const [showReactionPickerFor, setShowReactionPickerFor] = useState(null);
@@ -159,19 +166,24 @@ const Messages = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       if (!activeChat) return;
-      
+
+      // Reset pagination state for this conversation
+      setCurrentPage(1);
+      setHasMoreMessages(false);
+      setMessages([]);
+
       try {
-        const response = await getConversationWithUser(activeChat._id);
+        const response = await getConversationWithUser(activeChat._id, {
+          page: 1,
+          limit: MESSAGES_LIMIT,
+        });
         if (response.data.status === 'success') {
-          const sortedMessages = response.data.data.messages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-          setMessages(sortedMessages);
-          // Mark messages as read
+          const fetched = response.data.data.messages || [];
+          // Backend returns newest-first (index 0 = newest).
+          // MessageList uses flex-col-reverse so index 0 renders at the visual bottom.
+          setMessages(fetched);
+          setHasMoreMessages(fetched.length === MESSAGES_LIMIT);
           await markConversationAsRead(activeChat._id);
-          
-          // Instantly scroll to bottom (no animation) when loading conversation
-          setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-          }, 0);
         }
       } catch (error) {
         console.error('Error fetching messages:', error);
@@ -181,6 +193,39 @@ const Messages = () => {
 
     fetchMessages();
   }, [activeChat]);
+
+  // Load older messages when user scrolls to the top of the chat
+  const loadMoreMessages = async () => {
+    if (!activeChat || loadingMore || !hasMoreMessages) return;
+
+    setLoadingMore(true);
+    const nextPage = currentPage + 1;
+
+    try {
+      const response = await getConversationWithUser(activeChat._id, {
+        page: nextPage,
+        limit: MESSAGES_LIMIT,
+      });
+
+      if (response.data.status === 'success') {
+        const fetched = response.data.data.messages || [];
+        if (fetched.length > 0) {
+          // Append older messages to the END of the array.
+          // In flex-col-reverse the last DOM children render at the VISUAL TOP,
+          // so older messages naturally slot in above the existing ones.
+          setMessages(prev => [...prev, ...fetched]);
+          setCurrentPage(nextPage);
+          setHasMoreMessages(fetched.length === MESSAGES_LIMIT);
+        } else {
+          setHasMoreMessages(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading more messages:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   // Socket.IO event listeners
   useEffect(() => {
@@ -196,20 +241,28 @@ const Messages = () => {
         (messageData.sender._id === user?._id && messageData.receiver._id === activeChat?._id);
       
       if (isForCurrentChat) {
+        const el = messageListRef.current;
+        // In flex-col-reverse, scrollTop=0 means the user is at the visual bottom (newest).
+        const wasAtBottom = !el || el.scrollTop < 80;
+
         setMessages(prev => {
-          // Prevent duplicate messages
           const exists = prev.some(msg => msg._id === messageData._id);
           if (exists) return prev;
-          return [...prev, messageData];
+          // Prepend: newest at index 0 = visual bottom in flex-col-reverse
+          return [messageData, ...prev];
         });
-        
+
         // Mark as read if we're the receiver
         if (messageData.receiver._id === user?._id && activeChat) {
           markConversationAsRead(activeChat._id).catch(console.error);
         }
-        
-        // Scroll to bottom
-        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+
+        // Keep user at bottom only if they were already there
+        if (wasAtBottom) {
+          setTimeout(() => {
+            if (messageListRef.current) messageListRef.current.scrollTop = 0;
+          }, 50);
+        }
       } else {
         // Show notification or update unread count for other conversations
         console.log('Message from other conversation');
@@ -353,28 +406,28 @@ const Messages = () => {
       const response = await sendMessage(payload);
 
       if (response.data.status === 'success') {
-        // Message will be received via Socket.IO, but update local state for immediate feedback
         const newMessage = response.data.data.message;
         setMessages(prev => {
           const exists = prev.some(msg => msg._id === newMessage._id);
           if (exists) return prev;
-          return [...prev, newMessage];
+          // Prepend: newest at index 0 = visual bottom in flex-col-reverse
+          return [newMessage, ...prev];
         });
         setMessageInput('');
-        setReplyingTo(null); // Clear reply state
-        
-        // Stop typing indicator
+        setReplyingTo(null);
+
         if (socket && isConnected) {
           socket.emit('typing:stop', { receiverId: activeChat._id });
         }
-        
-        // Clear typing timeout
+
         if (typingTimeoutRef.current) {
           clearTimeout(typingTimeoutRef.current);
         }
-        
-        // Scroll to bottom after sending
-        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+
+        // Always snap to the bottom after sending own message
+        setTimeout(() => {
+          if (messageListRef.current) messageListRef.current.scrollTop = 0;
+        }, 50);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -678,7 +731,10 @@ const Messages = () => {
               commonEmojis={commonEmojis}
               handleToggleReaction={handleToggleReaction}
               isTyping={isTyping}
-              messagesEndRef={messagesEndRef}
+              messageListRef={messageListRef}
+              loadMoreMessages={loadMoreMessages}
+              hasMoreMessages={hasMoreMessages}
+              loadingMore={loadingMore}
             />
 
             {/* Message Input */}
