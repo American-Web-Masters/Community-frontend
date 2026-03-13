@@ -11,6 +11,8 @@ const SubscriptionMgt = () => {
   const [loading, setLoading] = useState(true);
   const [receivedLoading, setReceivedLoading] = useState(false);
   const [cancelingId, setCancelingId] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedToCancel, setSelectedToCancel] = useState(null);
 
   useEffect(() => {
     fetchSubscriptions();
@@ -26,6 +28,7 @@ const SubscriptionMgt = () => {
     try {
       setLoading(true);
       const response = await getMySubscriptions();
+      console.log(response.data?.subscriptions)
       
       // Map the response to only necessary fields
       const mappedSubscriptions = response.data?.subscriptions?.map(sub => ({
@@ -34,8 +37,14 @@ const SubscriptionMgt = () => {
         amount: sub.amount,
         interval: sub.interval,
         status: sub.status,
-        communityName: sub.communityId?.name || 'Unknown Community',
-        communityId: sub.communityId?._id,
+  subscriptionType: sub.subscriptionType,
+  // Community fields (when subscriptionType === 'community')
+  communityName: sub.communityId?.name || (sub.metadata?.communityName ?? 'Unknown Community'),
+  communityId: sub.communityId?._id,
+  // Recipient / user fields (when subscriptionType === 'user')
+  recipientId: sub.recipientProfileId?._id || null,
+  recipientName: sub.recipientProfileId?.fullname || sub.metadata?.recipientName || null,
+  recipientUsername: sub.recipientProfileId?.username || sub.metadata?.recipientUsername || null,
         startDate: sub.startDate,
         canceledAt: sub.canceledAt,
         endDate: sub.endDate,
@@ -92,13 +101,25 @@ const SubscriptionMgt = () => {
     if (!window.confirm(confirmMessage)) {
       return;
     }
+  };
+
+  const handleCancelSubscription = async (subscription) => {
+    // open confirm modal for this subscription
+    setSelectedToCancel(subscription);
+    setConfirmOpen(true);
+  };
+
+  const confirmCancel = async () => {
+    const subscription = selectedToCancel;
+    if (!subscription) return;
 
     try {
       setCancelingId(subscription.id);
-      
+      setConfirmOpen(false);
+
       // Call the cancel API with database subscription ID
       const response = await cancelSubscription(subscription.id);
-      
+
       // Update local state with the response data
       if (response.data?.subscription) {
         setSubscriptions(prev => 
@@ -116,12 +137,14 @@ const SubscriptionMgt = () => {
           )
         );
       }
-      
+
       toast.success(response.message || 'Subscription will be canceled at the end of the current billing period');
     } catch (error) {
       toast.error('Failed to cancel subscription. Please try again.');
     } finally {
       setCancelingId(null);
+      setSelectedToCancel(null);
+      setConfirmOpen(false);
     }
   };
 
