@@ -14,9 +14,13 @@ const MessageItem = ({
   deletingMessage,
   reactionPickerRef,
   commonEmojis,
-  handleToggleReaction
+  handleToggleReaction,
+  chatMode = 'direct',
 }) => {
-  const isOutgoing = message.sender._id === user._id;
+  const isGroup = chatMode === 'group';
+  const sender = message.sender || {};
+  const senderId = sender._id;
+  const isOutgoing = senderId === user._id;
   const messageReactions = message.reactions || [];
   const isDeleted = message.isDeletedForEveryone;
   
@@ -43,8 +47,8 @@ const MessageItem = ({
     >
       {!isOutgoing && (
         <img
-          src={message.sender.profilePicture || "https://i.pravatar.cc/150?img=12"}
-          alt={`${message.sender.firstname} ${message.sender.lastname}`}
+          src={sender.profilePicture || "https://i.pravatar.cc/150?img=12"}
+          alt={`${sender.firstname || 'User'} ${sender.lastname || ''}`.trim()}
           className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
         />
       )}
@@ -100,6 +104,11 @@ const MessageItem = ({
       )}
       
       <div className="flex flex-col space-y-1 max-w-md relative">
+        {isGroup && !isOutgoing && !isDeleted && (
+          <p className="text-[10px] text-gray-500 px-1">
+            {`${sender.firstname || 'User'} ${sender.lastname || ''}`.trim()}
+          </p>
+        )}
         <div className="relative">
           <div
             className={`px-4 py-2.5 rounded-2xl ${
@@ -122,7 +131,7 @@ const MessageItem = ({
                     <p className={`text-[10px] font-medium mb-0.5 ${
                       isOutgoing ? 'text-white/80' : 'text-gray-600'
                     }`}>
-                      {message.replyTo.sender._id === user._id ? 'You' : `${message.replyTo.sender.firstname} ${message.replyTo.sender.lastname}`}
+                      {message.replyTo.sender?._id === user._id ? 'You' : `${message.replyTo.sender?.firstname || 'User'} ${message.replyTo.sender?.lastname || ''}`.trim()}
                     </p>
                     <p className={`text-[11px] line-clamp-2 ${
                       isOutgoing ? 'text-white/70' : 'text-gray-500'

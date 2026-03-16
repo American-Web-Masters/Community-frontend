@@ -21,6 +21,7 @@ const MessageList = ({
   loadMoreMessages,
   hasMoreMessages,
   loadingMore,
+  chatMode = 'direct',
 }) => {
   // Sentinel div at the visual top — IntersectionObserver watches it to trigger pagination
   const sentinelRef = useRef(null);
@@ -56,7 +57,9 @@ const MessageList = ({
   if (!activeChat) {
     return (
       <div className="flex-1 overflow-y-auto thin-scrollbar flex items-center justify-center">
-        <span className="text-gray-500">Select a user to view messages</span>
+        <span className="text-gray-500">
+          {chatMode === 'group' ? 'Select a community to view messages' : 'Select a user to view messages'}
+        </span>
       </div>
     );
   }
@@ -75,12 +78,12 @@ const MessageList = ({
     >
       {/* ── VISUAL BOTTOM ─────────────────────────────────────────────────── */}
 
-      {isTyping && <TypingIndicator activeChat={activeChat} />}
+      {isTyping && <TypingIndicator activeChat={activeChat} chatMode={chatMode} />}
 
       {/* Empty state */}
       {messages.length === 0 && !loadingMore && (
         <p className="text-center text-gray-500 py-4">
-          No messages yet. Start the conversation!
+          {chatMode === 'group' ? 'No group messages yet. Say hello!' : 'No messages yet. Start the conversation!'}
         </p>
       )}
 
@@ -100,6 +103,7 @@ const MessageList = ({
           reactionPickerRef={reactionPickerRef}
           commonEmojis={commonEmojis}
           handleToggleReaction={handleToggleReaction}
+          chatMode={chatMode}
         />
       ))}
 
@@ -116,7 +120,9 @@ const MessageList = ({
 
       {!hasMoreMessages && messages.length > 0 && (
         <div className="flex justify-center py-2">
-          <span className="text-xs text-gray-400">Beginning of conversation</span>
+          <span className="text-xs text-gray-400">
+            {chatMode === 'group' ? 'Beginning of group conversation' : 'Beginning of conversation'}
+          </span>
         </div>
       )}
 

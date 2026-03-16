@@ -1,13 +1,34 @@
 import { IoChevronBack, IoEllipsisVertical } from 'react-icons/io5';
 
-const ChatHeader = ({ activeChat, onlineUsers, isConnected, onBackClick }) => {
+const ChatHeader = ({
+  activeChat,
+  onlineUsers,
+  isConnected,
+  onBackClick,
+  chatMode = 'direct',
+  onlineGroupMemberIds = new Set(),
+}) => {
   if (!activeChat) {
     return (
       <div className="bg-white/50 backdrop-blur-sm border-b border-white/50 px-5 py-3 flex-shrink-0">
-        <div className="text-center text-gray-500">Select a user to start messaging</div>
+        <div className="text-center text-gray-500">
+          {chatMode === 'group' ? 'Select a community to start messaging' : 'Select a user to start messaging'}
+        </div>
       </div>
     );
   }
+
+  const isGroup = chatMode === 'group';
+  const avatar = isGroup
+    ? (activeChat.coverPhoto || activeChat.profilePicture || 'https://i.pravatar.cc/150?img=32')
+    : (activeChat.profilePicture || 'https://i.pravatar.cc/150?img=12');
+  const title = isGroup
+    ? activeChat.name
+    : `${activeChat.firstname} ${activeChat.lastname}`;
+  const subtitle = isGroup
+    ? `${onlineGroupMemberIds.size} online`
+    : `@${activeChat.username}`;
+  const isUserOnline = !isGroup && onlineUsers.has(activeChat._id);
 
   return (
     <div className="bg-white/50 backdrop-blur-sm border-b border-white/50 px-5 py-3 flex-shrink-0">
@@ -22,25 +43,25 @@ const ChatHeader = ({ activeChat, onlineUsers, isConnected, onBackClick }) => {
           </button>
           <div className="relative">
             <img
-              src={activeChat.profilePicture || "https://i.pravatar.cc/150?img=12"}
-              alt={`${activeChat.firstname} ${activeChat.lastname}`}
+              src={avatar}
+              alt={title}
               className="w-11 h-11 rounded-full"
             />
-            {onlineUsers.has(activeChat._id) && (
+            {isUserOnline && (
               <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
             )}
           </div>
           <div>
             <h2 className="text-sm font-semibold text-gray-900">
-              {activeChat.firstname} {activeChat.lastname}
+              {title}
             </h2>
             <p className="text-[11px] text-gray-500">
-              @{activeChat.username}
-              {onlineUsers.has(activeChat._id) ? (
+              {subtitle}
+              {!isGroup && (isUserOnline ? (
                 <span className="text-green-500 ml-2">● Online</span>
               ) : (
                 <span className="text-gray-400 ml-2">● Offline</span>
-              )}
+              ))}
             </p>
           </div>
         </div>

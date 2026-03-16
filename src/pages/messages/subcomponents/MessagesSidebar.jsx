@@ -7,6 +7,8 @@ import CommunityCard from '../../communities/subcomponents/CommunityCard';
 const MessagesSidebar = ({
   isSidebarOpen,
   activeChat,
+  chatMode,
+  setChatMode,
   searchQuery,
   setSearchQuery,
   searchDebounceRef,
@@ -22,14 +24,28 @@ const MessagesSidebar = ({
   onlineUsers,
   handlePinUser,
   pinningUserId,
+  groupConversations,
+  loadingGroupConversations,
+  groupOnlineMemberCountMap,
   loadingCommunities,
   discoverCommunities
 }) => {
   const navigate = useNavigate();
+  const isGroupMode = chatMode === 'group';
 
   const filteredUsers = users.filter(u => {
     const q = debouncedSearch.toLowerCase();
     return !q || `${u.firstname} ${u.lastname}`.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
+  });
+
+  const filteredGroupConversations = groupConversations.filter((community) => {
+    const q = debouncedSearch.toLowerCase();
+    const matchesSearch = !q || community.name?.toLowerCase().includes(q);
+    if (!matchesSearch) return false;
+    if (activeTab === 'Unread') {
+      return (community.unreadCount || 0) > 0;
+    }
+    return true;
   });
 
   return (
@@ -83,17 +99,49 @@ const MessagesSidebar = ({
           ))}
         </div>
 
+        {/* Chat Mode Selector */}
+        <div className="flex items-center gap-2 mb-3">
+          <button
+            onClick={() => setChatMode('direct')}
+            className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 ${
+              !isGroupMode
+                ? 'btn-blue-gradient text-white shadow-sm'
+                : 'bg-white/70 text-gray-700 hover:bg-white/90'
+            }`}
+          >
+            Direct
+          </button>
+          <button
+            onClick={() => setChatMode('group')}
+            className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 ${
+              isGroupMode
+                ? 'btn-blue-gradient text-white shadow-sm'
+                : 'bg-white/70 text-gray-700 hover:bg-white/90'
+            }`}
+          >
+            Group
+          </button>
+        </div>
+
         {/* Chats Container */}
         <div className="w-full sm:w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm" style={{ maxHeight: '48%' }}>
           <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Chats</h3>
-            {loading ? (
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">
+              {isGroupMode ? 'Group Chats' : 'Chats'}
+            </h3>
+            {!isGroupMode && loading ? (
               <div className="text-center py-4 text-gray-500">Loading...</div>
-            ) : filteredUsers.length === 0 ? (
+            ) : !isGroupMode && filteredUsers.length === 0 ? (
               <div className="text-center py-4 text-gray-500 text-xs">{debouncedSearch ? 'No users found' : 'No users available'}</div>
+            ) : isGroupMode && loadingGroupConversations ? (
+              <div className="text-center py-4 text-gray-500 text-xs">Loading...</div>
+            ) : isGroupMode && filteredGroupConversations.length === 0 ? (
+              <div className="text-center py-4 text-gray-500 text-xs">
+                {debouncedSearch ? 'No communities found' : 'No joined communities yet'}
+              </div>
             ) : (
               <div className="space-y-1">
-                {sortUsers(filteredUsers).map((chat) => {
+                {!isGroupMode && sortUsers(filteredUsers).map((chat) => {
                   const isPinned = pinnedUserIds.has(chat._id);
                   return (
                     <div
@@ -153,41 +201,89 @@ const MessagesSidebar = ({
                     </div>
                   );
                 })}
+
+                {isGroupMode && filteredGroupConversations.map((community) => {
+                  const communityId = community._id || community.communityId;
+                  const unreadCount = community.unreadCount || 0;
+                  const onlineCount = groupOnlineMemberCountMap[communityId] || 0;
+
+                  return (
+                    <div
+                      key={communityId}
+                      onClick={() => setActiveChat(community)}
+                      className={`flex items-start space-x-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 group relative ${
+                        activeChat?._id === communityId
+                          ? 'bg-white shadow-sm'
+                          : 'hover:bg-white/50'
+                      }`}
+                    >
+                      <div className="relative">
+                        <img
+                          src={community.coverPhoto || community.profilePicture || 'https://i.pravatar.cc/150?img=32'}
+                          alt={community.name}
+                          className="w-10 h-10 rounded-full flex-shrink-0"
+                        />
+                        {onlineCount > 0 && (
+                          <div className="absolute -bottom-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-green-500 border-2 border-white text-[9px] text-white flex items-center justify-center">
+                            {onlineCount > 9 ? '9+' : onlineCount}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-0.5 gap-2">
+                          <h4 className="text-sm font-semibold text-gray-900 truncate">
+                            {community.name}
+                          </h4>
+                          {unreadCount > 0 && (
+                            <span className="inline-flex min-w-5 h-5 px-1.5 rounded-full bg-blue-600 text-white text-[10px] items-center justify-center">
+                              {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 truncate leading-tight">
+                          {community.lastMessage?.content || 'Start the conversation'}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
         </div>
 
         {/* Discover Communities Container */}
-        <div className="w-full sm:w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm mt-3" style={{ maxHeight: '48%' }}>
-          <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Discover</h3>
-            {loadingCommunities ? (
-              <div className="text-center py-4 text-gray-500 text-xs">Loading...</div>
-            ) : discoverCommunities.length === 0 ? (
-              <div className="text-center py-4 text-gray-500 text-xs">No communities to discover</div>
-            ) : (
-              <div className="space-y-3">
-                {discoverCommunities.map((community) => (
-                  <CommunityCard
-                    key={community._id || community.id}
-                    id={community._id || community.id}
-                    name={community.name}
-                    wallAssociation={community.wallAssociation}
-                    category={community.tags || []}
-                    members={community.memberCount}
-                    avatar={community.coverPhoto}
-                    privacyLevel={community.privacyLevel}
-                    status={community.privacyLevel === 'private' ? 'Private' : 'Public'}
-                    isJoined={false}
-                    onJoinClick={() => navigate('/communities')}
-                    onViewClick={() => navigate('/communities')}
-                  />
-                ))}
-              </div>
-            )}
+        {!isGroupMode && (
+          <div className="w-full sm:w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm mt-3" style={{ maxHeight: '48%' }}>
+            <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">Discover</h3>
+              {loadingCommunities ? (
+                <div className="text-center py-4 text-gray-500 text-xs">Loading...</div>
+              ) : discoverCommunities.length === 0 ? (
+                <div className="text-center py-4 text-gray-500 text-xs">No communities to discover</div>
+              ) : (
+                <div className="space-y-3">
+                  {discoverCommunities.map((community) => (
+                    <CommunityCard
+                      key={community._id || community.id}
+                      id={community._id || community.id}
+                      name={community.name}
+                      wallAssociation={community.wallAssociation}
+                      category={community.tags || []}
+                      members={community.memberCount}
+                      avatar={community.coverPhoto}
+                      privacyLevel={community.privacyLevel}
+                      status={community.privacyLevel === 'private' ? 'Private' : 'Public'}
+                      isJoined={false}
+                      onJoinClick={() => navigate('/communities')}
+                      onViewClick={() => navigate('/communities')}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </>
   );

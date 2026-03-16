@@ -1,9 +1,15 @@
-const TypingIndicator = ({ activeChat }) => {
+const TypingIndicator = ({ activeChat, chatMode = 'direct' }) => {
+  const isGroup = chatMode === 'group';
+  const avatar = isGroup
+    ? (activeChat.coverPhoto || activeChat.profilePicture || 'https://i.pravatar.cc/150?img=32')
+    : (activeChat.profilePicture || 'https://i.pravatar.cc/150?img=12');
+  const title = isGroup ? activeChat.name : `${activeChat.firstname} ${activeChat.lastname}`;
+
   return (
     <div className="flex items-start gap-3 justify-start">
       <img
-        src={activeChat.profilePicture || "https://i.pravatar.cc/150?img=12"}
-        alt={`${activeChat.firstname} ${activeChat.lastname}`}
+        src={avatar}
+        alt={title}
         className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
       />
       <div className="bg-white/80 px-4 py-3 rounded-2xl shadow-sm">
