@@ -5,6 +5,7 @@ import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
 import { useLogout } from "../../hooks/useLogout";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import Header from "../../components/ui/Header";
+import CreateCommunityModal from "../../components/ui/CreateCommunityModal";
 import { getUserProfile } from "../../api";
 import { ProfileHeader, Posts, Communities, Testimony, Journal, SubscriptionMgt } from "./subcomponents";
 
@@ -16,8 +17,10 @@ const Profile = () => {
   const { logout } = useLogout();
   const [activeTab, setActiveTab] = useState("Posts");
   const postsRef = useRef(null);
+  const communitiesRef = useRef(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isCreateCommunityModalOpen, setIsCreateCommunityModalOpen] = useState(false);
 
   // Fetch user profile data
   useEffect(() => {
@@ -81,7 +84,7 @@ const Profile = () => {
       name: "Communities", 
       component: Communities,
       buttonText: "Create Community",
-      buttonAction: () => console.log('Create Community') // Add your logic here
+  buttonAction: () => setIsCreateCommunityModalOpen(true)
     },
     { 
       name: "Testimonies", 
@@ -233,11 +236,22 @@ const Profile = () => {
           {activeTab === "Posts" ? (
             <Posts ref={postsRef} userProfile={userProfile} />
           ) : activeTab === "Communities" ? (
-            <Communities userProfile={userProfile} />
+            <Communities ref={communitiesRef} userProfile={userProfile} />
           ) : (
             <ActiveComponent />
           )}
         </div>
+
+        {/* Create Community Modal (reuses same component as Communities page) */}
+        <CreateCommunityModal
+          isOpen={isCreateCommunityModalOpen}
+          onClose={() => setIsCreateCommunityModalOpen(false)}
+          onSuccess={() => {
+            // Close modal then refresh profile communities list if available
+            setIsCreateCommunityModalOpen(false);
+            communitiesRef.current?.refresh?.();
+          }}
+        />
 
         {/* Logout Button - Fixed at bottom of content */}
         <div className="max-w-6xl mx-auto px-6 mt-8">

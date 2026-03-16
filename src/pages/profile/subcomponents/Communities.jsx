@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../../../api/client";
 
-const Communities = ({ userProfile }) => {
+const Communities = forwardRef(({ userProfile }, ref) => {
   const navigate = useNavigate();
   const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All"); // 'All', 'My Communities', 'Joined Communities'
 
   console.log(userProfile);
-  useEffect(() => {
-    const fetchUserCommunities = async () => {
+  const fetchUserCommunities = async () => {
       if (!userProfile?.user?._id) return;
 
       try {
@@ -28,10 +27,16 @@ const Communities = ({ userProfile }) => {
       } finally {
         setLoading(false);
       }
-    };
+  };
 
+  useImperativeHandle(ref, () => ({
+    refresh: fetchUserCommunities,
+  }));
+
+  useEffect(() => {
     fetchUserCommunities();
-  }, [userProfile?._id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userProfile?.user?._id]);
 
   const filteredCommunities = communities.filter((community) => {
     if (filter === "All") return true;
@@ -135,11 +140,11 @@ const Communities = ({ userProfile }) => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
           {filteredCommunities.map((community) => (
             <div
               key={community._id}
-              className="bg-[#f0f7ff] rounded-3xl p-5 transition-all duration-300 hover:shadow-md border border-blue-50/50 flex flex-col h-full"
+              className="bg-[#f0f7ff] rounded-3xl p-4 transition-all duration-300 hover:shadow-md border border-blue-50/50 flex flex-col h-full"
             >
               {/* Card Header */}
               <div className="flex items-start justify-between mb-1">
@@ -233,6 +238,6 @@ const Communities = ({ userProfile }) => {
       )}
     </div>
   );
-};
+});
 
 export default Communities;
