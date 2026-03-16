@@ -125,7 +125,7 @@ const Profile = () => {
         {/* Tabs Navigation */}
         <div className="mt-6 w-full md:w-4/6 mx-auto">
           {/* Header with tabs and create button */}
-          <div className="mb-6 px-4 lg:px-0">
+          <div className="mb-6 px-4 md:px-0">
             {/* Large Desktop (>=lg) - tabs and button on same line */}
             <div className="hidden lg:flex lg:items-center lg:justify-between lg:gap-4">
               {/* Tab Navigation */}
@@ -167,7 +167,7 @@ const Profile = () => {
                     <button
                       key={tab.name}
                       onClick={() => setActiveTab(tab.name)}
-                      className={`flex-1 py-2.5 px-3 rounded-full cursor-pointer text-xs sm:text-sm font-medium transition-all duration-200 text-center ${
+                      className={`flex-1 py-2.5 px-4 rounded-full cursor-pointer text-sm sm:text-sm font-medium transition-all duration-200 text-center ${
                         activeTab === tab.name
                           ? "btn-blue-gradient text-white shadow-lg"
                           : "text-gray-700 hover:bg-white/30"
@@ -202,7 +202,7 @@ const Profile = () => {
                   <button
                     key={tab.name}
                     onClick={() => setActiveTab(tab.name)}
-                    className={`flex-1 py-2.5 px-2 rounded-full cursor-pointer text-xs font-medium transition-all duration-200 text-center ${
+                    className={`flex-1 py-2.5 px-4 rounded-full cursor-pointer text-sm font-medium transition-all duration-200 text-center ${
                       activeTab === tab.name
                         ? "btn-blue-gradient text-white shadow-lg"
                         : "text-gray-700 hover:bg-white/30"
