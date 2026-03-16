@@ -41,3 +41,45 @@ export const formatTimeAgo = (date) => {
       userId: typeof comment.user === 'object' ? comment.user?._id : comment.userId
     }));
   };
+
+  export const formatTimelineDate = (isoDate) => {
+    const d = new Date(isoDate);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  export const formatRelativeTime = (isoDate) => {
+    const date = new Date(isoDate);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+    if (Number.isNaN(diffDays)) return '';
+    if (diffDays <= 0) return 'TODAY';
+    if (diffDays === 1) return '1 DAY AGO';
+    if (diffDays < 7) return `${diffDays} DAYS AGO`;
+    const weeks = Math.floor(diffDays / 7);
+    if (weeks === 1) return '1 WEEK AGO';
+    if (weeks < 5) return `${weeks} WEEKS AGO`;
+    const months = Math.floor(diffDays / 30);
+    if (months === 1) return '1 MONTH AGO';
+    return `${months} MONTHS AGO`;
+  };
+  
+  export const getInitials = (name = '') => {
+    const cleaned = String(name).trim();
+    if (!cleaned) return '?';
+    const parts = cleaned.split(/\s+/).slice(0, 2);
+    return parts.map((p) => p[0]?.toUpperCase()).join('') || '?';
+  };
+  
+  export const clampText = (text, maxChars) => {
+    const t = String(text ?? '').trim();
+    if (!t) return '';
+    if (t.length <= maxChars) return t;
+    return `${t.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
+  };
