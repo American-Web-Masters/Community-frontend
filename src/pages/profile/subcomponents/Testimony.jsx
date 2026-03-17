@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clampText, formatRelativeTime, formatTimelineDate, getInitials} from '../../../utils/profileUtils';
+import { getTestimonyByUser } from '../../../api';
 
 
 
-const Testimony = () => {
+const Testimony = ({ userProfile }) => {
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState(null);
   const [activeId, setActiveId] = useState(null);
@@ -14,6 +15,9 @@ const Testimony = () => {
   const [spineFill, setSpineFill] = useState(0);
   const expandRefs = useRef({});
   const [expandHeights, setExpandHeights] = useState({});
+  const [testimonies, setTestimonies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const TagPill = ({ label }) => (
     <span className="inline-flex items-center rounded-full border border-[color:var(--color-primary-100)] bg-gray-200 px-3 py-1 text-[11px] font-semibold tracking-wide text-gray-600">
@@ -42,54 +46,58 @@ const Testimony = () => {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  // Mock data (random-ish) - replace with API later
-  const testimonies = useMemo(
-    () => [
-      {
-        id: 't1',
-        authorName: 'Sarah Jenkins',
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        excerpt:
-          "After years of struggling with anxiety and feeling distant from God, a single moment of surrender changed everything for me…",
-        description:
-          "After years of struggling with anxiety and feeling distant from God, a single moment of surrender changed everything for me.\n\nI was sitting in my car in a parking lot, overwhelmed by life, when I simply said, ‘God, I can't do this alone anymore.’ What followed was a peace I had never experienced. It wasn't that my circumstances changed overnight, but my perspective shifted entirely.\n\nI started seeing His hand in the small things—a friend's call at just the right time, a verse that spoke directly to my situation. Over the past year, I've learned that faith isn't about having all the answers; it's about trusting the One who does.",
-        verse: {
-          quote: 'He leads me beside quiet waters, he refreshes my soul.',
-          reference: 'Psalm 23:2–3',
-        },
-        tags: ['Restoration', 'Peace', 'Surrender'],
-      },
-      {
-        id: 't2',
-        authorName: 'Marcus Rivera',
-        createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-        excerpt:
-          'My marriage was falling apart. We were two strangers living under the same roof, until we decided to let God into our brokenness…',
-        description:
-          "My marriage was falling apart. We were two strangers living under the same roof, carrying years of disappointment and unspoken resentment.\n\nOne night, instead of arguing, we prayed—awkwardly at first—asking God to soften our hearts. It didn't fix everything instantly, but it gave us a starting point.\n\nWe began choosing humility over pride, listening instead of defending, and seeking counsel. The biggest miracle wasn't a dramatic moment—it was the daily grace to try again, and the steady rebuilding of trust.",
-        verse: {
-          quote: 'Love is patient, love is kind.',
-          reference: '1 Corinthians 13:4',
-        },
-        tags: ['Marriage', 'Healing', 'Grace'],
-      },
-      {
-        id: 't3',
-        authorName: 'Amina Patel',
-        createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
-        excerpt:
-          "I was exhausted trying to prove myself to everyone. Learning to rest in God's acceptance changed how I see my worth…",
-        description:
-          "I was exhausted trying to prove myself to everyone—work, family, even church. I thought being 'enough' meant never slowing down.\n\nDuring a season of burnout, I started reading the Gospels again and noticed how often Jesus withdrew to rest and pray. It hit me: I was treating rest like a reward, not a rhythm.\n\nAs I learned to sit with God without performing, my anxiety eased. I still work hard, but from peace instead of pressure. My identity isn’t my productivity—it's being loved.",
-        verse: {
-          quote: 'Come to me, all you who are weary and burdened, and I will give you rest.',
-          reference: 'Matthew 11:28',
-        },
-        tags: ['Rest', 'Identity', 'Burnout'],
-      },
-    ],
-    []
-  );
+  const userId = userProfile?.user?._id
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchTestimonies = async () => {
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await getTestimonyByUser(userId);
+        console.log(res)
+        const items = res?.data?.testimonies || [];
+
+        const mapped = items.map((t) => {
+          const first = t?.author?.firstname || '';
+          const last = t?.author?.lastname || '';
+          const full = `${first} ${last}`.trim() || t?.author?.username || 'User';
+          const username = t?.author?.username ? `@${t.author.username}` : null;
+          const description = t?.description || '';
+          return {
+            id: t?._id,
+            authorName: full,
+            authorUsername: username,
+            createdAt: t?.createdAt,
+            excerpt: description,
+            description,
+            verse: t?.verse,
+            tags: Array.isArray(t?.tags) ? t.tags : [],
+          };
+        });
+
+        if (mounted) setTestimonies(mapped);
+      } catch (e) {
+        if (mounted) {
+          setError('Failed to load testimonies.');
+          setTestimonies([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchTestimonies();
+    return () => {
+      mounted = false;
+    };
+  }, [userId]);
 
   // Scroll interaction: highlight the timeline dot/line for the testimony currently in view.
   useEffect(() => {
@@ -193,7 +201,16 @@ const Testimony = () => {
 
   return (
     <div className="pr-2 md:p-0">
-      {testimonies.length === 0 ? (
+      {loading ? (
+        <div className="py-16 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[color:var(--color-primary-600)]"></div>
+        </div>
+      ) : error ? (
+        <div className="text-center py-16">
+          <h3 className="text-xl font-semibold text-gray-900 mb-3">Couldn't load testmonies</h3>
+          <p className="text-gray-600 mb-8 max-w-md mx-auto">{error}</p>
+        </div>
+      ) : testimonies.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
             <span className="text-3xl">✨</span>
@@ -296,6 +313,11 @@ const Testimony = () => {
                           <p className="text-sm font-semibold text-gray-900">
                             {testimony.authorName}
                           </p>
+                          {testimony.authorUsername ? (
+                            <p className="text-xs font-semibold text-gray-500 mt-0.5">
+                              {testimony.authorUsername}
+                            </p>
+                          ) : null}
                         </div>
                       </div>
 

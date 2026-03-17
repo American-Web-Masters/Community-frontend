@@ -131,6 +131,31 @@ export const createUserPaymentIntent = async (amount, recipientUserId, personalM
   }
 };
 
+// export const createTestimony = async(description, verse, tags)=>{
+//   try {
+//     const response = await apiClient.post('/testimonies', {
+//       description,
+//       verse,
+//       tags,
+//     });
+//     return response.data;
+//   } catch (error) {
+//     console.error('Error creating testimony:', error);
+//     throw error;
+//   }
+// }
+
+export const getTestimonyByUser = async(userId)=>{
+  try{
+    const response = await apiClient.get(`/testimonies/user/${userId}`);
+    return response.data;
+  }
+  catch(error){
+    console.error('Error getting testimonies by user:', error);
+    throw error;
+  }
+}
+
 export default {
   getUserProfile,
   updateUserProfile,
@@ -138,4 +163,6 @@ export default {
   getUserStripeAccountStatus,
   connectUserStripe,
   createUserPaymentIntent,
+  // createTestimony,
+  getTestimonyByUser
 };

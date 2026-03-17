@@ -237,6 +237,8 @@ const Profile = () => {
             <Posts ref={postsRef} userProfile={userProfile} />
           ) : activeTab === "Communities" ? (
             <Communities ref={communitiesRef} userProfile={userProfile} />
+          ) : activeTab === "Testimonies" ? (
+            <Testimony userProfile={userProfile} />
           ) : (
             <ActiveComponent />
           )}
