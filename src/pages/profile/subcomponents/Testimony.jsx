@@ -1,14 +1,16 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clampText, formatRelativeTime, formatTimelineDate, getInitials} from '../../../utils/profileUtils';
 import { getTestimonyByUser } from '../../../api';
+import CreateTestimonyModal from '../../../components/ui/CreateTestimonyModal';
 
 
 
-const Testimony = ({ userProfile }) => {
+const Testimony = forwardRef(({ userProfile }, ref) => {
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState(null);
   const [activeId, setActiveId] = useState(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const itemRefs = useRef({});
   const listRef = useRef(null);
   const spineRef = useRef(null);
@@ -18,6 +20,12 @@ const Testimony = ({ userProfile }) => {
   const [testimonies, setTestimonies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Expose modal open to parent (Profile tab button)
+  useImperativeHandle(ref, () => ({
+    openCreateModal: () => setIsCreateOpen(true),
+  }));
 
   const TagPill = ({ label }) => (
     <span className="inline-flex items-center rounded-full border border-[color:var(--color-primary-100)] bg-gray-200 px-3 py-1 text-[11px] font-semibold tracking-wide text-gray-600">
@@ -75,7 +83,6 @@ const Testimony = ({ userProfile }) => {
             authorName: full,
             authorUsername: username,
             createdAt: t?.createdAt,
-            excerpt: description,
             description,
             verse: t?.verse,
             tags: Array.isArray(t?.tags) ? t.tags : [],
@@ -97,7 +104,7 @@ const Testimony = ({ userProfile }) => {
     return () => {
       mounted = false;
     };
-  }, [userId]);
+  }, [userId, refreshKey]);
 
   // Scroll interaction: highlight the timeline dot/line for the testimony currently in view.
   useEffect(() => {
@@ -201,6 +208,14 @@ const Testimony = ({ userProfile }) => {
 
   return (
     <div className="pr-2 md:p-0">
+      <CreateTestimonyModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onSuccess={() => {
+          setIsCreateOpen(false);
+          setRefreshKey((k) => k + 1);
+        }}
+      />
       {loading ? (
         <div className="py-16 flex items-center justify-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[color:var(--color-primary-600)]"></div>
@@ -220,7 +235,7 @@ const Testimony = ({ userProfile }) => {
             You haven't shared any testimonies yet. Share your faith journey and inspire others with your experiences.
           </p>
           <button
-            onClick={() => navigate('/create')}
+            onClick={() => setIsCreateOpen(true)}
             className="btn-blue-gradient px-8 py-4 text-white rounded-xl hover:opacity-90 transition-opacity font-medium"
           >
             Share Your Testimony
@@ -290,7 +305,7 @@ const Testimony = ({ userProfile }) => {
 
                   <div
                     className={
-                      "rounded-2xl bg-white shadow-sm border px-6 py-5 transition-[border-color,box-shadow,transform] duration-500 " +
+                      "rounded-2xl bg-[#fffffff6] shadow-sm border px-6 py-5 transition-[border-color,box-shadow,transform] duration-500 " +
                       (isActive
                         ? "border-[color:var(--color-primary-200)] shadow-md"
                         : "border-gray-200")
@@ -335,7 +350,7 @@ const Testimony = ({ userProfile }) => {
                       <p className="text-[15px] leading-7 text-gray-600 whitespace-pre-line">
                         {isExpanded
                           ? testimony.description
-                          : clampText(testimony.excerpt || testimony.description, 140)}
+                          : clampText(testimony.description, 140)}
                       </p>
                     </div>
 
@@ -392,6 +407,6 @@ const Testimony = ({ userProfile }) => {
       )}
     </div>
   );
-};
+});
 
 export default Testimony;

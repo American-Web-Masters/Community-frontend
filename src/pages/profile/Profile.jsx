@@ -18,6 +18,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState("Posts");
   const postsRef = useRef(null);
   const communitiesRef = useRef(null);
+  const testimonyRef = useRef(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isCreateCommunityModalOpen, setIsCreateCommunityModalOpen] = useState(false);
@@ -90,7 +91,11 @@ const Profile = () => {
       name: "Testimonies", 
       component: Testimony,
       buttonText: "Share Your Story",
-      buttonAction: () => console.log('Share Story') // Add your logic here
+      buttonAction: () => {
+        if (testimonyRef.current?.openCreateModal) {
+          testimonyRef.current.openCreateModal();
+        }
+      }
     },
     { 
       name: "Journal", 
@@ -238,7 +243,7 @@ const Profile = () => {
           ) : activeTab === "Communities" ? (
             <Communities ref={communitiesRef} userProfile={userProfile} />
           ) : activeTab === "Testimonies" ? (
-            <Testimony userProfile={userProfile} />
+            <Testimony ref={testimonyRef} userProfile={userProfile} />
           ) : (
             <ActiveComponent />
           )}
