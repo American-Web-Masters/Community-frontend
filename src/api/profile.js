@@ -156,6 +156,17 @@ export const getTestimonyByUser = async(userId)=>{
   }
 }
 
+export const getTestimonyById = async (testimonyId) => {
+  try {
+    const response = await apiClient.get(`/testimonies/${testimonyId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting testimony by id:', error);
+    throw error;
+  }
+};
+
+
 export default {
   getUserProfile,
   updateUserProfile,
@@ -164,5 +175,6 @@ export default {
   connectUserStripe,
   createUserPaymentIntent,
   createTestimony,
-  getTestimonyByUser
+  getTestimonyByUser,
+  getTestimonyById,
 };
