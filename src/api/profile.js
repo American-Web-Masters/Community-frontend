@@ -166,6 +166,20 @@ export const getTestimonyById = async (testimonyId) => {
   }
 };
 
+export const updateTestimony = async (testimonyId, { description, verse, tags }) => {
+  try {
+    const response = await apiClient.patch(`/testimonies/${testimonyId}`, {
+      description,
+      verse,
+      tags,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating testimony:', error);
+    throw error;
+  }
+};
+
 
 export default {
   getUserProfile,
@@ -177,4 +191,5 @@ export default {
   createTestimony,
   getTestimonyByUser,
   getTestimonyById,
+  updateTestimony
 };
