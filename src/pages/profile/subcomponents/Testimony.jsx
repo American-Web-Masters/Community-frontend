@@ -1,16 +1,23 @@
-import React, { useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { clampText, formatRelativeTime, formatTimelineDate, getInitials} from '../../../utils/profileUtils';
-import { getTestimonyByUser } from '../../../api';
+import { deleteTestimony, getTestimonyById, getTestimonyByUser } from '../../../api';
 import CreateTestimonyModal from '../../../components/ui/CreateTestimonyModal';
+import { FaEdit, FaTrash } from 'react-icons/fa';
+import ConfirmModal from './ConfirmModal';
 
 
 
 const Testimony = forwardRef(({ userProfile }, ref) => {
-  const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState(null);
   const [activeId, setActiveId] = useState(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [editInitialData, setEditInitialData] = useState(null);
   const itemRefs = useRef({});
   const listRef = useRef(null);
   const spineRef = useRef(null);
@@ -54,57 +61,99 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const userId = userProfile?.user?._id
+  const userId = userProfile?.user?._id;
 
-  useEffect(() => {
-    let mounted = true;
+  const mapTestimonies = useCallback((items) => {
+    const safeItems = Array.isArray(items) ? items : [];
+    return safeItems.map((t) => {
+      const first = t?.author?.firstname || '';
+      const last = t?.author?.lastname || '';
+      const full = `${first} ${last}`.trim() || t?.author?.username || 'User';
+      const username = t?.author?.username ? `@${t.author.username}` : null;
+      const description = t?.description || '';
+      return {
+        id: t?._id,
+        authorName: full,
+        authorUsername: username,
+        createdAt: t?.createdAt,
+        description,
+        verse: t?.verse,
+        tags: Array.isArray(t?.tags) ? t.tags : [],
+      };
+    });
+  }, []);
 
-    const fetchTestimonies = async () => {
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
+  const fetchTestimonies = useCallback(async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await getTestimonyByUser(userId);
+      const items = res?.data?.testimonies || [];
+      setTestimonies(mapTestimonies(items));
+    } catch (e) {
+      setError('Failed to load testimonies.');
+      setTestimonies([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [mapTestimonies, userId]);
+
+  const openEditModal = useCallback(
+    async (testimonyId) => {
+      if (!testimonyId) return;
+      setEditError('');
+      setEditLoading(true);
 
       try {
-        setLoading(true);
-        setError(null);
-        const res = await getTestimonyByUser(userId);
-        console.log(res)
-        const items = res?.data?.testimonies || [];
-
-        const mapped = items.map((t) => {
-          const first = t?.author?.firstname || '';
-          const last = t?.author?.lastname || '';
-          const full = `${first} ${last}`.trim() || t?.author?.username || 'User';
-          const username = t?.author?.username ? `@${t.author.username}` : null;
-          const description = t?.description || '';
-          return {
-            id: t?._id,
-            authorName: full,
-            authorUsername: username,
-            createdAt: t?.createdAt,
-            description,
-            verse: t?.verse,
-            tags: Array.isArray(t?.tags) ? t.tags : [],
-          };
-        });
-
-        if (mounted) setTestimonies(mapped);
-      } catch (e) {
-        if (mounted) {
-          setError('Failed to load testimonies.');
-          setTestimonies([]);
-        }
+        const res = await getTestimonyById(testimonyId);
+        const t = res?.data?.testimony;
+        if (!t?._id) throw new Error('Testimony not found.');
+        setEditInitialData({ ...t, id: t._id });
+        setIsEditOpen(true);
+      } catch (err) {
+        setEditError(err?.response?.data?.message || err?.message || 'Failed to load testimony.');
       } finally {
-        if (mounted) setLoading(false);
+        setEditLoading(false);
       }
-    };
+    },
+    []
+  );
 
-    fetchTestimonies();
-    return () => {
-      mounted = false;
-    };
-  }, [userId, refreshKey]);
+  const requestDelete = useCallback((testimonyId) => {
+    if (!testimonyId) return;
+    setEditError('');
+    setDeleteTargetId(testimonyId);
+    setIsDeleteOpen(true);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTargetId) return;
+    if (deleteLoading) return;
+
+    setEditError('');
+    setDeleteLoading(true);
+    try {
+      await deleteTestimony(deleteTargetId);
+      if (selectedId === deleteTargetId) setSelectedId(null);
+      setIsDeleteOpen(false);
+      setDeleteTargetId(null);
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      setEditError(err?.response?.data?.message || err?.message || 'Failed to delete testimony.');
+      // keep dialog open so user can retry/cancel
+    } finally {
+      setDeleteLoading(false);
+    }
+  }, [deleteLoading, deleteTargetId, selectedId]);
+
+  useEffect(() => {
+  fetchTestimonies();
+  }, [fetchTestimonies, userId, refreshKey]);
 
   // Scroll interaction: highlight the timeline dot/line for the testimony currently in view.
   useEffect(() => {
@@ -208,6 +257,20 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
 
   return (
     <div className="pr-2 md:p-0">
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        onClose={() => {
+          if (deleteLoading) return;
+          setIsDeleteOpen(false);
+          setDeleteTargetId(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Delete testimony?"
+        description="This action can't be undone."
+        confirmLabel={deleteLoading ? 'Deleting…' : 'Delete'}
+        cancelLabel="Cancel"
+      />
+
       <CreateTestimonyModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
@@ -216,6 +279,30 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
           setRefreshKey((k) => k + 1);
         }}
       />
+
+      <CreateTestimonyModal
+        isOpen={isEditOpen}
+        initialData={editInitialData}
+        onClose={() => {
+          if (editLoading) return;
+          setIsEditOpen(false);
+          setEditInitialData(null);
+          setEditError('');
+        }}
+        onSuccess={() => {
+          setIsEditOpen(false);
+          setEditInitialData(null);
+          setEditError('');
+          setRefreshKey((k) => k + 1);
+        }}
+      />
+
+      {editError ? (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {editError}
+        </div>
+      ) : null}
+
       {loading ? (
         <div className="py-16 flex items-center justify-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[color:var(--color-primary-600)]"></div>
@@ -336,14 +423,44 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
                         </div>
                       </div>
 
-                      {isExpanded ? (
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => setSelectedId(null)}
-                          className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditModal(testimony?.id);
+                          }}
+                          className="rounded-full border border-gray-200 p-2 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-60"
+                          aria-label="Edit testimony"
+                          title="Edit"
+                          disabled={editLoading}
                         >
-                          Close
+                          <FaEdit className="h-4 w-4" />
                         </button>
-                      ) : null}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            requestDelete(testimony?.id);
+                          }}
+                          className="rounded-full border border-gray-200 p-2 text-red-600 hover:bg-red-50 transition-colors"
+                          aria-label="Delete testimony"
+                          title="Delete"
+                          disabled={deleteLoading}
+                        >
+                          <FaTrash className="h-4 w-4" />
+                        </button>
+
+                        {isExpanded ? (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedId(null)}
+                            className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                          >
+                            Close
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
 
                     <div className="mt-4">
