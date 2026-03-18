@@ -13,7 +13,7 @@ in faith together through prayer, encouragement, and authentic community both on
 
 ## 🌍 **Vision**
 A global movement of connected walls where churches, ministries, and individuals build  
-communities that strengthen discipleship, share hope, and reflect the unity of Christ to the world.  
+communities that strengthen discipleship, share hope, and reflect the unity of Christ to the world  
 
 > **“Make every effort to keep the unity of the Spirit through the bond of peace.  
 > There is one body and one Spirit, just as you were called to one hope when you were called.”**  
