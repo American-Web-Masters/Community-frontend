@@ -4,7 +4,7 @@
 
 ## 🕊️ **Mission**
 To cultivate a safe and welcoming space where people can share, connect, and grow  
-in faith together through prayer, encouragement, and authentic community both online and in person.  
+in faith together through prayer, encouragement, and authentic community both online and in person
 
 > **“Therefore encourage one another and build one another up, just as you are doing.”**  
 > — *1 Thessalonians 5:11*
