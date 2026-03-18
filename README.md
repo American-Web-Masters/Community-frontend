@@ -24,7 +24,7 @@ communities that strengthen discipleship, share hope, and reflect the unity of C
 ## 💡 **Purpose**
 Ao1 Community exists to build up the body of Christ by removing barriers of competition, isolation,  
 and distance by using technology to empower fellowship, deepen discipleship, and make prayer and  
-encouragement accessible to all.  
+encouragement accessible to all
 
 > **“From him the whole body, joined and held together by every supporting ligament, grows and builds itself up in love,  
 > as each part does its work.”**  
