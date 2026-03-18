@@ -180,6 +180,15 @@ export const updateTestimony = async (testimonyId, { description, verse, tags })
   }
 };
 
+export const deleteTestimony = async (testimonyId) => {
+  try {
+    const response = await apiClient.delete(`/testimonies/${testimonyId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting testimony:', error);
+    throw error;
+  }
+};
 
 export default {
   getUserProfile,
@@ -191,5 +200,6 @@ export default {
   createTestimony,
   getTestimonyByUser,
   getTestimonyById,
-  updateTestimony
+  updateTestimony,
+  deleteTestimony
 };
