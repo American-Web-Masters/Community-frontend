@@ -127,6 +127,106 @@ export const getPinnedUsers = () => {
   return apiClient.get('/messages/pinned');
 };
 
+/**
+ * Send a message to a community group
+ * @param {string} communityId
+ * @param {{content: string, messageType?: string, replyTo?: string}} payload
+ */
+export const sendGroupMessage = (communityId, payload) => {
+  return apiClient.post(`/messages/groups/${communityId}/send`, payload);
+};
+
+/**
+ * Get paginated messages for a community group
+ * @param {string} communityId
+ * @param {{page?: number, limit?: number}} params
+ */
+export const getCommunityGroupMessages = (communityId, params = {}) => {
+  return apiClient.get(`/messages/groups/${communityId}/messages`, { params });
+};
+
+/**
+ * Get all group conversations the current user belongs to
+ */
+export const getMyGroupConversations = () => {
+  return apiClient.get('/messages/groups/conversations');
+};
+
+/**
+ * Mark specific group messages as read
+ * @param {{messageIds: string[]}} payload
+ */
+export const markSpecificGroupMessagesAsRead = (payload) => {
+  return apiClient.patch('/messages/groups/mark-read', payload);
+};
+
+/**
+ * Mark entire community group as read
+ * @param {string} communityId
+ */
+export const markCommunityGroupAsRead = (communityId) => {
+  return apiClient.patch(`/messages/groups/${communityId}/mark-read`);
+};
+
+/**
+ * Get group unread count
+ */
+export const getGroupUnreadCount = () => {
+  return apiClient.get('/messages/groups/unread-count');
+};
+
+/**
+ * Search group messages
+ * @param {{query: string, communityId?: string}} params
+ */
+export const searchGroupMessages = (params) => {
+  return apiClient.get('/messages/groups/search', { params });
+};
+
+/**
+ * Get online members in a community
+ * @param {string} communityId
+ */
+export const getCommunityOnlineMembers = (communityId) => {
+  return apiClient.get(`/messages/groups/${communityId}/online-members`);
+};
+
+/**
+ * Add reaction to a group message
+ * @param {string} messageId
+ * @param {{emoji: string}} payload
+ */
+export const addGroupReaction = (messageId, payload) => {
+  return apiClient.post(`/messages/groups/messages/${messageId}/reactions`, payload);
+};
+
+/**
+ * Remove reaction from a group message
+ * @param {string} messageId
+ * @param {{emoji: string}} payload
+ */
+export const removeGroupReaction = (messageId, payload) => {
+  return apiClient.delete(`/messages/groups/messages/${messageId}/reactions`, {
+    data: payload,
+  });
+};
+
+/**
+ * Delete group message for current user
+ * @param {string} messageId
+ */
+export const deleteGroupMessage = (messageId) => {
+  return apiClient.delete(`/messages/groups/messages/${messageId}`);
+};
+
+/**
+ * Delete group message for everyone
+ * @param {string} messageId
+ */
+export const deleteGroupMessageForEveryone = (messageId) => {
+  return apiClient.delete(`/messages/groups/messages/${messageId}/for-everyone`);
+};
+
 export default {
   sendMessage,
   getConversations,
@@ -144,4 +244,16 @@ export default {
   pinUser,
   unpinUser,
   getPinnedUsers,
+  sendGroupMessage,
+  getCommunityGroupMessages,
+  getMyGroupConversations,
+  markSpecificGroupMessagesAsRead,
+  markCommunityGroupAsRead,
+  getGroupUnreadCount,
+  searchGroupMessages,
+  getCommunityOnlineMembers,
+  addGroupReaction,
+  removeGroupReaction,
+  deleteGroupMessage,
+  deleteGroupMessageForEveryone,
 };
