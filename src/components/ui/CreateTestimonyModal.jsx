@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
-import { createTestimony } from '../../api/profile';
+import { createTestimony, updateTestimony } from '../../api/profile';
 
 const MAX_TAGS = 8;
 
@@ -28,6 +28,8 @@ const CreateTestimonyModal = ({ isOpen, onClose, onSuccess, initialData = null }
   const [newTag, setNewTag] = useState('');
 
   const title = useMemo(() => (initialData ? 'Edit Testimony' : 'Share Your Testimony'), [initialData]);
+  const submitLabel = useMemo(() => (initialData ? 'Save Changes' : 'Post Testimony'), [initialData]);
+  const loadingLabel = useMemo(() => (initialData ? 'Saving…' : 'Posting…'), [initialData]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -103,11 +105,23 @@ const CreateTestimonyModal = ({ isOpen, onClose, onSuccess, initialData = null }
             }
           : undefined;
 
-      const res = await createTestimony(form.description.trim(), payloadVerse, normalizeTags(form.tags || []));
+      const normalizedTags = normalizeTags(form.tags || []);
+
+      const res = initialData?.id
+        ? await updateTestimony(initialData.id, {
+            description: form.description.trim(),
+            verse: payloadVerse,
+            tags: normalizedTags,
+          })
+        : await createTestimony(form.description.trim(), payloadVerse, normalizedTags);
       onSuccess?.(res);
       onClose?.();
     } catch (err) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to create testimony.');
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          (initialData ? 'Failed to update testimony.' : 'Failed to create testimony.')
+      );
     } finally {
       setLoading(false);
     }
@@ -256,7 +270,7 @@ const CreateTestimonyModal = ({ isOpen, onClose, onSuccess, initialData = null }
               className="btn-blue-gradient rounded-2xl px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-95 disabled:opacity-60 cursor-pointer"
               disabled={loading}
             >
-              {loading ? 'Posting…' : 'Post Testimony'}
+              {loading ? loadingLabel : submitLabel}
             </button>
           </div>
         </form>
