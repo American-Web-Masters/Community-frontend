@@ -46,5 +46,5 @@ We value humility by keeping pride, competition, and comparison out of our commu
 ### 💼 Stewardship  
 We value stewardship as we faithfully use our time, gifts, and technology to build communities that honor God and serve people well.  
 
-> **“Do nothing out of selfish ambition or vain conceit. Rather, in humility value others above yourselves.”**  
+> **“Do nothing out of selfish ambition or vain conceit. Rather, in humility value others above yourselves”**  
 > — *Philippians 2:3*
