@@ -27,7 +27,7 @@ and distance by using technology to empower fellowship, deepen discipleship, and
 encouragement accessible to all
 
 > **“From him the whole body, joined and held together by every supporting ligament, grows and builds itself up in love,  
-> as each part does its work.”**  
+> as each part does its work”**  
 > — *Ephesians 4:16*
 
 ---
