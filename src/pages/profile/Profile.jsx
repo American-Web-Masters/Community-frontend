@@ -5,6 +5,7 @@ import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
 import { useLogout } from "../../hooks/useLogout";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import Header from "../../components/ui/Header";
+import CreateCommunityModal from "../../components/ui/CreateCommunityModal";
 import { getUserProfile } from "../../api";
 import { ProfileHeader, Posts, Communities, Testimony, Journal, SubscriptionMgt } from "./subcomponents";
 
@@ -16,8 +17,11 @@ const Profile = () => {
   const { logout } = useLogout();
   const [activeTab, setActiveTab] = useState("Posts");
   const postsRef = useRef(null);
+  const communitiesRef = useRef(null);
+  const testimonyRef = useRef(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isCreateCommunityModalOpen, setIsCreateCommunityModalOpen] = useState(false);
 
   // Fetch user profile data
   useEffect(() => {
@@ -81,13 +85,17 @@ const Profile = () => {
       name: "Communities", 
       component: Communities,
       buttonText: "Create Community",
-      buttonAction: () => console.log('Create Community') // Add your logic here
+  buttonAction: () => setIsCreateCommunityModalOpen(true)
     },
     { 
       name: "Testimonies", 
       component: Testimony,
       buttonText: "Share Your Story",
-      buttonAction: () => console.log('Share Story') // Add your logic here
+      buttonAction: () => {
+        if (testimonyRef.current?.openCreateModal) {
+          testimonyRef.current.openCreateModal();
+        }
+      }
     },
     { 
       name: "Journal", 
@@ -125,7 +133,7 @@ const Profile = () => {
         {/* Tabs Navigation */}
         <div className="mt-6 w-full md:w-4/6 mx-auto">
           {/* Header with tabs and create button */}
-          <div className="mb-6 px-4 lg:px-0">
+          <div className="mb-6 px-4 md:px-0">
             {/* Large Desktop (>=lg) - tabs and button on same line */}
             <div className="hidden lg:flex lg:items-center lg:justify-between lg:gap-4">
               {/* Tab Navigation */}
@@ -167,7 +175,7 @@ const Profile = () => {
                     <button
                       key={tab.name}
                       onClick={() => setActiveTab(tab.name)}
-                      className={`flex-1 py-2.5 px-3 rounded-full cursor-pointer text-xs sm:text-sm font-medium transition-all duration-200 text-center ${
+                      className={`flex-1 py-2.5 px-4 rounded-full cursor-pointer text-sm sm:text-sm font-medium transition-all duration-200 text-center ${
                         activeTab === tab.name
                           ? "btn-blue-gradient text-white shadow-lg"
                           : "text-gray-700 hover:bg-white/30"
@@ -202,7 +210,7 @@ const Profile = () => {
                   <button
                     key={tab.name}
                     onClick={() => setActiveTab(tab.name)}
-                    className={`flex-1 py-2.5 px-2 rounded-full cursor-pointer text-xs font-medium transition-all duration-200 text-center ${
+                    className={`flex-1 py-2.5 px-4 rounded-full cursor-pointer text-sm font-medium transition-all duration-200 text-center ${
                       activeTab === tab.name
                         ? "btn-blue-gradient text-white shadow-lg"
                         : "text-gray-700 hover:bg-white/30"
@@ -232,10 +240,25 @@ const Profile = () => {
         <div className="max-sm:min-w-[95%] md:w-4/6 mx-auto overflow-x-hidden">
           {activeTab === "Posts" ? (
             <Posts ref={postsRef} userProfile={userProfile} />
+          ) : activeTab === "Communities" ? (
+            <Communities ref={communitiesRef} userProfile={userProfile} />
+          ) : activeTab === "Testimonies" ? (
+            <Testimony ref={testimonyRef} userProfile={userProfile} />
           ) : (
             <ActiveComponent />
           )}
         </div>
+
+        {/* Create Community Modal (reuses same component as Communities page) */}
+        <CreateCommunityModal
+          isOpen={isCreateCommunityModalOpen}
+          onClose={() => setIsCreateCommunityModalOpen(false)}
+          onSuccess={() => {
+            // Close modal then refresh profile communities list if available
+            setIsCreateCommunityModalOpen(false);
+            communitiesRef.current?.refresh?.();
+          }}
+        />
 
         {/* Logout Button - Fixed at bottom of content */}
         <div className="max-w-6xl mx-auto px-6 mt-8">
