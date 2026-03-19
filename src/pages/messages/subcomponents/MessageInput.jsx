@@ -9,8 +9,11 @@ const MessageInput = ({
   messageInput,
   handleTyping,
   handleSendMessage,
-  sendingMessage
+  sendingMessage,
+  chatMode = 'direct',
 }) => {
+  const isGroup = chatMode === 'group';
+
   return (
     <div className="px-6 py-4 flex-shrink-0">
       {/* Reply Preview */}
@@ -40,7 +43,9 @@ const MessageInput = ({
           value={messageInput}
           onChange={(e) => handleTyping(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-          placeholder={activeChat ? `Reply to ${activeChat.firstname}` : "Select a user to start messaging"}
+          placeholder={activeChat
+            ? (isGroup ? `Message ${activeChat.name}` : `Reply to ${activeChat.firstname}`)
+            : (isGroup ? 'Select a community to start messaging' : 'Select a user to start messaging')}
           disabled={!activeChat || sendingMessage}
           className="flex-1 px-4 py-2.5 rounded-full bg-white/70 border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
         />

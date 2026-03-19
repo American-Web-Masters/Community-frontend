@@ -13,16 +13,16 @@ export const fetchCommunities = async (user) => {
       
       // Process communities to add user membership status
       const processedCommunities = communitiesData.map(community => {
-        const isOwner = community.createdBy._id === user?._id;
-        const isMember = community.members.some(member => 
-          member.user._id === user?._id
-        );
+        const isOwner = community.createdBy?._id === user?._id;
+        const isMember = community.members?.some(member => 
+          member?.user?._id === user?._id
+        ) || false;
         
         return {
           ...community,
           isOwner,
           isMember,
-          memberCount: community.memberCount || community.members.length
+          memberCount: community.memberCount || community.members?.length || 0
         };
       });
       
@@ -58,10 +58,10 @@ export const fetchCommunityById = async (communityId, user) => {
       const community = response?.data?.data?.community;
       
       // Process community to add user membership status
-      const isOwner = community.createdBy._id === user?._id;
-      const isMember = community.members.some(member => 
-        member.user._id === user?._id
-      );
+      const isOwner = community.createdBy?._id === user?._id;
+      const isMember = community.members?.some(member => 
+        member?.user?._id === user?._id
+      ) || false;
       
       return {
         success: true,
@@ -69,7 +69,7 @@ export const fetchCommunityById = async (communityId, user) => {
           ...community,
           isOwner,
           isMember,
-          memberCount: community.memberCount || community.members.length
+          memberCount: community.memberCount || community.members?.length || 0
         }
       };
     } else {

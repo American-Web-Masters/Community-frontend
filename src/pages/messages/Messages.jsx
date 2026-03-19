@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +16,15 @@ import {
   deleteMessageForEveryone, 
   pinUser, 
   unpinUser, 
-  getPinnedUsers 
+  getPinnedUsers,
+  sendGroupMessage,
+  getCommunityGroupMessages,
+  getMyGroupConversations,
+  markCommunityGroupAsRead,
+  getCommunityOnlineMembers,
+  addGroupReaction,
+  removeGroupReaction,
+  deleteGroupMessageForEveryone,
 } from "../../api/messages";
 import { fetchCommunities as apiFetchCommunities } from "../../api";
 import toast from 'react-hot-toast';
@@ -28,6 +36,16 @@ import MessageList from './subcomponents/MessageList';
 import MessageInput from './subcomponents/MessageInput';
 
 const MESSAGES_LIMIT = 30;
+
+const toIdString = (value) => {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') {
+    if (typeof value._id === 'string') return value._id;
+    if (typeof value.id === 'string') return value.id;
+  }
+  return String(value);
+};
 
 // Custom styles for thin scrollbars
 const scrollbarStyles = `
@@ -56,6 +74,7 @@ const Messages = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const navigate = useNavigate();
   const [activeChat, setActiveChat] = useState(null);
+  const [chatMode, setChatMode] = useState("direct");
   const [activeTab, setActiveTab] = useState("All");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
@@ -65,6 +84,10 @@ const Messages = () => {
   const [messageInput, setMessageInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [groupConversations, setGroupConversations] = useState([]);
+  const [loadingGroupConversations, setLoadingGroupConversations] = useState(false);
+  const [groupOnlineMemberCountMap, setGroupOnlineMemberCountMap] = useState({});
+  const [onlineGroupMemberIds, setOnlineGroupMemberIds] = useState(new Set());
   const [discoverCommunities, setDiscoverCommunities] = useState([]);
   const [loadingCommunities, setLoadingCommunities] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -97,6 +120,26 @@ const Messages = () => {
   // Pin state
   const [pinnedUserIds, setPinnedUserIds] = useState(new Set());
   const [pinningUserId, setPinningUserId] = useState(null);
+
+  const activeCommunityId = useMemo(() => {
+    if (chatMode !== 'group') return null;
+    return activeChat?._id || activeChat?.communityId || null;
+  }, [chatMode, activeChat]);
+
+  const normalizeGroupConversation = (item) => {
+    const community = item?.community || item || {};
+    const normalizedId = community._id || item?.communityId || item?._id;
+    return {
+      ...community,
+      _id: normalizedId,
+      communityId: normalizedId,
+      name: community.name || item?.name || 'Community',
+      coverPhoto: community.coverPhoto || item?.coverPhoto || community.profilePicture,
+      unreadCount: item?.unreadCount ?? community.unreadCount ?? 0,
+      lastMessage: item?.lastMessage || community.lastMessage || null,
+      members: community.members || item?.members || [],
+    };
+  };
   
 
   // Fetch all users and pinned users.
@@ -109,9 +152,6 @@ const Messages = () => {
           // Filter out current user
           const otherUsers = allUsers.filter(u => u._id !== user?._id);
           setUsers(otherUsers);
-          if (otherUsers.length > 0 && !activeChat) {
-            setActiveChat(otherUsers[0]);
-          }
         }
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -134,33 +174,109 @@ const Messages = () => {
       }
     };
 
-    if (isLoggedIn && user) {
-      fetchUsers();
-      fetchPinnedUsers();
-    }
-  }, [isLoggedIn, user]);
-
-
-  useEffect(() => {
-    const fetchDiscover = async () => {
+    const fetchGroupConversations = async () => {
       try {
+        setLoadingGroupConversations(true);
         setLoadingCommunities(true);
-        const response = await apiFetchCommunities(user);
-        if (response.success) {
-          const notJoined = response.data.filter(c => !c.isMember && !c.isOwner);
+
+        const [communitiesResult, conversationsResult] = await Promise.allSettled([
+          apiFetchCommunities(user),
+          getMyGroupConversations(),
+        ]);
+
+        let joinedCommunities = [];
+        if (communitiesResult.status === 'fulfilled' && communitiesResult.value?.success) {
+          const allCommunities = communitiesResult.value.data || [];
+          const joined = allCommunities.filter((community) => community.isMember || community.isOwner);
+          const notJoined = allCommunities.filter((community) => !community.isMember && !community.isOwner);
+
           setDiscoverCommunities(notJoined);
+          joinedCommunities = joined
+            .map((community) => normalizeGroupConversation(community))
+            .filter((community) => Boolean(community._id));
+        } else {
+          setDiscoverCommunities([]);
+        }
+
+        let conversationMap = new Map();
+        if (
+          conversationsResult.status === 'fulfilled' &&
+          conversationsResult.value?.data?.status === 'success'
+        ) {
+          const rawConversations = conversationsResult.value.data.data?.conversations || conversationsResult.value.data.data || [];
+          const normalizedConversations = rawConversations
+            .map(normalizeGroupConversation)
+            .filter((item) => Boolean(item._id));
+
+          conversationMap = new Map(
+            normalizedConversations.map((community) => [community._id, community])
+          );
+        }
+
+        const mergedJoinedCommunities = joinedCommunities.map((community) => {
+          const conversation = conversationMap.get(community._id);
+          if (!conversation) {
+            return {
+              ...community,
+              unreadCount: community.unreadCount || 0,
+              lastMessage: community.lastMessage || null,
+            };
+          }
+
+          return {
+            ...community,
+            unreadCount: conversation.unreadCount ?? community.unreadCount ?? 0,
+            lastMessage: conversation.lastMessage || community.lastMessage || null,
+          };
+        });
+
+        setGroupConversations(mergedJoinedCommunities);
+
+        if (mergedJoinedCommunities.length > 0) {
+          const onlineEntries = await Promise.all(
+            mergedJoinedCommunities.map(async (community) => {
+              try {
+                const onlineResponse = await getCommunityOnlineMembers(community._id);
+                const onlineMembers = onlineResponse.data?.data?.onlineMembers || [];
+                return [community._id, onlineMembers.length];
+              } catch {
+                return [community._id, 0];
+              }
+            })
+          );
+
+          setGroupOnlineMemberCountMap(Object.fromEntries(onlineEntries));
+        } else {
+          setGroupOnlineMemberCountMap({});
         }
       } catch (error) {
-        console.error('Error fetching discover communities:', error);
+        console.error('Error fetching group conversations:', error);
+        setGroupConversations([]);
+        setGroupOnlineMemberCountMap({});
       } finally {
+        setLoadingGroupConversations(false);
         setLoadingCommunities(false);
       }
     };
 
     if (isLoggedIn && user) {
-      fetchDiscover();
+      fetchUsers();
+      fetchPinnedUsers();
+      fetchGroupConversations();
     }
   }, [isLoggedIn, user]);
+  useEffect(() => {
+    if (chatMode === 'direct') {
+      if (!activeChat || !activeChat.firstname) {
+        setActiveChat(null);
+      }
+      return;
+    }
+
+    if (!activeChat || !activeChat.name) {
+      setActiveChat(null);
+    }
+  }, [chatMode, users, groupConversations]);
 
   // Fetch messages when active chat changes
   useEffect(() => {
@@ -173,17 +289,27 @@ const Messages = () => {
       setMessages([]);
 
       try {
-        const response = await getConversationWithUser(activeChat._id, {
-          page: 1,
-          limit: MESSAGES_LIMIT,
-        });
+        const response = chatMode === 'group'
+          ? await getCommunityGroupMessages(activeChat._id, {
+              page: 1,
+              limit: MESSAGES_LIMIT,
+            })
+          : await getConversationWithUser(activeChat._id, {
+              page: 1,
+              limit: MESSAGES_LIMIT,
+            });
+
         if (response.data.status === 'success') {
           const fetched = response.data.data.messages || [];
           // Backend returns newest-first (index 0 = newest).
           // MessageList uses flex-col-reverse so index 0 renders at the visual bottom.
           setMessages(fetched);
           setHasMoreMessages(fetched.length === MESSAGES_LIMIT);
-          await markConversationAsRead(activeChat._id);
+          if (chatMode === 'group') {
+            await markCommunityGroupAsRead(activeChat._id);
+          } else {
+            await markConversationAsRead(activeChat._id);
+          }
         }
       } catch (error) {
         console.error('Error fetching messages:', error);
@@ -192,7 +318,77 @@ const Messages = () => {
     };
 
     fetchMessages();
-  }, [activeChat]);
+  }, [activeChat, chatMode]);
+
+  useEffect(() => {
+    const fetchOnlineMembersForCommunity = async () => {
+      if (!activeCommunityId) return;
+
+      try {
+        const response = await getCommunityOnlineMembers(activeCommunityId);
+        const onlineMembers = response.data?.data?.onlineMembers || [];
+        const ids = onlineMembers
+          .map((member) => member?._id || member?.userId)
+          .filter(Boolean);
+
+        setOnlineGroupMemberIds(new Set(ids));
+        setGroupOnlineMemberCountMap((prev) => ({
+          ...prev,
+          [activeCommunityId]: ids.length,
+        }));
+      } catch (error) {
+        console.error('Error fetching community online members:', error);
+      }
+    };
+
+    if (chatMode === 'group' && activeCommunityId) {
+      fetchOnlineMembersForCommunity();
+    } else {
+      setOnlineGroupMemberIds(new Set());
+    }
+  }, [chatMode, activeCommunityId]);
+
+  useEffect(() => {
+    if (chatMode !== 'group' || !activeCommunityId) return;
+
+    setGroupConversations((prev) =>
+      prev.map((community) =>
+        toIdString(community._id) === toIdString(activeCommunityId)
+          ? { ...community, unreadCount: 0 }
+          : community
+      )
+    );
+  }, [chatMode, activeCommunityId]);
+
+  // Join group-chat rooms after connect (and re-join on reconnect) so live events are received.
+  useEffect(() => {
+    if (!socket || !isConnected || chatMode !== 'group') return;
+    if (!groupConversations.length) return;
+
+    const communityIds = groupConversations
+      .map((community) => toIdString(community._id || community.communityId))
+      .filter(Boolean);
+
+    if (!communityIds.length) return;
+
+    communityIds.forEach((communityId) => {
+      socket.emit('group:join', { communityId });
+      socket.emit('community:join', { communityId });
+      socket.emit('room:join', { roomType: 'community', roomId: communityId });
+    });
+
+    socket.emit('groups:join', { communityIds });
+    socket.emit('communities:join', { communityIds });
+  }, [socket, isConnected, chatMode, groupConversations]);
+
+  // Ensure currently opened group room is explicitly joined.
+  useEffect(() => {
+    if (!socket || !isConnected || chatMode !== 'group' || !activeCommunityId) return;
+
+    socket.emit('group:join', { communityId: activeCommunityId });
+    socket.emit('community:join', { communityId: activeCommunityId });
+    socket.emit('room:join', { roomType: 'community', roomId: activeCommunityId });
+  }, [socket, isConnected, chatMode, activeCommunityId]);
 
   // Load older messages when user scrolls to the top of the chat
   const loadMoreMessages = async () => {
@@ -202,10 +398,15 @@ const Messages = () => {
     const nextPage = currentPage + 1;
 
     try {
-      const response = await getConversationWithUser(activeChat._id, {
-        page: nextPage,
-        limit: MESSAGES_LIMIT,
-      });
+      const response = chatMode === 'group'
+        ? await getCommunityGroupMessages(activeChat._id, {
+            page: nextPage,
+            limit: MESSAGES_LIMIT,
+          })
+        : await getConversationWithUser(activeChat._id, {
+            page: nextPage,
+            limit: MESSAGES_LIMIT,
+          });
 
       if (response.data.status === 'success') {
         const fetched = response.data.data.messages || [];
@@ -231,41 +432,103 @@ const Messages = () => {
   useEffect(() => {
     if (!socket || !isConnected) return;
 
-    // Listen for new messages
+    const getGroupPayload = (raw) => raw?.message || raw;
+    const getCommunityId = (raw) => {
+      const payload = getGroupPayload(raw);
+      return toIdString(payload?.community?._id || payload?.community || payload?.communityId);
+    };
+
+    const upsertGroupConversationFromMessage = (messageData) => {
+      const payload = getGroupPayload(messageData);
+      const communityFromPayload = payload.community || {};
+      const communityId = getCommunityId(payload);
+      if (!communityId) return;
+
+      setGroupConversations((prev) => {
+        const existingIndex = prev.findIndex((c) => c._id === communityId);
+        const unreadIncrement = payload.sender?._id === user?._id ? 0 : 1;
+
+        if (existingIndex >= 0) {
+          const existing = prev[existingIndex];
+          const updated = {
+            ...existing,
+            lastMessage: payload,
+            unreadCount: (existing.unreadCount || 0) + unreadIncrement,
+          };
+          return [updated, ...prev.filter((_, idx) => idx !== existingIndex)];
+        }
+
+        const created = normalizeGroupConversation({
+          community: communityFromPayload,
+          communityId,
+          lastMessage: payload,
+          unreadCount: unreadIncrement,
+        });
+        return [created, ...prev];
+      });
+    };
+
+    // Listen for new direct messages
     const handleNewMessage = (messageData) => {
       console.log('📨 New message received:', messageData);
-      
-      // Check if message is for current conversation
-      const isForCurrentChat = 
-        (messageData.sender._id === activeChat?._id && messageData.receiver._id === user?._id) ||
-        (messageData.sender._id === user?._id && messageData.receiver._id === activeChat?._id);
-      
-      if (isForCurrentChat) {
-        const el = messageListRef.current;
-        // In flex-col-reverse, scrollTop=0 means the user is at the visual bottom (newest).
-        const wasAtBottom = !el || el.scrollTop < 80;
 
-        setMessages(prev => {
-          const exists = prev.some(msg => msg._id === messageData._id);
-          if (exists) return prev;
-          // Prepend: newest at index 0 = visual bottom in flex-col-reverse
-          return [messageData, ...prev];
-        });
+      const isForCurrentChat =
+        chatMode === 'direct' && (
+          (messageData.sender._id === activeChat?._id && messageData.receiver._id === user?._id) ||
+          (messageData.sender._id === user?._id && messageData.receiver._id === activeChat?._id)
+        );
 
-        // Mark as read if we're the receiver
-        if (messageData.receiver._id === user?._id && activeChat) {
-          markConversationAsRead(activeChat._id).catch(console.error);
-        }
+      if (!isForCurrentChat) return;
 
-        // Keep user at bottom only if they were already there
-        if (wasAtBottom) {
-          setTimeout(() => {
-            if (messageListRef.current) messageListRef.current.scrollTop = 0;
-          }, 50);
-        }
-      } else {
-        // Show notification or update unread count for other conversations
-        console.log('Message from other conversation');
+      const el = messageListRef.current;
+      const wasAtBottom = !el || el.scrollTop < 80;
+
+      setMessages(prev => {
+        const exists = prev.some(msg => msg._id === messageData._id);
+        if (exists) return prev;
+        return [messageData, ...prev];
+      });
+
+      if (messageData.receiver._id === user?._id && activeChat) {
+        markConversationAsRead(activeChat._id).catch(console.error);
+      }
+
+      if (wasAtBottom) {
+        setTimeout(() => {
+          if (messageListRef.current) messageListRef.current.scrollTop = 0;
+        }, 50);
+      }
+    };
+
+    // Listen for new group messages
+    const handleNewGroupMessage = (messageData) => {
+      const payload = getGroupPayload(messageData);
+      const communityId = getCommunityId(payload);
+      if (!communityId) return;
+
+      upsertGroupConversationFromMessage(payload);
+
+      const isForCurrentCommunity =
+        chatMode === 'group' && toIdString(activeCommunityId) === toIdString(communityId);
+      if (!isForCurrentCommunity) return;
+
+      const el = messageListRef.current;
+      const wasAtBottom = !el || el.scrollTop < 80;
+
+      setMessages((prev) => {
+        const exists = prev.some((msg) => toIdString(msg._id) === toIdString(payload._id));
+        if (exists) return prev;
+        return [payload, ...prev];
+      });
+
+      if (payload.sender?._id !== user?._id && activeCommunityId) {
+        markCommunityGroupAsRead(activeCommunityId).catch(console.error);
+      }
+
+      if (wasAtBottom) {
+        setTimeout(() => {
+          if (messageListRef.current) messageListRef.current.scrollTop = 0;
+        }, 50);
       }
     };
 
@@ -281,6 +544,19 @@ const Messages = () => {
       if (userId === activeChat?._id) {
         setIsTyping(false);
       }
+    };
+
+    const handleGroupTypingStart = ({ communityId, userId }) => {
+      if (chatMode !== 'group') return;
+      if (toIdString(communityId) !== toIdString(activeCommunityId)) return;
+      if (userId === user?._id) return;
+      setIsTyping(true);
+    };
+
+    const handleGroupTypingStop = ({ communityId }) => {
+      if (chatMode !== 'group') return;
+      if (toIdString(communityId) !== toIdString(activeCommunityId)) return;
+      setIsTyping(false);
     };
 
     // Listen for message read receipts
@@ -343,7 +619,117 @@ const Messages = () => {
       );
     };
 
-    // Attach event listeners
+    const handleGroupMessageRead = ({ communityId, messageIds, readBy }) => {
+      if (chatMode !== 'group' || toIdString(communityId) !== toIdString(activeCommunityId)) return;
+      if (readBy === user?._id) return;
+      setMessages((prev) =>
+        prev.map((msg) =>
+          messageIds.some((id) => toIdString(id) === toIdString(msg._id))
+            ? { ...msg, isRead: true }
+            : msg
+        )
+      );
+    };
+
+    const handleGroupMessageDeleted = ({ communityId, messageId }) => {
+      if (chatMode !== 'group' || toIdString(communityId) !== toIdString(activeCommunityId)) return;
+      setMessages((prev) => prev.filter((msg) => toIdString(msg._id) !== toIdString(messageId)));
+    };
+
+    const handleGroupMessageDeletedForEveryone = ({ communityId, messageId }) => {
+      if (chatMode !== 'group' || toIdString(communityId) !== toIdString(activeCommunityId)) return;
+      setMessages((prev) =>
+        prev.map((msg) =>
+          toIdString(msg._id) === toIdString(messageId)
+            ? { ...msg, isDeletedForEveryone: true }
+            : msg
+        )
+      );
+    };
+
+    const handleGroupReactionAdded = ({ communityId, messageId, reaction }) => {
+      if (toIdString(communityId) !== toIdString(activeCommunityId)) return;
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (toIdString(msg._id) !== toIdString(messageId)) return msg;
+          const reactions = msg.reactions || [];
+          const withoutCurrentUser = reactions.filter((r) => r.user._id !== reaction.user._id);
+          return { ...msg, reactions: [...withoutCurrentUser, reaction] };
+        })
+      );
+    };
+
+    const handleGroupReactionRemoved = ({ communityId, messageId, userId: reactionUserId, emoji }) => {
+      if (toIdString(communityId) !== toIdString(activeCommunityId)) return;
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (toIdString(msg._id) !== toIdString(messageId)) return msg;
+          const reactions = (msg.reactions || []).filter(
+            (r) => !(r.user._id === reactionUserId && r.emoji === emoji)
+          );
+          return { ...msg, reactions };
+        })
+      );
+    };
+
+    const handleGroupMemberOnline = ({ communityId, userId: memberId }) => {
+      const normalizedCommunityId = toIdString(communityId);
+      if (!normalizedCommunityId) return;
+
+      setGroupOnlineMemberCountMap((prev) => {
+        const current = prev[normalizedCommunityId] || 0;
+        return { ...prev, [normalizedCommunityId]: current + 1 };
+      });
+
+      if (normalizedCommunityId === toIdString(activeCommunityId)) {
+        setOnlineGroupMemberIds((prev) => new Set([...prev, memberId]));
+      }
+    };
+
+    const handleGroupMemberOffline = ({ communityId, userId: memberId }) => {
+      const normalizedCommunityId = toIdString(communityId);
+      if (!normalizedCommunityId) return;
+
+      setGroupOnlineMemberCountMap((prev) => {
+        const current = prev[normalizedCommunityId] || 0;
+        return { ...prev, [normalizedCommunityId]: Math.max(0, current - 1) };
+      });
+
+      if (normalizedCommunityId === toIdString(activeCommunityId)) {
+        setOnlineGroupMemberIds((prev) => {
+          const next = new Set(prev);
+          next.delete(memberId);
+          return next;
+        });
+      }
+    };
+
+    if (chatMode === 'group') {
+      socket.on('group:message:new', handleNewGroupMessage);
+      socket.on('group:message:read', handleGroupMessageRead);
+      socket.on('group:message:deleted', handleGroupMessageDeleted);
+      socket.on('group:message:deleted-for-everyone', handleGroupMessageDeletedForEveryone);
+      socket.on('group:reaction:added', handleGroupReactionAdded);
+      socket.on('group:reaction:removed', handleGroupReactionRemoved);
+      socket.on('group:typing:start', handleGroupTypingStart);
+      socket.on('group:typing:stop', handleGroupTypingStop);
+      socket.on('group:member:online', handleGroupMemberOnline);
+      socket.on('group:member:offline', handleGroupMemberOffline);
+
+      return () => {
+        socket.off('group:message:new', handleNewGroupMessage);
+        socket.off('group:message:read', handleGroupMessageRead);
+        socket.off('group:message:deleted', handleGroupMessageDeleted);
+        socket.off('group:message:deleted-for-everyone', handleGroupMessageDeletedForEveryone);
+        socket.off('group:reaction:added', handleGroupReactionAdded);
+        socket.off('group:reaction:removed', handleGroupReactionRemoved);
+        socket.off('group:typing:start', handleGroupTypingStart);
+        socket.off('group:typing:stop', handleGroupTypingStop);
+        socket.off('group:member:online', handleGroupMemberOnline);
+        socket.off('group:member:offline', handleGroupMemberOffline);
+      };
+    }
+
     socket.on('message:new', handleNewMessage);
     socket.on('typing:start', handleTypingStart);
     socket.on('typing:stop', handleTypingStop);
@@ -353,7 +739,6 @@ const Messages = () => {
     socket.on('message:reaction-removed', handleReactionRemoved);
     socket.on('message:deleted-for-everyone', handleMessageDeletedForEveryone);
 
-    // Cleanup
     return () => {
       socket.off('message:new', handleNewMessage);
       socket.off('typing:start', handleTypingStart);
@@ -364,7 +749,7 @@ const Messages = () => {
       socket.off('message:reaction-removed', handleReactionRemoved);
       socket.off('message:deleted-for-everyone', handleMessageDeletedForEveryone);
     };
-  }, [socket, isConnected, activeChat, user]);
+  }, [socket, isConnected, activeChat, activeCommunityId, chatMode, user]);
 
   // Handle typing with debounce
   const handleTyping = (value) => {
@@ -373,7 +758,11 @@ const Messages = () => {
     if (!socket || !isConnected || !activeChat) return;
 
     // Emit typing start
-    socket.emit('typing:start', { receiverId: activeChat._id });
+    if (chatMode === 'group') {
+      socket.emit('group:typing:start', { communityId: activeChat._id });
+    } else {
+      socket.emit('typing:start', { receiverId: activeChat._id });
+    }
 
     // Clear existing timeout
     if (typingTimeoutRef.current) {
@@ -382,7 +771,11 @@ const Messages = () => {
 
     // Set timeout to emit typing stop
     typingTimeoutRef.current = setTimeout(() => {
-      socket.emit('typing:stop', { receiverId: activeChat._id });
+      if (chatMode === 'group') {
+        socket.emit('group:typing:stop', { communityId: activeChat._id });
+      } else {
+        socket.emit('typing:stop', { receiverId: activeChat._id });
+      }
     }, 2000);
   };
 
@@ -393,7 +786,6 @@ const Messages = () => {
     setSendingMessage(true);
     try {
       const payload = {
-        receiverId: activeChat._id,
         content: messageInput.trim(),
         messageType: 'text'
       };
@@ -403,7 +795,9 @@ const Messages = () => {
         payload.replyTo = replyingTo._id;
       }
       
-      const response = await sendMessage(payload);
+      const response = chatMode === 'group'
+        ? await sendGroupMessage(activeChat._id, payload)
+        : await sendMessage({ ...payload, receiverId: activeChat._id });
 
       if (response.data.status === 'success') {
         const newMessage = response.data.data.message;
@@ -417,7 +811,11 @@ const Messages = () => {
         setReplyingTo(null);
 
         if (socket && isConnected) {
-          socket.emit('typing:stop', { receiverId: activeChat._id });
+          if (chatMode === 'group') {
+            socket.emit('group:typing:stop', { communityId: activeChat._id });
+          } else {
+            socket.emit('typing:stop', { receiverId: activeChat._id });
+          }
         }
 
         if (typingTimeoutRef.current) {
@@ -444,7 +842,9 @@ const Messages = () => {
   // Handle adding reaction
   const handleAddReaction = async (messageId, emoji) => {
     try {
-      const response = await addReaction(messageId, { emoji });
+      const response = chatMode === 'group'
+        ? await addGroupReaction(messageId, { emoji })
+        : await addReaction(messageId, { emoji });
       if (response.data.status === 'success') {
         // Update local state
         setMessages(prev => 
@@ -465,7 +865,9 @@ const Messages = () => {
   // Handle removing reaction
   const handleRemoveReaction = async (messageId, emoji) => {
     try {
-      const response = await removeReaction(messageId, { emoji });
+      const response = chatMode === 'group'
+        ? await removeGroupReaction(messageId, { emoji })
+        : await removeReaction(messageId, { emoji });
       if (response.data.status === 'success') {
         // Update local state
         setMessages(prev => 
@@ -543,7 +945,9 @@ const Messages = () => {
 
     setDeletingMessage(messageId);
     try {
-      const response = await deleteMessageForEveryone(messageId);
+      const response = chatMode === 'group'
+        ? await deleteGroupMessageForEveryone(messageId)
+        : await deleteMessageForEveryone(messageId);
       if (response.data.status === 'success') {
         // Update local state to mark as deleted
         setMessages(prev => 
@@ -568,11 +972,13 @@ const Messages = () => {
     try {
       await navigator.clipboard.writeText(messageContent);
       const copyButton = document.activeElement;
-      const originalTitle = copyButton.getAttribute('title');
-      copyButton.setAttribute('title', 'Copied!');
+      const originalTitle = copyButton?.getAttribute?.('title');
+      copyButton?.setAttribute?.('title', 'Copied!');
       toast.success('Message copied to clipboard');
       setTimeout(() => {
-        copyButton.setAttribute('title', originalTitle);
+        if (originalTitle) {
+          copyButton?.setAttribute?.('title', originalTitle);
+        }
       }, 1500);
     } catch (error) {
       console.error('Error copying message:', error);
@@ -649,6 +1055,12 @@ const Messages = () => {
     return `${Math.floor(diffMins / 1440)}d`;
   };
 
+  useEffect(() => {
+    setMessageInput('');
+    setReplyingTo(null);
+    setIsTyping(false);
+  }, [chatMode, activeChat?._id]);
+
   if (!isLoggedIn || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -671,12 +1083,27 @@ const Messages = () => {
           <div className="hidden sm:flex w-14 flex-col items-center justify-center space-y-6 mr-5">
             <div className="side-trapezoid btn-blue-gradient flex flex-col items-center justify-center">
               <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md"
+                onClick={() => {
+                  setChatMode('direct');
+                  setIsSidebarOpen(true);
+                }}
+                className={`flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md ${
+                  chatMode === 'direct' ? 'opacity-100' : 'opacity-70'
+                }`}
+                title="Open direct chats"
               >
                 <IoMenu className="w-6 h-6 text-white" />
               </button>
-              <button className="flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md">
+              <button
+                onClick={() => {
+                  setChatMode('group');
+                  setIsSidebarOpen(true);
+                }}
+                className={`flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md ${
+                  chatMode === 'group' ? 'opacity-100' : 'opacity-70'
+                }`}
+                title="Open group chats"
+              >
                 <IoPeopleOutline className="w-6 h-6 text-white" />
               </button>
             </div>
@@ -686,6 +1113,8 @@ const Messages = () => {
           <MessagesSidebar
             isSidebarOpen={isSidebarOpen}
             activeChat={activeChat}
+            chatMode={chatMode}
+            setChatMode={setChatMode}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             searchDebounceRef={searchDebounceRef}
@@ -701,6 +1130,9 @@ const Messages = () => {
             onlineUsers={onlineUsers}
             handlePinUser={handlePinUser}
             pinningUserId={pinningUserId}
+            groupConversations={groupConversations}
+            loadingGroupConversations={loadingGroupConversations}
+            groupOnlineMemberCountMap={groupOnlineMemberCountMap}
             loadingCommunities={loadingCommunities}
             discoverCommunities={discoverCommunities}
           />
@@ -712,6 +1144,8 @@ const Messages = () => {
               activeChat={activeChat}
               onlineUsers={onlineUsers}
               isConnected={isConnected}
+              chatMode={chatMode}
+              onlineGroupMemberIds={onlineGroupMemberIds}
               onBackClick={() => setActiveChat(null)}
             />
 
@@ -735,6 +1169,7 @@ const Messages = () => {
               loadMoreMessages={loadMoreMessages}
               hasMoreMessages={hasMoreMessages}
               loadingMore={loadingMore}
+              chatMode={chatMode}
             />
 
             {/* Message Input */}
@@ -747,6 +1182,7 @@ const Messages = () => {
               handleTyping={handleTyping}
               handleSendMessage={handleSendMessage}
               sendingMessage={sendingMessage}
+              chatMode={chatMode}
             />
           </div>
         </div>
