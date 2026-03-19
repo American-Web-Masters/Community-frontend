@@ -77,9 +77,6 @@ const ChatHeader = ({
               Reconnecting...
             </span>
           )}
-          <button className="text-gray-600 hover:text-gray-900 transition-colors">
-            <IoEllipsisVertical className="w-5 h-5" />
-          </button>
         </div>
       </div>
     </div>

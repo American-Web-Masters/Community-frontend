@@ -37,6 +37,16 @@ import MessageInput from './subcomponents/MessageInput';
 
 const MESSAGES_LIMIT = 30;
 
+const toIdString = (value) => {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') {
+    if (typeof value._id === 'string') return value._id;
+    if (typeof value.id === 'string') return value.id;
+  }
+  return String(value);
+};
+
 // Custom styles for thin scrollbars
 const scrollbarStyles = `
   .thin-scrollbar::-webkit-scrollbar {
@@ -258,13 +268,13 @@ const Messages = () => {
   useEffect(() => {
     if (chatMode === 'direct') {
       if (!activeChat || !activeChat.firstname) {
-        setActiveChat(users[0] || null);
+        setActiveChat(null);
       }
       return;
     }
 
     if (!activeChat || !activeChat.name) {
-      setActiveChat(groupConversations[0] || null);
+      setActiveChat(null);
     }
   }, [chatMode, users, groupConversations]);
 
@@ -343,12 +353,42 @@ const Messages = () => {
 
     setGroupConversations((prev) =>
       prev.map((community) =>
-        community._id === activeCommunityId
+        toIdString(community._id) === toIdString(activeCommunityId)
           ? { ...community, unreadCount: 0 }
           : community
       )
     );
   }, [chatMode, activeCommunityId]);
+
+  // Join group-chat rooms after connect (and re-join on reconnect) so live events are received.
+  useEffect(() => {
+    if (!socket || !isConnected || chatMode !== 'group') return;
+    if (!groupConversations.length) return;
+
+    const communityIds = groupConversations
+      .map((community) => toIdString(community._id || community.communityId))
+      .filter(Boolean);
+
+    if (!communityIds.length) return;
+
+    communityIds.forEach((communityId) => {
+      socket.emit('group:join', { communityId });
+      socket.emit('community:join', { communityId });
+      socket.emit('room:join', { roomType: 'community', roomId: communityId });
+    });
+
+    socket.emit('groups:join', { communityIds });
+    socket.emit('communities:join', { communityIds });
+  }, [socket, isConnected, chatMode, groupConversations]);
+
+  // Ensure currently opened group room is explicitly joined.
+  useEffect(() => {
+    if (!socket || !isConnected || chatMode !== 'group' || !activeCommunityId) return;
+
+    socket.emit('group:join', { communityId: activeCommunityId });
+    socket.emit('community:join', { communityId: activeCommunityId });
+    socket.emit('room:join', { roomType: 'community', roomId: activeCommunityId });
+  }, [socket, isConnected, chatMode, activeCommunityId]);
 
   // Load older messages when user scrolls to the top of the chat
   const loadMoreMessages = async () => {
@@ -392,20 +432,27 @@ const Messages = () => {
   useEffect(() => {
     if (!socket || !isConnected) return;
 
+    const getGroupPayload = (raw) => raw?.message || raw;
+    const getCommunityId = (raw) => {
+      const payload = getGroupPayload(raw);
+      return toIdString(payload?.community?._id || payload?.community || payload?.communityId);
+    };
+
     const upsertGroupConversationFromMessage = (messageData) => {
-      const communityFromPayload = messageData.community || {};
-      const communityId = communityFromPayload._id || messageData.communityId;
+      const payload = getGroupPayload(messageData);
+      const communityFromPayload = payload.community || {};
+      const communityId = getCommunityId(payload);
       if (!communityId) return;
 
       setGroupConversations((prev) => {
         const existingIndex = prev.findIndex((c) => c._id === communityId);
-        const unreadIncrement = messageData.sender?._id === user?._id ? 0 : 1;
+        const unreadIncrement = payload.sender?._id === user?._id ? 0 : 1;
 
         if (existingIndex >= 0) {
           const existing = prev[existingIndex];
           const updated = {
             ...existing,
-            lastMessage: messageData,
+            lastMessage: payload,
             unreadCount: (existing.unreadCount || 0) + unreadIncrement,
           };
           return [updated, ...prev.filter((_, idx) => idx !== existingIndex)];
@@ -414,7 +461,7 @@ const Messages = () => {
         const created = normalizeGroupConversation({
           community: communityFromPayload,
           communityId,
-          lastMessage: messageData,
+          lastMessage: payload,
           unreadCount: unreadIncrement,
         });
         return [created, ...prev];
@@ -455,24 +502,26 @@ const Messages = () => {
 
     // Listen for new group messages
     const handleNewGroupMessage = (messageData) => {
-      const communityId = messageData.community?._id || messageData.communityId;
+      const payload = getGroupPayload(messageData);
+      const communityId = getCommunityId(payload);
       if (!communityId) return;
 
-      upsertGroupConversationFromMessage(messageData);
+      upsertGroupConversationFromMessage(payload);
 
-      const isForCurrentCommunity = chatMode === 'group' && communityId === activeCommunityId;
+      const isForCurrentCommunity =
+        chatMode === 'group' && toIdString(activeCommunityId) === toIdString(communityId);
       if (!isForCurrentCommunity) return;
 
       const el = messageListRef.current;
       const wasAtBottom = !el || el.scrollTop < 80;
 
       setMessages((prev) => {
-        const exists = prev.some((msg) => msg._id === messageData._id);
+        const exists = prev.some((msg) => toIdString(msg._id) === toIdString(payload._id));
         if (exists) return prev;
-        return [messageData, ...prev];
+        return [payload, ...prev];
       });
 
-      if (messageData.sender?._id !== user?._id && activeCommunityId) {
+      if (payload.sender?._id !== user?._id && activeCommunityId) {
         markCommunityGroupAsRead(activeCommunityId).catch(console.error);
       }
 
@@ -499,14 +548,14 @@ const Messages = () => {
 
     const handleGroupTypingStart = ({ communityId, userId }) => {
       if (chatMode !== 'group') return;
-      if (communityId !== activeCommunityId) return;
+      if (toIdString(communityId) !== toIdString(activeCommunityId)) return;
       if (userId === user?._id) return;
       setIsTyping(true);
     };
 
     const handleGroupTypingStop = ({ communityId }) => {
       if (chatMode !== 'group') return;
-      if (communityId !== activeCommunityId) return;
+      if (toIdString(communityId) !== toIdString(activeCommunityId)) return;
       setIsTyping(false);
     };
 
@@ -571,25 +620,27 @@ const Messages = () => {
     };
 
     const handleGroupMessageRead = ({ communityId, messageIds, readBy }) => {
-      if (chatMode !== 'group' || communityId !== activeCommunityId) return;
+      if (chatMode !== 'group' || toIdString(communityId) !== toIdString(activeCommunityId)) return;
       if (readBy === user?._id) return;
       setMessages((prev) =>
         prev.map((msg) =>
-          messageIds.includes(msg._id) ? { ...msg, isRead: true } : msg
+          messageIds.some((id) => toIdString(id) === toIdString(msg._id))
+            ? { ...msg, isRead: true }
+            : msg
         )
       );
     };
 
     const handleGroupMessageDeleted = ({ communityId, messageId }) => {
-      if (chatMode !== 'group' || communityId !== activeCommunityId) return;
-      setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+      if (chatMode !== 'group' || toIdString(communityId) !== toIdString(activeCommunityId)) return;
+      setMessages((prev) => prev.filter((msg) => toIdString(msg._id) !== toIdString(messageId)));
     };
 
     const handleGroupMessageDeletedForEveryone = ({ communityId, messageId }) => {
-      if (chatMode !== 'group' || communityId !== activeCommunityId) return;
+      if (chatMode !== 'group' || toIdString(communityId) !== toIdString(activeCommunityId)) return;
       setMessages((prev) =>
         prev.map((msg) =>
-          msg._id === messageId
+          toIdString(msg._id) === toIdString(messageId)
             ? { ...msg, isDeletedForEveryone: true }
             : msg
         )
@@ -597,10 +648,10 @@ const Messages = () => {
     };
 
     const handleGroupReactionAdded = ({ communityId, messageId, reaction }) => {
-      if (communityId !== activeCommunityId) return;
+      if (toIdString(communityId) !== toIdString(activeCommunityId)) return;
       setMessages((prev) =>
         prev.map((msg) => {
-          if (msg._id !== messageId) return msg;
+          if (toIdString(msg._id) !== toIdString(messageId)) return msg;
           const reactions = msg.reactions || [];
           const withoutCurrentUser = reactions.filter((r) => r.user._id !== reaction.user._id);
           return { ...msg, reactions: [...withoutCurrentUser, reaction] };
@@ -609,10 +660,10 @@ const Messages = () => {
     };
 
     const handleGroupReactionRemoved = ({ communityId, messageId, userId: reactionUserId, emoji }) => {
-      if (communityId !== activeCommunityId) return;
+      if (toIdString(communityId) !== toIdString(activeCommunityId)) return;
       setMessages((prev) =>
         prev.map((msg) => {
-          if (msg._id !== messageId) return msg;
+          if (toIdString(msg._id) !== toIdString(messageId)) return msg;
           const reactions = (msg.reactions || []).filter(
             (r) => !(r.user._id === reactionUserId && r.emoji === emoji)
           );
@@ -622,23 +673,29 @@ const Messages = () => {
     };
 
     const handleGroupMemberOnline = ({ communityId, userId: memberId }) => {
+      const normalizedCommunityId = toIdString(communityId);
+      if (!normalizedCommunityId) return;
+
       setGroupOnlineMemberCountMap((prev) => {
-        const current = prev[communityId] || 0;
-        return { ...prev, [communityId]: current + 1 };
+        const current = prev[normalizedCommunityId] || 0;
+        return { ...prev, [normalizedCommunityId]: current + 1 };
       });
 
-      if (communityId === activeCommunityId) {
+      if (normalizedCommunityId === toIdString(activeCommunityId)) {
         setOnlineGroupMemberIds((prev) => new Set([...prev, memberId]));
       }
     };
 
     const handleGroupMemberOffline = ({ communityId, userId: memberId }) => {
+      const normalizedCommunityId = toIdString(communityId);
+      if (!normalizedCommunityId) return;
+
       setGroupOnlineMemberCountMap((prev) => {
-        const current = prev[communityId] || 0;
-        return { ...prev, [communityId]: Math.max(0, current - 1) };
+        const current = prev[normalizedCommunityId] || 0;
+        return { ...prev, [normalizedCommunityId]: Math.max(0, current - 1) };
       });
 
-      if (communityId === activeCommunityId) {
+      if (normalizedCommunityId === toIdString(activeCommunityId)) {
         setOnlineGroupMemberIds((prev) => {
           const next = new Set(prev);
           next.delete(memberId);
@@ -647,7 +704,32 @@ const Messages = () => {
       }
     };
 
-    // Attach event listeners
+    if (chatMode === 'group') {
+      socket.on('group:message:new', handleNewGroupMessage);
+      socket.on('group:message:read', handleGroupMessageRead);
+      socket.on('group:message:deleted', handleGroupMessageDeleted);
+      socket.on('group:message:deleted-for-everyone', handleGroupMessageDeletedForEveryone);
+      socket.on('group:reaction:added', handleGroupReactionAdded);
+      socket.on('group:reaction:removed', handleGroupReactionRemoved);
+      socket.on('group:typing:start', handleGroupTypingStart);
+      socket.on('group:typing:stop', handleGroupTypingStop);
+      socket.on('group:member:online', handleGroupMemberOnline);
+      socket.on('group:member:offline', handleGroupMemberOffline);
+
+      return () => {
+        socket.off('group:message:new', handleNewGroupMessage);
+        socket.off('group:message:read', handleGroupMessageRead);
+        socket.off('group:message:deleted', handleGroupMessageDeleted);
+        socket.off('group:message:deleted-for-everyone', handleGroupMessageDeletedForEveryone);
+        socket.off('group:reaction:added', handleGroupReactionAdded);
+        socket.off('group:reaction:removed', handleGroupReactionRemoved);
+        socket.off('group:typing:start', handleGroupTypingStart);
+        socket.off('group:typing:stop', handleGroupTypingStop);
+        socket.off('group:member:online', handleGroupMemberOnline);
+        socket.off('group:member:offline', handleGroupMemberOffline);
+      };
+    }
+
     socket.on('message:new', handleNewMessage);
     socket.on('typing:start', handleTypingStart);
     socket.on('typing:stop', handleTypingStop);
@@ -656,18 +738,7 @@ const Messages = () => {
     socket.on('message:reaction-added', handleReactionAdded);
     socket.on('message:reaction-removed', handleReactionRemoved);
     socket.on('message:deleted-for-everyone', handleMessageDeletedForEveryone);
-    socket.on('group:message:new', handleNewGroupMessage);
-    socket.on('group:message:read', handleGroupMessageRead);
-    socket.on('group:message:deleted', handleGroupMessageDeleted);
-    socket.on('group:message:deleted-for-everyone', handleGroupMessageDeletedForEveryone);
-    socket.on('group:reaction:added', handleGroupReactionAdded);
-    socket.on('group:reaction:removed', handleGroupReactionRemoved);
-    socket.on('group:typing:start', handleGroupTypingStart);
-    socket.on('group:typing:stop', handleGroupTypingStop);
-    socket.on('group:member:online', handleGroupMemberOnline);
-    socket.on('group:member:offline', handleGroupMemberOffline);
 
-    // Cleanup
     return () => {
       socket.off('message:new', handleNewMessage);
       socket.off('typing:start', handleTypingStart);
@@ -677,16 +748,6 @@ const Messages = () => {
       socket.off('message:reaction-added', handleReactionAdded);
       socket.off('message:reaction-removed', handleReactionRemoved);
       socket.off('message:deleted-for-everyone', handleMessageDeletedForEveryone);
-      socket.off('group:message:new', handleNewGroupMessage);
-      socket.off('group:message:read', handleGroupMessageRead);
-      socket.off('group:message:deleted', handleGroupMessageDeleted);
-      socket.off('group:message:deleted-for-everyone', handleGroupMessageDeletedForEveryone);
-      socket.off('group:reaction:added', handleGroupReactionAdded);
-      socket.off('group:reaction:removed', handleGroupReactionRemoved);
-      socket.off('group:typing:start', handleGroupTypingStart);
-      socket.off('group:typing:stop', handleGroupTypingStop);
-      socket.off('group:member:online', handleGroupMemberOnline);
-      socket.off('group:member:offline', handleGroupMemberOffline);
     };
   }, [socket, isConnected, activeChat, activeCommunityId, chatMode, user]);
 
@@ -1022,8 +1083,14 @@ const Messages = () => {
           <div className="hidden sm:flex w-14 flex-col items-center justify-center space-y-6 mr-5">
             <div className="side-trapezoid btn-blue-gradient flex flex-col items-center justify-center">
               <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md"
+                onClick={() => {
+                  setChatMode('direct');
+                  setIsSidebarOpen(true);
+                }}
+                className={`flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md ${
+                  chatMode === 'direct' ? 'opacity-100' : 'opacity-70'
+                }`}
+                title="Open direct chats"
               >
                 <IoMenu className="w-6 h-6 text-white" />
               </button>
