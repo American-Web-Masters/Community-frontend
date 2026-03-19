@@ -38,7 +38,7 @@ encouragement accessible to all
 We value encouragement as we lift one another up with words, prayers, and actions that bring hope
 
 ### 🤝 Unity  
-We value unity as we pursue oneness across denominations, cultures, and backgrounds while reflecting the heart of Christ for His Church.  
+We value unity as we pursue oneness across denominations, cultures, and backgrounds while reflecting the heart of Christ for His Church 
 
 ### 🙏 Humility  
 We value humility by keeping pride, competition, and comparison out of our community so that God receives the glory  
