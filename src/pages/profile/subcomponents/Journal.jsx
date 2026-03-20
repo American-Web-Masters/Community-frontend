@@ -4,11 +4,36 @@ import { getJournalByUser } from '../../../api';
 import { getInitials } from '../../../utils/profileUtils';
 
 const MOODS = [
-  { label: 'Joyful', emoji: '😊', pillClass: 'bg-yellow-100 text-yellow-700' },
-  { label: 'Peaceful', emoji: '😌', pillClass: 'bg-teal-100 text-teal-700' },
-  { label: 'Sad', emoji: '😢', pillClass: 'bg-blue-100 text-blue-700' },
-  { label: 'Grateful', emoji: '🙏', pillClass: 'bg-yellow-100 text-yellow-700' },
-  { label: 'Inspired', emoji: '✨', pillClass: 'bg-purple-100 text-purple-700' },
+  {
+    label: 'Joyful',
+    emoji: '😊',
+    pillClass: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
+    pillClassActive: 'bg-yellow-200 text-yellow-800',
+  },
+  {
+    label: 'Peaceful',
+    emoji: '😌',
+    pillClass: 'bg-teal-100 text-teal-700 hover:bg-teal-200',
+    pillClassActive: 'bg-teal-200 text-teal-800',
+  },
+  {
+    label: 'Sad',
+    emoji: '😢',
+    pillClass: 'bg-blue-100 text-blue-700 hover:bg-blue-200',
+    pillClassActive: 'bg-blue-200 text-blue-800',
+  },
+  {
+    label: 'Grateful',
+    emoji: '🙏',
+    pillClass: 'bg-orange-100 text-orange-700 hover:bg-orange-200',
+    pillClassActive: 'bg-orange-200 text-orange-800',
+  },
+  {
+    label: 'Inspired',
+    emoji: '✨',
+    pillClass: 'bg-purple-100 text-purple-700 hover:bg-purple-200',
+    pillClassActive: 'bg-purple-200 text-purple-800',
+  },
 ];
 
 const moodMetaByLabel = new Map(MOODS.map((m) => [m.label, m]));
@@ -107,9 +132,9 @@ const Journal = ({ userProfile }) => {
   }, [displayedJournal?.author?.profile?.profilePicture, userProfile?.profile?.profilePicture, userProfile?.profilePicture]);
 
   return (
-    <div className="w-full px-4 sm:px-6 py-6">
+    <div className="w-full px-2 sm:px-1 py-6">
       {/* Filter Tabs */}
-      <div className="w-full bg-white/90 backdrop-blur-sm rounded-full px-4 py-3 flex items-center gap-3 overflow-x-auto">
+      <div className="w-full bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-3 overflow-x-auto">
         <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Filter by mood:</span>
         <div className="flex items-center gap-2">
           {MOODS.map((mood) => {
@@ -120,10 +145,10 @@ const Journal = ({ userProfile }) => {
                 type="button"
                 onClick={() => setActiveMood(mood.label)}
                 className={
-                  `px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-150 ` +
+                  `px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-150 ring-1 ring-black/5 ` +
                   (isActive
-                    ? `${mood.pillClass} shadow-sm ring-1 ring-black/5`
-                    : 'bg-gray-100/70 text-gray-600 hover:bg-gray-100')
+                    ? `${mood.pillClassActive ?? mood.pillClass} shadow-sm`
+                    : `${mood.pillClass} opacity-90`)
                 }
               >
                 <span className="mr-2">{mood.emoji}</span>
