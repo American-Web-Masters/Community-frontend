@@ -83,3 +83,29 @@ export const formatTimeAgo = (date) => {
     if (t.length <= maxChars) return t;
     return `${t.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
   };
+
+  
+  // Matches the screenshot style: "3 days ago", "2 hours ago", etc.
+  export const formatRelativeTimeCompact = (isoDate) => {
+    if (!isoDate) return '';
+    const then = new Date(isoDate);
+    const now = new Date();
+    const diffMs = now - then;
+    const sec = Math.floor(diffMs / 1000);
+    if (!Number.isFinite(sec)) return '';
+  
+    const min = Math.floor(sec / 60);
+    const hour = Math.floor(min / 60);
+    const day = Math.floor(hour / 24);
+  
+    if (day > 0) return `${day} day${day === 1 ? '' : 's'} ago`;
+    if (hour > 0) return `${hour} hour${hour === 1 ? '' : 's'} ago`;
+    if (min > 0) return `${min} minute${min === 1 ? '' : 's'} ago`;
+    return 'just now';
+  };
+  
+  export const estimateReadTimeMin = (wordCount) => {
+    const words = Number(wordCount ?? 0);
+    if (!Number.isFinite(words) || words <= 0) return 1;
+    return Math.max(1, Math.round(words / 200));
+  };
