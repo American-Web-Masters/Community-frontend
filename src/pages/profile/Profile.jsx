@@ -245,7 +245,7 @@ const Profile = () => {
           ) : activeTab === "Testimonies" ? (
             <Testimony ref={testimonyRef} userProfile={userProfile} />
           ) : (
-            <ActiveComponent />
+            <ActiveComponent userProfile={userProfile} />
           )}
         </div>
 

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getJournalByUser } from '../../../api';
+import { getInitials } from '../../../utils/profileUtils';
 
 const MOODS = [
   { label: 'Joyful', emoji: '😊', pillClass: 'bg-yellow-100 text-yellow-700' },
@@ -12,12 +13,15 @@ const MOODS = [
 
 const moodMetaByLabel = new Map(MOODS.map((m) => [m.label, m]));
 
-const formatRelativeTime = (isoDate) => {
+// Matches the screenshot style: "3 days ago", "2 hours ago", etc.
+const formatRelativeTimeCompact = (isoDate) => {
   if (!isoDate) return '';
   const then = new Date(isoDate);
   const now = new Date();
   const diffMs = now - then;
   const sec = Math.floor(diffMs / 1000);
+  if (!Number.isFinite(sec)) return '';
+
   const min = Math.floor(sec / 60);
   const hour = Math.floor(min / 60);
   const day = Math.floor(hour / 24);
@@ -54,8 +58,9 @@ const Journal = ({ userProfile }) => {
     try {
       setLoading(true);
       setError('');
-      const res = await getJournalByUser(userId);
-      const items = res?.data?.journals || [];
+  const res = await getJournalByUser(userId);
+  // API can return either { data: { journals: [] } } or { data: { journal: {} } }
+  const items = res?.data?.journals ?? (res?.data?.journal ? [res.data.journal] : []);
       setJournals(Array.isArray(items) ? items : []);
     } catch (e) {
       setError(e?.response?.data?.message || 'Failed to load journal.');
@@ -89,6 +94,17 @@ const Journal = ({ userProfile }) => {
     const u = userProfile?.user?.username;
     return u ? `@${u}` : null;
   }, [userProfile]);
+
+  const authorProfilePicture = useMemo(() => {
+    // ProfileHeader uses `userProfile.profilePicture`, but some APIs nest it.
+    // Also allow fallback to the journal entry populated author (if backend returns it).
+    return (
+      userProfile?.profilePicture ||
+      userProfile?.profile?.profilePicture ||
+      displayedJournal?.author?.profile?.profilePicture ||
+      null
+    );
+  }, [displayedJournal?.author?.profile?.profilePicture, userProfile?.profile?.profilePicture, userProfile?.profilePicture]);
 
   return (
     <div className="w-full px-4 sm:px-6 py-6">
@@ -157,12 +173,20 @@ const Journal = ({ userProfile }) => {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
                   <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
-                    <span className="text-gray-600 text-sm font-semibold">SG</span>
+                    {authorProfilePicture ? (
+                      <img
+                        src={authorProfilePicture}
+                        alt={authorName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-gray-600 text-sm font-semibold">{getInitials(authorName)}</span>
+                    )}
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900 leading-5">{authorName}</div>
                     <div className="text-xs text-gray-500 mt-0.5">
-                      {authorHandle ? `${authorHandle} • ` : ''}{formatRelativeTime(displayedJournal.createdAt)}
+                      {authorHandle ? `${authorHandle} • ` : ''}{formatRelativeTimeCompact(displayedJournal.createdAt)}
                     </div>
                   </div>
                 </div>
