@@ -71,11 +71,13 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
       const full = `${first} ${last}`.trim() || t?.author?.username || 'User';
       const username = t?.author?.username ? `@${t.author.username}` : null;
       const description = t?.description || '';
+      const profilePicture = t?.author?.profile?.profilePicture || null;
       return {
         id: t?._id,
         authorName: full,
         authorUsername: username,
         createdAt: t?.createdAt,
+        profilePicture,
         description,
         verse: t?.verse,
         tags: Array.isArray(t?.tags) ? t.tags : [],
@@ -93,6 +95,7 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
       setLoading(true);
       setError(null);
       const res = await getTestimonyByUser(userId);
+      console.log(res?.data?.testimonies[0]?.author?.profile?.profilePicture)
       const items = res?.data?.testimonies || [];
       setTestimonies(mapTestimonies(items));
     } catch (e) {
@@ -351,7 +354,7 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
             );
             const isCompleted = idx < activeIndex;
             const isCurrentOrCompleted = isActive || isCompleted;
-
+            console.log(testimony)
             return (
               <div
                 key={testimony.id}
@@ -400,9 +403,9 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-center gap-3">
-                        {testimony.avatarUrl ? (
+                        {testimony?.profilePicture ? (
                           <img
-                            src={testimony.avatarUrl}
+                            src={testimony?.profilePicture}
                             alt=""
                             className="h-11 w-11 rounded-full object-cover"
                           />
