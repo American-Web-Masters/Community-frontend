@@ -35,7 +35,7 @@ encouragement accessible to all
 ## ❤️ **Values**
 
 ### ✨ Encouragement  
-We value encouragement as we lift one another up with words, prayers, and actions that bring hope
+We value encouragement as we lift one another up with words, prayers, and actions that bring hope.
 
 ### 🤝 Unity  
 We value unity as we pursue oneness across denominations, cultures, and backgrounds while reflecting the heart of Christ for His Church 
