@@ -210,6 +210,16 @@ export const getJournalByUser = async (userId) => {
   }
 };
 
+export const deleteJournalByUser = async (journalId) => {
+  try {
+    const response = await apiClient.delete(`/journals/${journalId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting journal by user:', error);
+    throw error;
+  }
+};
+
 export default {
   getUserProfile,
   updateUserProfile,
@@ -223,5 +233,6 @@ export default {
   updateTestimony,
   deleteTestimony,
   getJournalById,
-  getJournalByUser
+  getJournalByUser,
+  deleteJournalByUser
 };
