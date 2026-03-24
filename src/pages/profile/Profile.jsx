@@ -19,6 +19,7 @@ const Profile = () => {
   const postsRef = useRef(null);
   const communitiesRef = useRef(null);
   const testimonyRef = useRef(null);
+  const journalRef = useRef(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isCreateCommunityModalOpen, setIsCreateCommunityModalOpen] = useState(false);
@@ -101,7 +102,15 @@ const Profile = () => {
       name: "Journal", 
       component: Journal,
       buttonText: "Create New Entry",
-      buttonAction: () => console.log('Create Entry') // Add your logic here
+      buttonAction: () => {
+        // Keep the same "parent triggers child" pattern when possible.
+        // Journal doesn't expose a modal yet, so we fall back to the create route.
+        if (journalRef.current?.openCreateModal) {
+          journalRef.current.openCreateModal();
+          return;
+        }
+        navigate('/create');
+      }
     },
     { 
       name: "Subscriptions", 
@@ -244,6 +253,8 @@ const Profile = () => {
             <Communities ref={communitiesRef} userProfile={userProfile} />
           ) : activeTab === "Testimonies" ? (
             <Testimony ref={testimonyRef} userProfile={userProfile} />
+          ) : activeTab === "Journal" ? (
+            <Journal ref={journalRef} userProfile={userProfile} />
           ) : (
             <ActiveComponent userProfile={userProfile} />
           )}

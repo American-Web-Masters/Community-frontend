@@ -1,7 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState, useImperativeHandle } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getJournalByUser } from '../../../api';
+import { deleteJournalByUser, getJournalByUser } from '../../../api';
 import { estimateReadTimeMin, formatRelativeTimeCompact, getInitials } from '../../../utils/profileUtils';
+import { FaTrash } from 'react-icons/fa';
+import ConfirmModal from './ConfirmModal';
 
 const MOODS = [
   {
@@ -38,7 +40,7 @@ const MOODS = [
 
 const moodMetaByLabel = new Map(MOODS.map((m) => [m.label, m]));
 
-const Journal = ({ userProfile }) => {
+const Journal = forwardRef(({ userProfile }, ref) => {
   const navigate = useNavigate();
   const [activeMood, setActiveMood] = useState('Joyful');
   const [loading, setLoading] = useState(false);
@@ -48,7 +50,18 @@ const Journal = ({ userProfile }) => {
   const descriptionRefs = useRef({});
   const [maxHeightById, setMaxHeightById] = useState({});
 
+  // Delete modal + flow (mirrors Testimony delete behavior)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const userId = userProfile?.user?._id;
+
+  // Expose create action to Profile tab button (same pattern as Posts/Testimony)
+  useImperativeHandle(ref, () => ({
+    openCreateModal: () => navigate('/create'),
+  }));
 
   const fetchJournals = useCallback(async () => {
     if (!userId) {
@@ -74,7 +87,33 @@ const Journal = ({ userProfile }) => {
 
   useEffect(() => {
     fetchJournals();
-  }, [fetchJournals]);
+  }, [fetchJournals, refreshKey]);
+
+  const requestDelete = useCallback((journalId) => {
+    if (!journalId) return;
+    setError('');
+    setDeleteTargetId(journalId);
+    setIsDeleteOpen(true);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTargetId) return;
+    if (deleteLoading) return;
+
+    setError('');
+    setDeleteLoading(true);
+    try {
+      await deleteJournalByUser(deleteTargetId);
+      setIsDeleteOpen(false);
+      setDeleteTargetId(null);
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      setError(err?.response?.data?.message || err?.message || 'Failed to delete journal.');
+      // Keep dialog open so user can retry/cancel
+    } finally {
+      setDeleteLoading(false);
+    }
+  }, [deleteLoading, deleteTargetId]);
 
   const moodOption = useMemo(() => moodMetaByLabel.get(activeMood) ?? MOODS[0], [activeMood]);
 
@@ -110,6 +149,20 @@ const Journal = ({ userProfile }) => {
 
   return (
     <div className="w-full px-4 md:px-1 py-1">
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        onClose={() => {
+          if (deleteLoading) return;
+          setIsDeleteOpen(false);
+          setDeleteTargetId(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Delete journal entry?"
+        description="This action can't be undone."
+        confirmLabel={deleteLoading ? 'Deleting…' : 'Delete'}
+        cancelLabel="Cancel"
+      />
+
       {/* Filter Tabs */}
       <div className="w-full bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-3 overflow-x-auto">
         <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Filter by mood:</span>
@@ -210,9 +263,24 @@ const Journal = ({ userProfile }) => {
                           <span className="mr-2">{meta.emoji}</span>
                           {journalMood}
                         </span>
+
                         <button
                           type="button"
-                          className="w-10 h-10 rounded-xl border border-black/10 bg-white flex items-center justify-center hover:bg-gray-50 transition"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            requestDelete(journalId);
+                          }}
+                          className="w-10 h-10 rounded-xl border border-black/10 bg-white flex items-center justify-center text-red-600 hover:bg-red-50 transition disabled:opacity-60 cursor-pointer"
+                          aria-label="Delete journal"
+                          title="Delete"
+                          disabled={deleteLoading}
+                        >
+                          <FaTrash className="h-4 w-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          className="w-10 h-10 rounded-xl border border-black/10 bg-white flex items-center justify-center hover:bg-gray-50 transition cursor-pointer"
                           aria-label="Edit journal"
                         >
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -292,8 +360,26 @@ const Journal = ({ userProfile }) => {
             })
           )}
       </div>
+
+      {/* Local styles: smooth expand/collapse for story content */}
+      <style>{`
+        .journal-story {
+          overflow: hidden;
+          transition: max-height 260ms ease, opacity 200ms ease;
+          will-change: max-height;
+        }
+        .journal-story.is-collapsed {
+          opacity: 0.92;
+        }
+        .journal-story.is-expanded {
+          opacity: 1;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .journal-story { transition: none; }
+        }
+      `}</style>
     </div>
   );
-};
+});
 
 export default Journal;
