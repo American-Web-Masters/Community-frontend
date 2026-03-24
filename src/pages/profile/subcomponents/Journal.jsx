@@ -1,9 +1,11 @@
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState, useImperativeHandle } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { deleteJournalByUser, getJournalByUser } from '../../../api';
 import { estimateReadTimeMin, formatRelativeTimeCompact, getInitials } from '../../../utils/profileUtils';
 import { FaTrash } from 'react-icons/fa';
 import ConfirmModal from './ConfirmModal';
+import { selectUser } from '../../../store/userSlice';
 
 const MOODS = [
   {
@@ -42,6 +44,7 @@ const moodMetaByLabel = new Map(MOODS.map((m) => [m.label, m]));
 
 const Journal = forwardRef(({ userProfile }, ref) => {
   const navigate = useNavigate();
+  const viewer = useSelector(selectUser);
   const [activeMood, setActiveMood] = useState('Joyful');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -57,6 +60,11 @@ const Journal = forwardRef(({ userProfile }, ref) => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const userId = userProfile?.user?._id;
+
+  const isOwner = useMemo(() => {
+    const viewerId = viewer?._id || viewer?.id || viewer?.user?._id;
+    return Boolean(viewerId && userId && String(viewerId) === String(userId));
+  }, [userId, viewer]);
 
   // Expose create action to Profile tab button (same pattern as Posts/Testimony)
   useImperativeHandle(ref, () => ({
@@ -264,36 +272,40 @@ const Journal = forwardRef(({ userProfile }, ref) => {
                           {journalMood}
                         </span>
 
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            requestDelete(journalId);
-                          }}
-                          className="w-10 h-10 rounded-xl border border-black/10 bg-white flex items-center justify-center text-red-600 hover:bg-red-50 transition disabled:opacity-60 cursor-pointer"
-                          aria-label="Delete journal"
-                          title="Delete"
-                          disabled={deleteLoading}
-                        >
-                          <FaTrash className="h-4 w-4" />
-                        </button>
+                        {isOwner ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                requestDelete(journalId);
+                              }}
+                              className="w-10 h-10 rounded-xl border border-black/10 bg-white flex items-center justify-center text-red-600 hover:bg-red-50 transition disabled:opacity-60 cursor-pointer"
+                              aria-label="Delete journal"
+                              title="Delete"
+                              disabled={deleteLoading}
+                            >
+                              <FaTrash className="h-4 w-4" />
+                            </button>
 
-                        <button
-                          type="button"
-                          className="w-10 h-10 rounded-xl border border-black/10 bg-white flex items-center justify-center hover:bg-gray-50 transition cursor-pointer"
-                          aria-label="Edit journal"
-                        >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 20H21" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            <path
-                              d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"
-                              stroke="#111827"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </button>
+                            <button
+                              type="button"
+                              className="w-10 h-10 rounded-xl border border-black/10 bg-white flex items-center justify-center hover:bg-gray-50 transition cursor-pointer"
+                              aria-label="Edit journal"
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 20H21" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path
+                                  d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"
+                                  stroke="#111827"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </button>
+                          </>
+                        ) : null}
                       </div>
                     </div>
 
