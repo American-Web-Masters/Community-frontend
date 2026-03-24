@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getJournalByUser } from '../../../api';
 import { estimateReadTimeMin, formatRelativeTimeCompact, getInitials } from '../../../utils/profileUtils';
@@ -45,6 +45,8 @@ const Journal = ({ userProfile }) => {
   const [error, setError] = useState('');
   const [journals, setJournals] = useState([]);
   const [expandedById, setExpandedById] = useState({});
+  const descriptionRefs = useRef({});
+  const [maxHeightById, setMaxHeightById] = useState({});
 
   const userId = userProfile?.user?._id;
 
@@ -174,6 +176,7 @@ const Journal = ({ userProfile }) => {
 
               const isExpanded = Boolean(expandedById[j?.id ?? j?._id]);
               const journalId = j?.id ?? j?._id;
+              const maxHeight = maxHeightById[journalId] ?? 96;
 
               return (
                 <div
@@ -228,15 +231,33 @@ const Journal = ({ userProfile }) => {
 
                     {/* Description */}
                     <div className="mt-5 bg-[#eeeeeed7] rounded-xl p-4 text-sm text-gray-700 leading-6">
-                      <p className={isExpanded ? '' : 'line-clamp-3 '}>{j?.description}</p>
+                      <div
+                        className={`journal-story ${isExpanded ? 'is-expanded' : 'is-collapsed'}`}
+                        style={{ maxHeight: isExpanded ? `${maxHeight}px` : '4.5rem' }}
+                        aria-expanded={isExpanded}
+                      >
+                        <p
+                          ref={(el) => {
+                            if (!journalId) return;
+                            if (el) descriptionRefs.current[journalId] = el;
+                          }}
+                        >
+                          {j?.description}
+                        </p>
+                      </div>
                       <button
                         type="button"
-                        onClick={() =>
-                          setExpandedById((prev) => ({
-                            ...prev,
-                            [journalId]: !Boolean(prev[journalId]),
-                          }))
-                        }
+                        onClick={() => {
+                          // Measure full text height once, so we can animate max-height smoothly.
+                          if (journalId) {
+                            const el = descriptionRefs.current[journalId];
+                            const measured = el?.scrollHeight;
+                            if (measured) {
+                              setMaxHeightById((prev) => (prev[journalId] === measured ? prev : { ...prev, [journalId]: measured }));
+                            }
+                          }
+                          setExpandedById((prev) => ({ ...prev, [journalId]: !Boolean(prev[journalId]) }));
+                        }}
                         className="mt-2 text-blue-700 font-semibold hover:underline"
                       >
                         {isExpanded ? 'Show less' : 'Read full story →'}
