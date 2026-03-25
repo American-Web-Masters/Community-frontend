@@ -198,7 +198,7 @@ const Journal = forwardRef(({ userProfile }, ref) => {
       </div>
 
       {/* Header */}
-      <div className="mt-6">
+      <div className="mt-3">
         <h2 className="text-2xl font-semibold text-gray-900">My Faith Journal</h2>
         <p className="text-[15px] text-gray-800 mt-1">Reflect on your spiritual journey and track your emotional wellness</p>
       </div>

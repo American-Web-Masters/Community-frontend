@@ -220,6 +220,16 @@ export const deleteJournalByUser = async (journalId) => {
   }
 };
 
+export const createJournal = async (data)=>{
+  try {
+    const response = await apiClient.post('/journals', data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating journal:', error);
+    throw error;
+  }
+}
+
 export default {
   getUserProfile,
   updateUserProfile,
