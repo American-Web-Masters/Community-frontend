@@ -183,7 +183,7 @@ const Journal = forwardRef(({ userProfile }, ref) => {
                 type="button"
                 onClick={() => setActiveMood(mood.label)}
                 className={
-                  `px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-150 ring-1 ring-black/5 ` +
+                  `px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-150 ring-1 ring-black/5 cursor-pointer ` +
                   (isActive
                     ? `${mood.pillClassActive ?? mood.pillClass} shadow-sm`
                     : `${mood.pillClass} opacity-90`)
