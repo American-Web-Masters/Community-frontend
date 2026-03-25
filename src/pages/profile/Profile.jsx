@@ -127,7 +127,12 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen light-background overflow-x-hidden">
-      <Header />
+      <Header
+        showNotification={true}
+        showFilter={false}
+        showSearch={false}
+        onLogoutClick={handleLogout}
+      />
       
       <div className="pt-10 pb-20">
         {/* Profile Header - Always visible */}
@@ -270,24 +275,6 @@ const Profile = () => {
             communitiesRef.current?.refresh?.();
           }}
         />
-
-        {/* Logout Button - Fixed at bottom of content */}
-        <div className="max-w-6xl mx-auto px-6 mt-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Account Settings</h3>
-                <p className="text-sm text-gray-600">Manage your account preferences</p>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-              >
-                🚪 Logout
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
 
       <BottomNavBar />

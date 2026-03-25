@@ -6,6 +6,7 @@ const Header = ({
   showNotification = true, 
   showFilter = true, 
   showSearch = true,
+  showLogout,
   onNotificationClick,
   onLogoutClick,
   onFilterClick,
@@ -23,6 +24,7 @@ const Header = ({
   const urgencyOptions = ['low', 'normal', 'high'];
   const moodOptions = ['😄', '😐', '😔', '😡', '😢'];
   const commonTags = ['healing', 'family', 'work', 'health', 'peace', 'guidance'];
+  const shouldShowLogout = typeof showLogout === 'boolean' ? showLogout : !!onLogoutClick;
 
   return (
     <>
@@ -44,12 +46,14 @@ const Header = ({
             
             {/* Right side - Filter and Search */}
             <div className="flex items-center space-x-3">
-              <button
-                onClick={onLogoutClick}
-                className="px-4 py-2 md:px-6 text-xs cursor-pointer bg-red-500 text-white rounded-full shadow-sm hover:shadow-md transition-shadow duration-200"
-              >
-                Logout
-              </button>
+              {shouldShowLogout && (
+                <button
+                  onClick={onLogoutClick}
+                  className="px-4 py-2 md:px-6 text-xs cursor-pointer bg-red-500 text-white rounded-full shadow-sm hover:shadow-md transition-shadow duration-200"
+                >
+                  Logout
+                </button>
+              )}
 
               {showFilter && (
                 <button
