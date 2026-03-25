@@ -1,11 +1,11 @@
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState, useImperativeHandle } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { deleteJournalByUser, getJournalByUser } from '../../../api';
 import { estimateReadTimeMin, formatRelativeTimeCompact, getInitials } from '../../../utils/profileUtils';
 import { FaTrash } from 'react-icons/fa';
 import ConfirmModal from './ConfirmModal';
 import { selectUser } from '../../../store/userSlice';
+import CreateJournalModal from './CreateJournalModal';
 
 const MOODS = [
   {
@@ -43,7 +43,6 @@ const MOODS = [
 const moodMetaByLabel = new Map(MOODS.map((m) => [m.label, m]));
 
 const Journal = forwardRef(({ userProfile }, ref) => {
-  const navigate = useNavigate();
   const viewer = useSelector(selectUser);
   const [activeMood, setActiveMood] = useState('Joyful');
   const [loading, setLoading] = useState(false);
@@ -59,6 +58,9 @@ const Journal = forwardRef(({ userProfile }, ref) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Create modal
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+
   const userId = userProfile?.user?._id;
 
   const isOwner = useMemo(() => {
@@ -68,7 +70,11 @@ const Journal = forwardRef(({ userProfile }, ref) => {
 
   // Expose create action to Profile tab button (same pattern as Posts/Testimony)
   useImperativeHandle(ref, () => ({
-    openCreateModal: () => navigate('/create'),
+    openCreateModal: () => {
+      if (!isOwner) return;
+      setIsCreateOpen(true);
+    },
+    refresh: () => setRefreshKey((k) => k + 1),
   }));
 
   const fetchJournals = useCallback(async () => {
@@ -157,6 +163,15 @@ const Journal = forwardRef(({ userProfile }, ref) => {
 
   return (
     <div className="w-full px-4 md:px-1 py-1">
+      <CreateJournalModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onSuccess={() => {
+          setIsCreateOpen(false);
+          setRefreshKey((k) => k + 1);
+        }}
+      />
+
       <ConfirmModal
         isOpen={isDeleteOpen}
         onClose={() => {
@@ -224,7 +239,10 @@ const Journal = forwardRef(({ userProfile }, ref) => {
                 You haven't created any journal entries yet. Start documenting your spiritual journey and daily reflections.
               </p>
               <button
-                onClick={() => navigate('/create')}
+                onClick={() => {
+                  if (!isOwner) return;
+                  setIsCreateOpen(true);
+                }}
                 className="btn-blue-gradient text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 transition"
               >
                 Create Your First Entry
