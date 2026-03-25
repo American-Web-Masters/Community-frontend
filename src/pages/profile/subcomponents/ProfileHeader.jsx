@@ -383,10 +383,10 @@ const ProfileHeader = ({ userProfile, onProfileUpdate }) => {
             <div className="absolute top-4 right-3 flex items-center space-x-3 max-lg:flex-col-reverse pb-4">
               {/* Support Button */}
               <div>
-              <div className="flex justify-center align-center ">
+              <div className="flex justify-center align-center">
                 <button
                   onClick={() => navigate(`/profile/${userProfile?.username || location.pathname.split('/profile/')[1]}/support`)}
-                  className="btn-blue-gradient cursor-pointer text-white text-sm font-medium rounded-full transition-transform flex items-center space-x-2 py-1.5 px-4">
+                  className="btn-blue-gradient cursor-pointer text-white text-sm font-medium rounded-full transition-transform flex items-center space-x-2 py-1.5 px-4 hover:scale-105">
                   <span>🤍</span>
                   <span>Support</span>
                 </button>

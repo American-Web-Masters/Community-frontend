@@ -77,7 +77,7 @@ const ProfilePrayerMenu = ({
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 focus:outline-none"
+        className="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 focus:outline-none cursor-pointer"
         title="Post options"
       >
         <BsThreeDots className="w-5 h-5 text-gray-500" />
