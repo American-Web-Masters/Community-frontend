@@ -135,14 +135,14 @@ const Profile = () => {
       />
       
       <div className="pt-10 pb-20">
-        {/* Profile Header - Always visible */}
-        {loading ? (
-          <div className="flex justify-center items-center py-16">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        ) : (
-          <ProfileHeader userProfile={userProfile} onProfileUpdate={(updated) => setUserProfile(prev => ({ ...prev, ...updated }))} />
-        )}
+        {/* Profile Header - Keep visible while loading; show skeleton content inside */}
+        <ProfileHeader
+          userProfile={userProfile}
+          isLoading={loading}
+          onProfileUpdate={(updated) =>
+            setUserProfile((prev) => ({ ...prev, ...updated }))
+          }
+        />
 
         {/* Tabs Navigation */}
         <div className="mt-6 w-full md:w-4/6 mx-auto">
