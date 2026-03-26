@@ -114,7 +114,7 @@ const LinkedPrayerPicker = ({ isOpen, onClose, onSelectPrayer }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4"
+  className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center backdrop-blur-[1px] p-2 sm:p-4"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"

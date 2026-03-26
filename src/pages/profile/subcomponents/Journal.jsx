@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { deleteJournalByUser, getJournalByUser } from '../../../api';
 import { estimateReadTimeMin, formatRelativeTimeCompact, getInitials } from '../../../utils/profileUtils';
 import { FaTrash } from 'react-icons/fa';
+import { FiLink } from 'react-icons/fi';
 import ConfirmModal from './ConfirmModal';
 import { selectUser } from '../../../store/userSlice';
 import CreateJournalModal from './CreateJournalModal';
@@ -314,7 +315,7 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
                       <div className="flex items-center gap-3">
                         {linkedPrayerId ? (
                           <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                            <span aria-hidden="true">🔗</span>
+                            <FiLink className="h-4 w-4" aria-hidden="true" />
                             Linked prayer
                           </span>
                         ) : null}
@@ -416,7 +417,7 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-blue-700" aria-hidden="true">🔗</span>
+                            <FiLink className="h-4 w-4 text-blue-700" aria-hidden="true" />
                             <p className="text-sm font-semibold text-blue-900">Linked prayer</p>
                           </div>
                           <span className="text-xs font-semibold text-blue-700">Open →</span>
@@ -444,13 +445,15 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
                     ) : null}
 
                     {/* Tags */}
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      {(j?.tags ?? []).map((tag) => (
-                        <span key={tag} className="px-3 py-1 rounded-full bg-primary-500 text-white text-xs font-semibold">
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
+                    {Array.isArray(j?.tags) && j.tags.length > 0 ? (
+                      <div className="mt-5 flex flex-wrap gap-2">
+                        {j.tags.map((tag) => (
+                          <span key={tag} className="px-3 py-1 rounded-full bg-primary-500 text-white text-xs font-semibold">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
 
                     {/* Footer meta */}
                     <div className="mt-6 text-xs text-gray-700 flex items-center gap-3">

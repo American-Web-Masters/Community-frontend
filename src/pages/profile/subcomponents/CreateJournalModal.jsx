@@ -40,6 +40,7 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
     tags: [],
     mood: 'Joyful',
     prayer: null,
+  linkedPrayerPreview: null,
   });
 
   const [newTag, setNewTag] = useState('');
@@ -64,6 +65,7 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
         tags: Array.isArray(initialData.tags) ? initialData.tags : [],
         mood: initialData.mood || 'Joyful',
         prayer: initialData.prayer || null,
+  linkedPrayerPreview: null,
       });
       setNewTag('');
       return;
@@ -76,6 +78,7 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
       tags: [],
       mood: 'Joyful',
       prayer: null,
+  linkedPrayerPreview: null,
     });
     setNewTag('');
   }, [isOpen, initialData]);
@@ -109,7 +112,10 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
     }
   };
 
-  const clearLinkedPrayer = () => setField('prayer', null);
+  const clearLinkedPrayer = () => {
+    setField('prayer', null);
+    setField('linkedPrayerPreview', null);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -241,7 +247,12 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
                 {form.prayer ? (
                   <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl bg-gray-50 border border-gray-200 px-4 py-3">
                     <div className="text-sm text-gray-700">
-                      <span className="font-semibold">Prayer ID:</span> {form.prayer}
+                      <div className="font-semibold text-gray-800">Prayer Description</div>
+                      {form.linkedPrayerPreview ? (
+                        <p className="mt-0.5 text-sm text-gray-700 line-clamp-2">{form.linkedPrayerPreview}</p>
+                      ) : (
+                        <p className="mt-0.5 text-xs text-gray-500">A prayer is linked.</p>
+                      )}
                     </div>
                     <button
                       type="button"
@@ -354,7 +365,11 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
         onClose={() => setIsPrayerPickerOpen(false)}
         onSelectPrayer={(prayer) => {
           const id = prayer?._id || prayer?.id;
-          if (id) setField('prayer', String(id));
+          if (id) {
+            setField('prayer', String(id));
+            const preview = String(prayer?.content || prayer?.description || '').trim();
+            setField('linkedPrayerPreview', preview || null);
+          }
           setIsPrayerPickerOpen(false);
         }}
       />
