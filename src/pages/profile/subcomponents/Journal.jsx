@@ -42,9 +42,10 @@ const MOODS = [
 
 const moodMetaByLabel = new Map(MOODS.map((m) => [m.label, m]));
 
-const Journal = forwardRef(({ userProfile }, ref) => {
+const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
   const viewer = useSelector(selectUser);
-  const [activeMood, setActiveMood] = useState('Joyful');
+  // When null, no filter is applied (show all journals). This should be the default on page load.
+  const [activeMood, setActiveMood] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [journals, setJournals] = useState([]);
@@ -129,7 +130,11 @@ const Journal = forwardRef(({ userProfile }, ref) => {
     }
   }, [deleteLoading, deleteTargetId]);
 
-  const moodOption = useMemo(() => moodMetaByLabel.get(activeMood) ?? MOODS[0], [activeMood]);
+  const moodOption = useMemo(() => {
+    // Fallback used only for UI bits that need a mood meta.
+    // Don't force a default mood when no filter is selected.
+    return activeMood ? moodMetaByLabel.get(activeMood) ?? null : null;
+  }, [activeMood]);
 
   const filteredJournals = useMemo(() => {
     const list = Array.isArray(journals) ? journals : [];
@@ -190,13 +195,26 @@ const Journal = forwardRef(({ userProfile }, ref) => {
       <div className="w-full bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-3 overflow-x-auto">
         <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Filter by mood:</span>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveMood(null)}
+            className={
+              'px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-150 ring-1 ring-black/5 cursor-pointer ' +
+              (activeMood === null
+                ? 'bg-gray-200 text-gray-900 shadow-sm'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 opacity-90')
+            }
+          >
+            All
+          </button>
+
           {MOODS.map((mood) => {
             const isActive = activeMood === mood.label;
             return (
               <button
                 key={mood.label}
                 type="button"
-                onClick={() => setActiveMood(mood.label)}
+                onClick={() => setActiveMood((prev) => (prev === mood.label ? null : mood.label))}
                 className={
                   `px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-150 ring-1 ring-black/5 cursor-pointer ` +
                   (isActive
@@ -250,12 +268,23 @@ const Journal = forwardRef(({ userProfile }, ref) => {
             </div>
           ) : (
             displayedJournals.map((j) => {
-              const journalMood = String(j?.mood || activeMood);
-              const meta = moodMetaByLabel.get(journalMood) ?? moodOption;
+              const journalMood = String(j?.mood || '');
+              const meta = moodMetaByLabel.get(journalMood) ?? moodOption ?? MOODS[0];
 
               const isExpanded = Boolean(expandedById[j?.id ?? j?._id]);
               const journalId = j?.id ?? j?._id;
               const maxHeight = maxHeightById[journalId] ?? 96;
+              const linkedPrayerId =
+                (typeof j?.prayer === 'string' && j.prayer) ||
+                (typeof j?.prayer === 'object' && (j?.prayer?._id || j?.prayer?.id)) ||
+                j?.linkedPrayer?._id ||
+                j?.linkedPrayer?.id ||
+                null;
+
+              const linkedPrayerObj = typeof j?.prayer === 'object' ? j?.prayer : j?.linkedPrayer;
+              const linkedPrayerPreview = String(linkedPrayerObj?.content || linkedPrayerObj?.description || '').trim();
+              const linkedPrayerEmoji = linkedPrayerObj?.moodEmoji;
+              const linkedPrayerUrgency = linkedPrayerObj?.urgency;
 
               return (
                 <div
@@ -283,6 +312,12 @@ const Journal = forwardRef(({ userProfile }, ref) => {
                       </div>
 
                       <div className="flex items-center gap-3">
+                        {linkedPrayerId ? (
+                          <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                            <span aria-hidden="true">🔗</span>
+                            Linked prayer
+                          </span>
+                        ) : null}
                         <span
                           className={`px-4 py-2 rounded-full text-sm font-medium flex flex-col sm:flex-row justify-center items-center ${meta.pillClass}`}
                         >
@@ -368,6 +403,45 @@ const Journal = forwardRef(({ userProfile }, ref) => {
                         “{j?.verse?.quote}” - {j?.verse?.reference}
                       </p>
                     </div>
+
+                    {/* Linked prayer preview (interactive) */}
+                    {linkedPrayerId ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onOpenLinkedPrayer?.(linkedPrayerId);
+                        }}
+                        className="mt-5 w-full text-left rounded-xl border border-blue-200 bg-blue-50/70 px-4 py-3 hover:bg-blue-50 transition-colors cursor-pointer"
+                        title="Open linked prayer"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-blue-700" aria-hidden="true">🔗</span>
+                            <p className="text-sm font-semibold text-blue-900">Linked prayer</p>
+                          </div>
+                          <span className="text-xs font-semibold text-blue-700">Open →</span>
+                        </div>
+
+                        {linkedPrayerPreview ? (
+                          <p className="mt-2 text-sm text-blue-900/90 line-clamp-2">{linkedPrayerPreview}</p>
+                        ) : (
+                          <p className="mt-2 text-xs text-blue-700/90">
+                            Tap to open the attached prayer.
+                          </p>
+                        )}
+
+                        {(linkedPrayerEmoji || linkedPrayerUrgency) ? (
+                          <div className="mt-2 flex items-center gap-2 text-xs text-blue-700/90">
+                            {linkedPrayerEmoji ? <span aria-hidden="true">{linkedPrayerEmoji}</span> : null}
+                            {linkedPrayerUrgency ? (
+                              <span className="rounded-full border border-blue-200 bg-white/70 px-2 py-0.5 font-semibold">
+                                {String(linkedPrayerUrgency)}
+                              </span>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </button>
+                    ) : null}
 
                     {/* Tags */}
                     <div className="mt-5 flex flex-wrap gap-2">

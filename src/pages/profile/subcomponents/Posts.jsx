@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../../store/userSlice';
 import { apiClient } from '../../../api';
@@ -18,6 +18,7 @@ const Posts = forwardRef((props, ref) => {
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [selectedDraftPrayer, setSelectedDraftPrayer] = useState(null);
   const [expandedPrayers, setExpandedPrayers] = useState({});
+  const prayerCardRefs = useRef({});
 
   // Edit state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -32,7 +33,23 @@ const Posts = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     openCreateModal: () => {
       setIsCreateModalOpen(true);
-    }
+    },
+    /**
+     * Scroll to a prayer card, expand it, and briefly highlight.
+     * Used by Journal linked-prayer preview.
+     */
+    focusPrayerById: (prayerId) => {
+      if (!prayerId) return;
+      const id = String(prayerId);
+      setExpandedPrayers((prev) => ({ ...prev, [id]: true }));
+      // Let React render the expanded state, then scroll.
+      window.setTimeout(() => {
+        const el = prayerCardRefs.current[id];
+  // If the element isn't currently rendered (e.g., not loaded yet), don't scroll.
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 60);
+    },
   }));
 
   // Function to fetch user's prayers from API with pagination
@@ -220,7 +237,13 @@ const Posts = forwardRef((props, ref) => {
             {/* Simple grid layout for posts */}
             <div className="grid grid-cols-1 w-full max-md:px-3">
               {prayers.map((prayer) => (
-                <div key={prayer._id} className="mb-4">
+                <div
+                  key={prayer._id}
+                  className="mb-4"
+                  ref={(el) => {
+                    if (el) prayerCardRefs.current[String(prayer._id)] = el;
+                  }}
+                >
                   <PrayerCard
                     prayer={prayer}
                     prayerId={prayer._id}

@@ -164,8 +164,8 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
         <div className="flex items-start sm:items-center justify-between border-b border-gray-100 px-4 sm:px-6 py-4 sm:py-5 gap-3">
           <div>
             <h2 className="text-base sm:text-lg font-semibold text-gray-900">{title}</h2>
-            <p className="mt-1 text-[11px] sm:text-xs font-semibold tracking-[0.18em] sm:tracking-[0.22em] text-[color:var(--color-primary-700)]">
-              REFLECT • RECORD • GROW
+            <p className="mt-1 text-[11px] sm:text-sm font-semibold text-[color:var(--color-primary-700)]">
+              Reflect • Record • Grow
             </p>
           </div>
           <button

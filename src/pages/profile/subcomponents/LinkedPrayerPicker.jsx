@@ -124,8 +124,8 @@ const LinkedPrayerPicker = ({ isOpen, onClose, onSelectPrayer }) => {
         <div className="flex items-start sm:items-center justify-between border-b border-gray-100 px-4 sm:px-6 py-4 sm:py-5 gap-3">
           <div>
             <h2 className="text-base sm:text-lg font-semibold text-gray-900">{title}</h2>
-            <p className="mt-1 text-[11px] sm:text-xs font-semibold tracking-[0.18em] sm:tracking-[0.22em] text-[color:var(--color-primary-700)]">
-              CHOOSE ONE OF YOUR PRAYERS
+            <p className="mt-1 text-[11px] sm:text-xs font-semibold text-[color:var(--color-primary-700)]">
+              Choose One Of Your Prayers
             </p>
           </div>
           <button
@@ -229,7 +229,7 @@ const LinkedPrayerPicker = ({ isOpen, onClose, onSelectPrayer }) => {
         <div className="border-t border-blue-100 bg-white/70 backdrop-blur px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
           <div className="text-sm text-gray-600">
             {selectedPrayerId ? (
-              <span>Selected: <span className="font-semibold text-gray-900">1 prayer</span></span>
+              <span>Selected</span>
             ) : (
               <span>Select a prayer to link (optional).</span>
             )}
@@ -250,7 +250,7 @@ const LinkedPrayerPicker = ({ isOpen, onClose, onSelectPrayer }) => {
               className={
                 "px-4 py-2 rounded-xl font-medium text-white transition-colors " +
                 (selectedPrayerId
-                  ? "bg-[color:var(--color-primary-600)] hover:bg-[color:var(--color-primary-700)]"
+                  ? "bg-[color:var(--color-primary-600)] hover:bg-[color:var(--color-primary-700)] cursor-pointer"
                   : "bg-gray-300 cursor-not-allowed")
               }
               disabled={!selectedPrayerId || loading}

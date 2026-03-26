@@ -259,7 +259,17 @@ const Profile = () => {
           ) : activeTab === "Testimonies" ? (
             <Testimony ref={testimonyRef} userProfile={userProfile} />
           ) : activeTab === "Journal" ? (
-            <Journal ref={journalRef} userProfile={userProfile} />
+            <Journal
+              ref={journalRef}
+              userProfile={userProfile}
+              onOpenLinkedPrayer={(prayerId) => {
+                setActiveTab('Posts');
+                // Move viewport to top so we don't stay at (or jump to) the bottom when switching tabs.
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Wait for Posts tab to render, then focus the card.
+                window.setTimeout(() => postsRef.current?.focusPrayerById?.(prayerId), 180);
+              }}
+            />
           ) : (
             <ActiveComponent userProfile={userProfile} />
           )}
