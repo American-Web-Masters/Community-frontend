@@ -42,13 +42,28 @@ const Posts = forwardRef((props, ref) => {
       if (!prayerId) return;
       const id = String(prayerId);
       setExpandedPrayers((prev) => ({ ...prev, [id]: true }));
-      // Let React render the expanded state, then scroll.
-      window.setTimeout(() => {
+      // After switching tabs, Posts mounts and refs populate asynchronously.
+      // Retry a few times so we reliably scroll to the correct card.
+      const startedAt = Date.now();
+      const MAX_MS = 2500;
+      const TICK_MS = 120;
+
+      const tryScroll = () => {
         const el = prayerCardRefs.current[id];
-  // If the element isn't currently rendered (e.g., not loaded yet), don't scroll.
-  if (!el) return;
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 60);
+        if (el && el.scrollIntoView) {
+          // Make sure the window itself isn't stuck at some old scroll position.
+          // Then scroll to the specific card.
+          window.scrollTo({ top: 0, behavior: 'auto' });
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+
+        if (Date.now() - startedAt < MAX_MS) {
+          window.setTimeout(tryScroll, TICK_MS);
+        }
+      };
+
+      window.setTimeout(tryScroll, 60);
     },
   }));
 
