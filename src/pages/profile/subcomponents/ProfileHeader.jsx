@@ -412,7 +412,7 @@ const ProfileHeader = ({ userProfile, isLoading = false, onProfileUpdate }) => {
 
               {/* Action Icons */}
             </div>
-            <div className="absolute top-4 right-3 flex items-center space-x-3 max-lg:flex-col-reverse pb-4">
+            <div className="absolute top-4 right-3 flex items-center space-x-2 max-lg:flex-col-reverse pb-4">
               {/* Support Button */}
               <div>
                 <div className="flex justify-center align-center">
@@ -471,7 +471,18 @@ const ProfileHeader = ({ userProfile, isLoading = false, onProfileUpdate }) => {
               </button>
 
               {/* Settings Icon */}
-              <button className="p-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer">
+              <button
+                className="p-2 text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
+                onClick={() =>
+                  navigate(
+                    `/profile/${
+                      userProfile?.username || location.pathname.split("/profile/")[1]
+                    }/settings`
+                  )
+                }
+                disabled={showSkeleton}
+                title="Settings"
+              >
                 <svg
                   className="w-5 h-5"
                   fill="none"
