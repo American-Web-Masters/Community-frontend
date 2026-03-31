@@ -3,10 +3,10 @@ import ToggleSwitch from "./ToggleSwitch";
 
 const Row = ({ title, right, children }) => {
   return (
-    <div className="px-6 py-5">
-      <div className="flex items-center justify-between gap-6">
+    <div className="px-6 py-7">
+      <div className="flex sm:items-center sm:justify-between gap-6 max-sm:flex-col">
         <div>
-          <p className="font-semibold text-gray-900 text-sm sm:text-base">{title}</p>
+          <p className="font-semibold text-gray-900 text-lg">{title}</p>
           {children ? (
             <p className="text-xs sm:text-sm text-gray-600 mt-1">{children}</p>
           ) : null}
@@ -17,7 +17,7 @@ const Row = ({ title, right, children }) => {
   );
 };
 
-const Divider = () => <div className="h-px bg-blue-100 mx-6" />;
+const Divider = () => <div className="h-px bg-blue-100 mx-4" />;
 
 const NotificationSettings = ({ value, onChange }) => {
   // value shape:
