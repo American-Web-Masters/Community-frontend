@@ -56,15 +56,34 @@ const Settings = () => {
 					{/* Top bar icons shown in the screenshot are handled by Header */}
 
 					<div className="mt-4">
-						<SettingsHeader onSave={handleSave} isSaving={isSaving} />
+						<div className="flex items-start justify-between gap-4">
+							<div className="min-w-0 flex-1">
+								<SettingsHeader onSave={handleSave} isSaving={isSaving} />
+							</div>
+							{/* On md+ the Save button is shown in the tabs row; on sm- it's shown in the header */}
+							<div className="hidden lg:block" />
+						</div>
 					</div>
 
-					<div className="mt-5">
-						<SettingsTabs
-							tabs={tabs}
-							activeTab={activeTab}
-							onTabChange={setActiveTab}
-						/>
+					{/* Tabs row (md+ keeps tabs + save button in the same line) */}
+					<div className="mt-5 flex items-center justify-between gap-4">
+						<div className="min-w-0 ">
+							<SettingsTabs
+								tabs={tabs}
+								activeTab={activeTab}
+								onTabChange={setActiveTab}
+							/>
+						</div>
+						<div className="hidden lg:block flex-shrink-0">
+							<button
+								type="button"
+								onClick={handleSave}
+								disabled={isSaving}
+								className="btn-blue-gradient px-6 py-3 rounded-full text-white text-sm font-semibold shadow-md hover:opacity-95 disabled:opacity-60"
+							>
+								{isSaving ? "Saving…" : "Save Changes"}
+							</button>
+						</div>
 					</div>
 
 					<div className="mt-6">

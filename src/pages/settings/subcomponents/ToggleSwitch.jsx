@@ -23,7 +23,7 @@ const ToggleSwitch = ({ checked, onChange, label, disabled = false }) => {
         />
       </button>
       {label ? (
-        <span id={`${id}-label`} className="text-xs sm:text-sm text-gray-700">
+        <span id={`${id}-label`} className="text-xs sm:text-sm text-black font-semibold">
           {label}
         </span>
       ) : null}
