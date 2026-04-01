@@ -17,7 +17,7 @@ const SegmentedControl = ({ options, value, onChange, ariaLabel }) => {
 						className={`px-4 py-2 rounded-full text-[12px] sm:text-[13px] font-semibold transition-all duration-150 border ${
 							active
 								? "btn-blue-gradient text-white border-transparent shadow"
-								: "bg-[#EAF4FF] text-gray-700 border-white/60 hover:bg-white"
+								: "bg-[#d7eafc] text-gray-700 border-white/60 hover:bg-white"
 						}`}
 					>
 						{opt.label}
