@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 
 import {
 	NotificationSettings,
+	PrivacyAccountSettings,
 	SettingsCard,
 	SettingsHeader,
 	SettingsTabs,
@@ -92,6 +93,19 @@ const Settings = () => {
 								<NotificationSettings value={notifications} onChange={setNotifications} />
 								{/* <div className="h-px bg-blue-100 mx-6" /> */}
 							</SettingsCard>
+						) : activeTab === "privacy" ? (
+							<>
+							<div className="px-1 pb-4">
+									<h2 className="text-2xl font-bold text-gray-900">Privacy &amp; Account</h2>
+									<p className="text-gray-800 text-sm mt-1">
+										Manage your visibility, data, and account security.
+									</p>
+								</div>
+								<div className="h-px bg-blue-100 mx-4" />
+							<SettingsCard>
+								<PrivacyAccountSettings />
+							</SettingsCard>
+							</>
 						) : (
 							<SettingsCard className="p-6">
 								<div className="flex items-start justify-between gap-6">
