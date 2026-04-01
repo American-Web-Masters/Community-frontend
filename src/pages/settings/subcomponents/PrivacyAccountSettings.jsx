@@ -67,7 +67,7 @@ const PrivacyAccountSettings = () => {
 					</button>
 				</div>
 
-				<p className="mt-5 text-center text-[15px] text-red-700">
+				<p className="mt-5 text-center text-sm sm:text-[15px] text-red-700">
 					Deactivating or deleting your account are permanent actions.
 				</p>
 			</div>
