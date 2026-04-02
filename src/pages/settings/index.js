@@ -6,3 +6,5 @@ export { default as NotificationSettings } from "./subcomponents/NotificationSet
 export { default as SegmentedControl } from "./subcomponents/SegmentedControl";
 export { default as SettingsSectionRow } from "./subcomponents/SettingsSectionRow";
 export { default as PrivacyAccountSettings } from "./subcomponents/PrivacyAccountSettings";
+export { default as ChangePasswordModal } from "./subcomponents/ChangePasswordModal";
+export { default as ConfirmActionModal } from "./subcomponents/ConfirmActionModal";
