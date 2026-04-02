@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import {
 	NotificationSettings,
 	PrivacyAccountSettings,
+	AppInfoDataSettings,
 	SettingsCard,
 	SettingsHeader,
 	SettingsTabs,
@@ -105,6 +106,19 @@ const Settings = () => {
 							<SettingsCard>
 								<PrivacyAccountSettings />
 							</SettingsCard>
+							</>
+						) : activeTab === "appInfo" ? (
+							<>
+								<div className="px-1 pb-4">
+									<h2 className="text-2xl font-bold text-gray-900">App Info &amp; Data</h2>
+									<p className="text-gray-800 text-sm mt-1">
+										Manage app data, view legal policies, and get help.
+									</p>
+								</div>
+								<div className="h-px bg-blue-100 mx-4" />
+								<SettingsCard>
+									<AppInfoDataSettings />
+								</SettingsCard>
 							</>
 						) : (
 							<SettingsCard className="p-6">
