@@ -48,20 +48,20 @@ const PrivacyAccountSettings = () => {
 				<div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
 					<button
 						type="button"
-						className="w-full rounded-full border border-blue-300 bg-white px-6 py-3 text-[13px] sm:text-[14px] font-semibold text-gray-900 hover:bg-blue-50 transition"
+						className="w-full rounded-full border border-blue-300 bg-white px-6 py-3 text-[13px] sm:text-[14px] font-semibold text-gray-900 hover:bg-blue-50 transition cursor-pointer"
 					>
 						Change Password
 					</button>
 
 					<button
 						type="button"
-						className="w-full rounded-full bg-[#FDE7E7] px-6 py-3 text-[13px] sm:text-[14px] font-semibold text-red-600 hover:bg-[#FAD1D1] transition"
+						className="w-full rounded-full bg-[#FDE7E7] px-6 py-3 text-[13px] sm:text-[14px] font-semibold text-red-600 hover:bg-[#FAD1D1] transition cursor-pointer"
 					>
 						Deactivate Account
 					</button>
 					<button
 						type="button"
-						className="w-full rounded-full bg-[#FDE7E7] px-6 py-3 text-[13px] sm:text-[14px] font-semibold text-red-600 hover:bg-[#FAD1D1] transition"
+						className="w-full rounded-full bg-[#FDE7E7] px-6 py-3 text-[13px] sm:text-[14px] font-semibold text-red-600 hover:bg-[#FAD1D1] transition cursor-pointer"
 					>
 						Delete Account
 					</button>
