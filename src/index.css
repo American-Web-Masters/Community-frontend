@@ -407,3 +407,18 @@ body.modal-open {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Chrome, Safari and Opera */
 }
+
+/* Journal card: smooth "Read full story" expand/collapse */
+.journal-story {
+  overflow: hidden;
+  transition: max-height 360ms ease, opacity 240ms ease;
+  will-change: max-height;
+}
+
+.journal-story.is-collapsed {
+  opacity: 0.92;
+}
+
+.journal-story.is-expanded {
+  opacity: 1;
+}

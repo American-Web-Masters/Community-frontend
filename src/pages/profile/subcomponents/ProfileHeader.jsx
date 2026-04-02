@@ -7,7 +7,7 @@ import { MdCheck, MdClose, MdCameraAlt } from "react-icons/md";
 import { FaEdit } from "react-icons/fa";
 import toast from "react-hot-toast";
 
-const ProfileHeader = ({ userProfile, onProfileUpdate }) => {
+const ProfileHeader = ({ userProfile, isLoading = false, onProfileUpdate }) => {
   const user = useSelector(selectUser);
   const location = useLocation();
   const navigate = useNavigate();
@@ -37,6 +37,10 @@ const ProfileHeader = ({ userProfile, onProfileUpdate }) => {
     bio: userProfile?.bio || "Tell us about your faith journey...",
     streak: 21,
   };
+
+  // Keep the header container visible while loading, but show skeleton content
+  // until we have a populated userProfile.
+  const showSkeleton = Boolean(isLoading && !userProfile);
 
   const handleEditClick = () => {
     setEditData({
@@ -316,8 +320,10 @@ const ProfileHeader = ({ userProfile, onProfileUpdate }) => {
             <div className="flex items-start justify-between mb-4">
               <div className="flex md:items-center space-x-6 w-full max-sm:flex-col">
                 {/* Profile Image */}
-                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg max-md:mb-2 flex-shrink-0">
-                  {profileData.profileImage ? (
+                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg max-md:mb-2 flex-shrink-0 overflow-hidden">
+                  {showSkeleton ? (
+                    <div className="w-full h-full bg-gray-200 animate-pulse" />
+                  ) : profileData.profileImage ? (
                     <img
                       src={profileData.profileImage}
                       alt="Profile"
@@ -336,61 +342,97 @@ const ProfileHeader = ({ userProfile, onProfileUpdate }) => {
                 <div className="flex flex-col flex-1">
                   {/* Name and Username */}
                   <div className="mb-3">
-                    <h1 className="text-xl font-bold text-gray-900 mb-1">
-                      {profileData.name}
-                    </h1>
-                    <div className="flex items-center space-x-3">
-                      <p className="text-gray-600 text-sm">
-                        @{profileData.username}
-                      </p>
-                      <span className="text-gray-400 text-sm">|</span>
-                      {/* Streak */}
-                      <div className="flex items-center space-x-1">
-                        <span className="text-orange-500">🔥</span>
-                        <span className="text-sm font-medium text-gray-700">
-                          {profileData.streak}
-                        </span>
-                      </div>
-                    </div>
+                    {showSkeleton ? (
+                      <>
+                        <div className="h-6 w-48 bg-gray-200/70 rounded-md animate-pulse mb-2" />
+                        <div className="flex items-center space-x-3">
+                          <div className="h-4 w-32 bg-gray-200/70 rounded-md animate-pulse" />
+                          <span className="text-gray-300 text-sm">|</span>
+                          <div className="h-4 w-10 bg-gray-200/70 rounded-md animate-pulse" />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <h1 className="text-xl font-bold text-gray-900 mb-1">
+                          {profileData.name}
+                        </h1>
+                        <div className="flex items-center space-x-3">
+                          <p className="text-gray-600 text-sm">@{profileData.username}</p>
+                          <span className="text-gray-400 text-sm">|</span>
+                          {/* Streak */}
+                          <div className="flex items-center space-x-1">
+                            <span className="text-orange-500">🔥</span>
+                            <span className="text-sm font-medium text-gray-700">
+                              {profileData.streak}
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Verse Banner */}
                   <div className="btn-blue-gradient cursor-pointer text-white px-4 py-1.5 mb-4 rounded-md">
-                    <p
-                      className={`text-sm font-medium italic ${
-                        !userProfile?.verse ? "opacity-70" : ""
-                      }`}
-                    >
-                      {profileData.verse}
-                    </p>
+                    {showSkeleton ? (
+                      <div className="space-y-2 py-1">
+                        <div className="h-4 w-full bg-gray-200 rounded-md animate-pulse" />
+                        <div className="h-4 w-5/6 bg-gray-200 rounded-md animate-pulse" />
+                      </div>
+                    ) : (
+                      <p
+                        className={`text-sm font-medium italic ${
+                          !userProfile?.verse ? "opacity-70" : ""
+                        }`}
+                      >
+                        {profileData.verse}
+                      </p>
+                    )}
                   </div>
 
                   {/* Bio */}
                   <div className="mb-4">
-                    <p
-                      className={`text-gray-700 text-sm leading-relaxed ${
-                        !userProfile?.bio ? "italic opacity-70" : ""
-                      }`}
-                    >
-                      {profileData.bio}
-                    </p>
+                    {showSkeleton ? (
+                      <div className="space-y-2">
+                        <div className="h-4 w-full bg-gray-200/70 rounded-md animate-pulse" />
+                        <div className="h-4 w-11/12 bg-gray-200/70 rounded-md animate-pulse" />
+                        <div className="h-4 w-3/4 bg-gray-200/70 rounded-md animate-pulse" />
+                      </div>
+                    ) : (
+                      <p
+                        className={`text-gray-700 text-sm leading-relaxed ${
+                          !userProfile?.bio ? "italic opacity-70" : ""
+                        }`}
+                      >
+                        {profileData.bio}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Action Icons */}
             </div>
-            <div className="absolute top-4 right-3 flex items-center space-x-3 max-lg:flex-col-reverse pb-4">
+            <div className="absolute top-4 right-3 flex items-center space-x-2 max-lg:flex-col-reverse pb-4">
               {/* Support Button */}
               <div>
-              <div className="flex justify-center align-center ">
+                <div className="flex justify-center align-center">
                 <button
-                  onClick={() => navigate(`/profile/${userProfile?.username || location.pathname.split('/profile/')[1]}/support`)}
-                  className="btn-blue-gradient cursor-pointer text-white text-sm font-medium rounded-full transition-transform flex items-center space-x-2 py-1.5 px-4">
+                  onClick={() =>
+                    navigate(
+                      `/profile/${
+                        userProfile?.username || location.pathname.split("/profile/")[1]
+                      }/support`
+                    )
+                  }
+                  disabled={showSkeleton}
+                  className={`btn-blue-gradient cursor-pointer text-white text-sm font-medium rounded-full transition-transform flex items-center space-x-2 py-1.5 px-4 hover:scale-105 ${
+                    showSkeleton ? "opacity-60 cursor-not-allowed hover:scale-100" : ""
+                  }`}
+                 >
                   <span>🤍</span>
                   <span>Support</span>
                 </button>
-              </div>
+                </div>
               </div>
               <div>
 
@@ -398,6 +440,7 @@ const ProfileHeader = ({ userProfile, onProfileUpdate }) => {
               <button
                 className="p-2 text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
                 onClick={handleShareProfile}
+                disabled={showSkeleton}
                 title="Share Profile"
               >
                 <svg
@@ -418,14 +461,28 @@ const ProfileHeader = ({ userProfile, onProfileUpdate }) => {
               {/* Edit Icon */}
               <button
                 onClick={handleEditClick}
-                className="p-2 text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
+                disabled={showSkeleton}
+                className={`p-2 text-gray-600 hover:text-blue-600 transition-colors cursor-pointer ${
+                  showSkeleton ? "opacity-60 cursor-not-allowed hover:text-gray-600" : ""
+                }`}
                 title="Edit Profile"
               >
                 <FaEdit className="w-5 h-5" />
               </button>
 
               {/* Settings Icon */}
-              <button className="p-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer">
+              <button
+                className="p-2 text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
+                onClick={() =>
+                  navigate(
+                    `/profile/${
+                      userProfile?.username || location.pathname.split("/profile/")[1]
+                    }/settings`
+                  )
+                }
+                disabled={showSkeleton}
+                title="Settings"
+              >
                 <svg
                   className="w-5 h-5"
                   fill="none"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../../store/userSlice';
 import { apiClient } from '../../../api';
@@ -18,6 +18,7 @@ const Posts = forwardRef((props, ref) => {
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [selectedDraftPrayer, setSelectedDraftPrayer] = useState(null);
   const [expandedPrayers, setExpandedPrayers] = useState({});
+  const prayerCardRefs = useRef({});
 
   // Edit state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -32,7 +33,38 @@ const Posts = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     openCreateModal: () => {
       setIsCreateModalOpen(true);
-    }
+    },
+    /**
+     * Scroll to a prayer card, expand it, and briefly highlight.
+     * Used by Journal linked-prayer preview.
+     */
+    focusPrayerById: (prayerId) => {
+      if (!prayerId) return;
+      const id = String(prayerId);
+      setExpandedPrayers((prev) => ({ ...prev, [id]: true }));
+      // After switching tabs, Posts mounts and refs populate asynchronously.
+      // Retry a few times so we reliably scroll to the correct card.
+      const startedAt = Date.now();
+      const MAX_MS = 2500;
+      const TICK_MS = 120;
+
+      const tryScroll = () => {
+        const el = prayerCardRefs.current[id];
+        if (el && el.scrollIntoView) {
+          // Make sure the window itself isn't stuck at some old scroll position.
+          // Then scroll to the specific card.
+          window.scrollTo({ top: 0, behavior: 'auto' });
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+
+        if (Date.now() - startedAt < MAX_MS) {
+          window.setTimeout(tryScroll, TICK_MS);
+        }
+      };
+
+      window.setTimeout(tryScroll, 60);
+    },
   }));
 
   // Function to fetch user's prayers from API with pagination
@@ -220,7 +252,13 @@ const Posts = forwardRef((props, ref) => {
             {/* Simple grid layout for posts */}
             <div className="grid grid-cols-1 w-full max-md:px-3">
               {prayers.map((prayer) => (
-                <div key={prayer._id}>
+                <div
+                  key={prayer._id}
+                  className="mb-4"
+                  ref={(el) => {
+                    if (el) prayerCardRefs.current[String(prayer._id)] = el;
+                  }}
+                >
                   <PrayerCard
                     prayer={prayer}
                     prayerId={prayer._id}

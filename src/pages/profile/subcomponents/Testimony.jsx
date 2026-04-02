@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../../store/userSlice';
 import { clampText, formatRelativeTime, formatTimelineDate, getInitials} from '../../../utils/profileUtils';
 import { deleteTestimony, getTestimonyById, getTestimonyByUser } from '../../../api';
 import CreateTestimonyModal from '../../../components/ui/CreateTestimonyModal';
@@ -8,6 +10,7 @@ import ConfirmModal from './ConfirmModal';
 
 
 const Testimony = forwardRef(({ userProfile }, ref) => {
+  const viewer = useSelector(selectUser);
   const [selectedId, setSelectedId] = useState(null);
   const [activeId, setActiveId] = useState(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -63,6 +66,11 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
 
   const userId = userProfile?.user?._id;
 
+  const isOwner = useMemo(() => {
+    const viewerId = viewer?._id || viewer?.id || viewer?.user?._id;
+    return Boolean(viewerId && userId && String(viewerId) === String(userId));
+  }, [userId, viewer]);
+
   const mapTestimonies = useCallback((items) => {
     const safeItems = Array.isArray(items) ? items : [];
     return safeItems.map((t) => {
@@ -71,11 +79,13 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
       const full = `${first} ${last}`.trim() || t?.author?.username || 'User';
       const username = t?.author?.username ? `@${t.author.username}` : null;
       const description = t?.description || '';
+      const profilePicture = t?.author?.profile?.profilePicture || null;
       return {
         id: t?._id,
         authorName: full,
         authorUsername: username,
         createdAt: t?.createdAt,
+        profilePicture,
         description,
         verse: t?.verse,
         tags: Array.isArray(t?.tags) ? t.tags : [],
@@ -93,6 +103,7 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
       setLoading(true);
       setError(null);
       const res = await getTestimonyByUser(userId);
+      console.log(res?.data?.testimonies[0]?.author?.profile?.profilePicture)
       const items = res?.data?.testimonies || [];
       setTestimonies(mapTestimonies(items));
     } catch (e) {
@@ -341,7 +352,7 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
             </div>
           </div>
 
-          <div className="space-y-7">
+          <div className="space-y-4">
           {testimonies.map((testimony, idx) => {
             const isExpanded = selectedId === testimony.id;
             const isActive = (activeId || testimonies[0]?.id) === testimony.id;
@@ -351,7 +362,7 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
             );
             const isCompleted = idx < activeIndex;
             const isCurrentOrCompleted = isActive || isCompleted;
-
+            console.log(testimony)
             return (
               <div
                 key={testimony.id}
@@ -400,9 +411,9 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-center gap-3">
-                        {testimony.avatarUrl ? (
+                        {testimony?.profilePicture ? (
                           <img
-                            src={testimony.avatarUrl}
+                            src={testimony?.profilePicture}
                             alt=""
                             className="h-11 w-11 rounded-full object-cover"
                           />
@@ -424,32 +435,36 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openEditModal(testimony?.id);
-                          }}
-                          className="rounded-full border border-gray-200 p-2 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-60"
-                          aria-label="Edit testimony"
-                          title="Edit"
-                          disabled={editLoading}
-                        >
-                          <FaEdit className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            requestDelete(testimony?.id);
-                          }}
-                          className="rounded-full border border-gray-200 p-2 text-red-600 hover:bg-red-50 transition-colors"
-                          aria-label="Delete testimony"
-                          title="Delete"
-                          disabled={deleteLoading}
-                        >
-                          <FaTrash className="h-4 w-4" />
-                        </button>
+                        {isOwner ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditModal(testimony?.id);
+                              }}
+                              className="rounded-full border border-gray-200 p-2 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-60 cursor-pointer"
+                              aria-label="Edit testimony"
+                              title="Edit"
+                              disabled={editLoading}
+                            >
+                              <FaEdit className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                requestDelete(testimony?.id);
+                              }}
+                              className="rounded-full border border-gray-200 p-2 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                              aria-label="Delete testimony"
+                              title="Delete"
+                              disabled={deleteLoading}
+                            >
+                              <FaTrash className="h-4 w-4" />
+                            </button>
+                          </>
+                        ) : null}
 
                         {isExpanded ? (
                           <button

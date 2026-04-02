@@ -17,7 +17,7 @@ const ConfirmModal = ({
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 backdrop-blur-[3px] bg-opacity-30 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg w-full max-w-md shadow-lg">
         <div className="p-6">
           <div className="flex items-start space-x-4">

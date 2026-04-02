@@ -1,0 +1,10 @@
+export { default as SettingsHeader } from "./subcomponents/SettingsHeader";
+export { default as SettingsTabs } from "./subcomponents/SettingsTabs";
+export { default as SettingsCard } from "./subcomponents/SettingsCard";
+export { default as ToggleSwitch } from "./subcomponents/ToggleSwitch";
+export { default as NotificationSettings } from "./subcomponents/NotificationSettings";
+export { default as SegmentedControl } from "./subcomponents/SegmentedControl";
+export { default as SettingsSectionRow } from "./subcomponents/SettingsSectionRow";
+export { default as PrivacyAccountSettings } from "./subcomponents/PrivacyAccountSettings";
+export { default as ChangePasswordModal } from "./subcomponents/ChangePasswordModal";
+export { default as ConfirmActionModal } from "./subcomponents/ConfirmActionModal";
