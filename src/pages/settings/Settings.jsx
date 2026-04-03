@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import Header from "../../components/ui/Header";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useLogout } from "../../hooks/useLogout";
 
 import {
 	NotificationSettings,
@@ -15,6 +16,7 @@ import {
 const Settings = () => {
 	const navigate = useNavigate();
 	const { username } = useParams();
+	const { logout } = useLogout();
 
 	const tabs = useMemo(
 		() => [
@@ -51,7 +53,13 @@ const Settings = () => {
 
 	return (
 		<div className="min-h-screen light-background overflow-x-hidden">
-			<Header showNotification={true} showFilter={false} showSearch={false} />
+			<Header
+				showNotification={true}
+				showFilter={false}
+				showSearch={false}
+				showLogout={true}
+				onLogoutClick={logout}
+			/>
 
 			<div className="pt-4 pb-20">
 				<div className="w-[95%] mx-auto">
