@@ -26,6 +26,7 @@ import DemoSubscriptionManagement from "../pages/support/DemoSubscriptionManagem
 import StripeOnboardingSuccess from "../pages/communities/StripeOnboardingSuccess";
 import StripeOnboardingRefresh from "../pages/communities/StripeOnboardingRefresh";
 import { UserStripeOnboardingRefresh, UserStripeOnboardingSuccess } from "../pages/profile/subcomponents";
+import Settings from "../pages/settings/Settings";
 
 const Routes = () =>{
     return(
@@ -188,6 +189,14 @@ const Routes = () =>{
             element={
                 <ProtectedRoute>
                     <UserSupport/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/profile/:username/settings"
+            element={
+                <ProtectedRoute>
+                    <Settings />
                 </ProtectedRoute>
             }
             />

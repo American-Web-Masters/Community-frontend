@@ -190,6 +190,46 @@ export const deleteTestimony = async (testimonyId) => {
   }
 };
 
+export const getJournalById = async (journalId) => {
+  try {
+    const response = await apiClient.get(`/journals/${journalId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting journal by id:', error);
+    throw error;
+  }
+};
+
+export const getJournalByUser = async (userId) => {
+  try {
+    const response = await apiClient.get(`/journals/user/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting journals by user:', error);
+    throw error;
+  }
+};
+
+export const deleteJournalByUser = async (journalId) => {
+  try {
+    const response = await apiClient.delete(`/journals/${journalId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting journal by user:', error);
+    throw error;
+  }
+};
+
+export const createJournal = async (data)=>{
+  try {
+    const response = await apiClient.post('/journals', data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating journal:', error);
+    throw error;
+  }
+}
+
 export default {
   getUserProfile,
   updateUserProfile,
@@ -201,5 +241,8 @@ export default {
   getTestimonyByUser,
   getTestimonyById,
   updateTestimony,
-  deleteTestimony
+  deleteTestimony,
+  getJournalById,
+  getJournalByUser,
+  deleteJournalByUser
 };

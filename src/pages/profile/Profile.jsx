@@ -19,6 +19,7 @@ const Profile = () => {
   const postsRef = useRef(null);
   const communitiesRef = useRef(null);
   const testimonyRef = useRef(null);
+  const journalRef = useRef(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isCreateCommunityModalOpen, setIsCreateCommunityModalOpen] = useState(false);
@@ -101,7 +102,15 @@ const Profile = () => {
       name: "Journal", 
       component: Journal,
       buttonText: "Create New Entry",
-      buttonAction: () => console.log('Create Entry') // Add your logic here
+      buttonAction: () => {
+        // Keep the same "parent triggers child" pattern when possible.
+        // Journal doesn't expose a modal yet, so we fall back to the create route.
+        if (journalRef.current?.openCreateModal) {
+          journalRef.current.openCreateModal();
+          return;
+        }
+        navigate('/create');
+      }
     },
     { 
       name: "Subscriptions", 
@@ -118,17 +127,22 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen light-background overflow-x-hidden">
-      <Header />
+      <Header
+        showNotification={true}
+        showFilter={false}
+        showSearch={false}
+        onLogoutClick={handleLogout}
+      />
       
       <div className="pt-10 pb-20">
-        {/* Profile Header - Always visible */}
-        {loading ? (
-          <div className="flex justify-center items-center py-16">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        ) : (
-          <ProfileHeader userProfile={userProfile} onProfileUpdate={(updated) => setUserProfile(prev => ({ ...prev, ...updated }))} />
-        )}
+        {/* Profile Header - Keep visible while loading; show skeleton content inside */}
+        <ProfileHeader
+          userProfile={userProfile}
+          isLoading={loading}
+          onProfileUpdate={(updated) =>
+            setUserProfile((prev) => ({ ...prev, ...updated }))
+          }
+        />
 
         {/* Tabs Navigation */}
         <div className="mt-6 w-full md:w-4/6 mx-auto">
@@ -244,8 +258,18 @@ const Profile = () => {
             <Communities ref={communitiesRef} userProfile={userProfile} />
           ) : activeTab === "Testimonies" ? (
             <Testimony ref={testimonyRef} userProfile={userProfile} />
+          ) : activeTab === "Journal" ? (
+            <Journal
+              ref={journalRef}
+              userProfile={userProfile}
+              onOpenLinkedPrayer={(prayerId) => {
+                setActiveTab('Posts');
+                // Wait for Posts tab to render, then focus the card.
+                window.setTimeout(() => postsRef.current?.focusPrayerById?.(prayerId), 180);
+              }}
+            />
           ) : (
-            <ActiveComponent />
+            <ActiveComponent userProfile={userProfile} />
           )}
         </div>
 
@@ -259,24 +283,6 @@ const Profile = () => {
             communitiesRef.current?.refresh?.();
           }}
         />
-
-        {/* Logout Button - Fixed at bottom of content */}
-        <div className="max-w-6xl mx-auto px-6 mt-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Account Settings</h3>
-                <p className="text-sm text-gray-600">Manage your account preferences</p>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-              >
-                🚪 Logout
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
 
       <BottomNavBar />

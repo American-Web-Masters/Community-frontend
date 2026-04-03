@@ -387,7 +387,7 @@ const PrayerCard = ({
         timelineData={timelineData}
       />
       
-      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4 mb-4 transition-all duration-500 ease-in-out relative">
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4  transition-all duration-500 ease-in-out relative">
         {/* Publish Draft Button - positioned absolutely */}
         {isDraft && onPublishDraft && (
           <button
