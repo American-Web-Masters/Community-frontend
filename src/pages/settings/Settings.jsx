@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import Header from "../../components/ui/Header";
 import { useNavigate, useParams } from "react-router-dom";
-import toast from "react-hot-toast";
 import { useLogout } from "../../hooks/useLogout";
 
 import {
@@ -9,7 +8,6 @@ import {
 	PrivacyAccountSettings,
 	AppInfoDataSettings,
 	SettingsCard,
-	SettingsHeader,
 	SettingsTabs,
 } from "./index";
 
@@ -31,25 +29,11 @@ const Settings = () => {
 	);
 
 	const [activeTab, setActiveTab] = useState("notifications");
-	const [isSaving, setIsSaving] = useState(false);
 
 	const [notifications, setNotifications] = useState({
 		journal: { newEntry: true, likes: true, comments: true },
 		communityMode: "all",
 	});
-
-	const handleSave = async () => {
-		// For now this is UI-only. We’ll wire API when backend endpoints exist.
-		setIsSaving(true);
-		try {
-			await new Promise((r) => setTimeout(r, 450));
-			toast.success("Settings saved");
-		} catch {
-			toast.error("Failed to save settings");
-		} finally {
-			setIsSaving(false);
-		}
-	};
 
 	return (
 		<div className="min-h-screen light-background overflow-x-hidden">
@@ -65,17 +49,7 @@ const Settings = () => {
 				<div className="w-[95%] mx-auto">
 					{/* Top bar icons shown in the screenshot are handled by Header */}
 
-					<div className="mt-4">
-						<div className="flex items-start justify-between gap-4">
-							<div className="min-w-0 flex-1">
-								<SettingsHeader onSave={handleSave} isSaving={isSaving} />
-							</div>
-							{/* On md+ the Save button is shown in the tabs row; on sm- it's shown in the header */}
-							<div className="hidden lg:block" />
-						</div>
-					</div>
-
-					{/* Tabs row (md+ keeps tabs + save button in the same line) */}
+					{/* Tabs row */}
 					<div className="mt-5 flex items-center justify-between gap-4">
 						<div className="min-w-0 ">
 							<SettingsTabs
@@ -83,16 +57,6 @@ const Settings = () => {
 								activeTab={activeTab}
 								onTabChange={setActiveTab}
 							/>
-						</div>
-						<div className="hidden lg:block flex-shrink-0">
-							<button
-								type="button"
-								onClick={handleSave}
-								disabled={isSaving}
-								className="btn-blue-gradient px-6 py-3 rounded-full text-white text-sm font-semibold shadow-md hover:opacity-95 disabled:opacity-60"
-							>
-								{isSaving ? "Saving…" : "Save Changes"}
-							</button>
 						</div>
 					</div>
 

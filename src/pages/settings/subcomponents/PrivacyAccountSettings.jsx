@@ -4,7 +4,7 @@ import SettingsSectionRow from "./SettingsSectionRow";
 import SegmentedControl from "./SegmentedControl";
 import ChangePasswordModal from "./ChangePasswordModal";
 import DeleteAccountModal from "./DeleteAccountModal";
-import { changePassword, deleteAccount } from "../../../api/settings.js";
+import { changePassword, deleteAccount, toggleDirectMessaging } from "../../../api/settings.js";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../../store/userSlice.js";
@@ -22,6 +22,7 @@ const PrivacyAccountSettings = () => {
 	const [changePasswordOpen, setChangePasswordOpen] = useState(false);
 	const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
+	const [togglingDM, setTogglingDM] = useState(false);
 
 	const getErrorMessage = (error) => {
 		return (
@@ -57,6 +58,22 @@ const PrivacyAccountSettings = () => {
 		}
 	};
 
+	const handleToggleDirectMessaging = async (nextValue) => {
+		const previousValue = directMessagesEnabled;
+		setDirectMessagesEnabled(nextValue);
+		setTogglingDM(true);
+		try {
+			await toggleDirectMessaging({ allowDirectMessaging: nextValue });
+			toast.success(`Direct messages ${nextValue ? "enabled" : "disabled"}`);
+		} catch (error) {
+			// rollback
+			setDirectMessagesEnabled(previousValue);
+			toast.error(getErrorMessage(error));
+		} finally {
+			setTogglingDM(false);
+		}
+	};
+
 	const handleDelete = async ({ currentPassword }) => {
 		setSubmitting(true);
 		try {
@@ -80,8 +97,9 @@ const PrivacyAccountSettings = () => {
 				right={
 					<ToggleSwitch
 						checked={directMessagesEnabled}
-						onChange={setDirectMessagesEnabled}
+						onChange={handleToggleDirectMessaging}
 						label={directMessagesEnabled ? "On" : "Off"}
+						disabled={togglingDM}
 					/>
 				}
 			/>
