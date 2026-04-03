@@ -3,21 +3,23 @@ import ToggleSwitch from "./ToggleSwitch";
 import SettingsSectionRow from "./SettingsSectionRow";
 import SegmentedControl from "./SegmentedControl";
 import ChangePasswordModal from "./ChangePasswordModal";
-import ConfirmActionModal from "./ConfirmActionModal";
-import { changePassword } from "../../../api/settings.js";
+import DeleteAccountModal from "./DeleteAccountModal";
+import { changePassword, deleteAccount } from "../../../api/settings.js";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../../store/userSlice.js";
+import { clearUser } from "../../../store/userSlice.js";
+import { useNavigate } from "react-router-dom";
 
 const Divider = () => <div className="h-px bg-blue-100 mx-4" />;
 
 const PrivacyAccountSettings = () => {
+	const navigate = useNavigate();
 	const dispatch = useDispatch();
 	const [directMessagesEnabled, setDirectMessagesEnabled] = useState(true);
 	const [profileVisibility, setProfileVisibility] = useState("public");
 
 	const [changePasswordOpen, setChangePasswordOpen] = useState(false);
-	const [confirmDeactivateOpen, setConfirmDeactivateOpen] = useState(false);
 	const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 
@@ -55,25 +57,16 @@ const PrivacyAccountSettings = () => {
 		}
 	};
 
-	const handleDeactivate = async () => {
+	const handleDelete = async ({ currentPassword }) => {
 		setSubmitting(true);
 		try {
-			// TODO: replace with real API call.
-			await new Promise((r) => setTimeout(r, 700));
-			console.log("deactivateAccount");
-			setConfirmDeactivateOpen(false);
-		} finally {
-			setSubmitting(false);
-		}
-	};
-
-	const handleDelete = async () => {
-		setSubmitting(true);
-		try {
-			// TODO: replace with real API call.
-			await new Promise((r) => setTimeout(r, 700));
-			console.log("deleteAccount");
+			await deleteAccount({ currentPassword });
+			toast.success("Account deleted successfully");
 			setConfirmDeleteOpen(false);
+
+			// Clear client state and redirect to login
+			dispatch(clearUser());
+			navigate("/login");
 		} finally {
 			setSubmitting(false);
 		}
@@ -144,36 +137,17 @@ const PrivacyAccountSettings = () => {
 				loading={submitting}
 			/>
 
-			<ConfirmActionModal
-				isOpen={confirmDeactivateOpen}
-				onClose={() => setConfirmDeactivateOpen(false)}
-				onConfirm={handleDeactivate}
-				loading={submitting}
-				variant="danger"
-				title="Deactivate account?"
-				message={
-					<p>
-						You can reactivate later by logging in again. This will hide your profile
-						 and activity.
-					</p>
-				}
-				confirmText="Deactivate"
-			/>
-
-			<ConfirmActionModal
+			<DeleteAccountModal
 				isOpen={confirmDeleteOpen}
 				onClose={() => setConfirmDeleteOpen(false)}
-				onConfirm={handleDelete}
+				onConfirm={async (payload) => {
+					try {
+						await handleDelete(payload);
+					} catch (error) {
+						toast.error(getErrorMessage(error));
+					}
+				}}
 				loading={submitting}
-				variant="danger"
-				title="Delete account permanently?"
-				message={
-					<p>
-						This action can’t be undone. Your account and associated data will be
-						 permanently removed.
-					</p>
-				}
-				confirmText="Delete"
 			/>
 		</div>
 	);
