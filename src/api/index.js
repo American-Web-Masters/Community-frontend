@@ -18,3 +18,6 @@ export * from './subscriptions.js';
 
 // Export profile API functions
 export * from './profile.js';
+
+// Export settings API functions
+export * from './settings.js';
