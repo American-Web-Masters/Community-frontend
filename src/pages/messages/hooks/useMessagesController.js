@@ -97,7 +97,10 @@ export const useMessagesController = () => {
         const response = await getAllUsers();
         if (response.data.status === "success") {
           const allUsers = response.data.data.users;
-          const otherUsers = allUsers.filter((u) => u._id !== user?._id);
+          const otherUsers = allUsers.filter(
+            (u) => u.allowDirectMessaging === true && u._id !== user?._id
+          );
+          
           setUsers(otherUsers);
         }
       } catch (error) {

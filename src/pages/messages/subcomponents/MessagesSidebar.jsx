@@ -164,7 +164,7 @@ const MessagesSidebar = ({
                 <div className="text-center py-4 text-gray-500 text-xs">Loading...</div>
               ) : isGroupMode && filteredGroupConversations.length === 0 ? (
                 <div className="text-center py-4 text-gray-500 text-xs">
-                  {debouncedSearch ? 'No communities found' : 'No joined communities yet'}
+                  {debouncedSearch ? 'No communities found' : 'No unread messages in group chats'}
                 </div>
               ) : (
                 <div className="space-y-1">
