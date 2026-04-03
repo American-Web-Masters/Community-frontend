@@ -16,6 +16,21 @@ export const changePassword = async (payload) => {
 	return response.data;
 };
 
+/**
+ * Delete the current authenticated user's account.
+ *
+ * POST /users/delete-account
+ * body: { currentPassword }
+ *
+ * @param {{ currentPassword: string }} payload
+ * @returns {Promise<any>} API response data
+ */
+export const deleteAccount = async (payload) => {
+	const response = await apiClient.patch("/users/delete-account", payload);
+	return response.data;
+};
+
 export default {
 	changePassword,
+	deleteAccount,
 };
