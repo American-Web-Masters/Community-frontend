@@ -9,3 +9,4 @@ export { default as PrivacyAccountSettings } from "./subcomponents/PrivacyAccoun
 export { default as ChangePasswordModal } from "./subcomponents/ChangePasswordModal";
 export { default as AccordionRow } from "./subcomponents/AccordionRow";
 export { default as AppInfoDataSettings } from "./subcomponents/AppInfoDataSettings";
+export { default as SettingsSupportCard } from "./subcomponents/SettingsSupportCard";
