@@ -55,11 +55,17 @@ const CheckoutForm = ({ amount, communityId, recipientUserId, personalMessage, o
           recipientUserId,
           personalMessage,
         });
-      } else {
+      } else if (communityId) {
         // Community payment
         response = await apiClient.post('/payments/create-payment-intent', {
           amount,
           communityId,
+          personalMessage,
+        });
+      } else {
+        // App/admin payment (platform support)
+        response = await apiClient.post('/payments/app/create-payment-intent', {
+          amount,
           personalMessage,
         });
       }
