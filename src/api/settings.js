@@ -47,8 +47,23 @@ export const toggleDirectMessaging = async (payload) => {
 	return response.data;
 };
 
+/**
+ * Toggle whether the current user's profile is private.
+ *
+ * PATCH /user-profiles/privacy/toggle
+ * body: { togglePrivacy: boolean }
+ *
+ * @param {{ togglePrivacy: boolean }} payload
+ * @returns {Promise<any>} API response data
+ */
+export const toggleProfilePrivacy = async (payload) => {
+	const response = await apiClient.patch("/user-profiles/privacy/toggle", payload);
+	return response.data;
+};
+
 export default {
 	changePassword,
 	deleteAccount,
 	toggleDirectMessaging,
+	toggleProfilePrivacy,
 };
