@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   PaymentElement,
@@ -8,13 +8,15 @@ import {
 } from '@stripe/react-stripe-js';
 import toast from 'react-hot-toast';
 import apiClient from '../../api/client';
+import { useNavigate } from 'react-router-dom';
 
 // Initialize Stripe - Replace with your actual publishable key
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key_here');
 
-const CheckoutForm = ({ amount, communityId, recipientUserId, personalMessage, onSuccess, onCancel }) => {
+const CheckoutForm = ({ amount, communityId, recipientUserId, personalMessage, onSuccess, onCancel, successRedirectTo }) => {
   const stripe = useStripe();
   const elements = useElements();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -64,7 +66,7 @@ const CheckoutForm = ({ amount, communityId, recipientUserId, personalMessage, o
         });
       } else {
         // App/admin payment (platform support)
-        response = await apiClient.post('/payments/app/create-payment-intent', {
+        response = await apiClient.post('/payments/application/create-payment-intent', {
           amount,
           personalMessage,
         });
@@ -88,7 +90,11 @@ const CheckoutForm = ({ amount, communityId, recipientUserId, personalMessage, o
         elements,
         clientSecret,
         confirmParams: {
-          return_url: `${window.location.origin}/payment-success`,
+          // If Stripe requires a full-page redirect (3DS, bank auth, etc), we land on
+          // /payment-success and can optionally bounce the user back to where they came from.
+          return_url: `${window.location.origin}/payment-success?redirectTo=${encodeURIComponent(
+            successRedirectTo || ''
+          )}`,
         },
         redirect: 'if_required',
       });
@@ -97,8 +103,25 @@ const CheckoutForm = ({ amount, communityId, recipientUserId, personalMessage, o
         setErrorMessage(error.message);
         toast.error(`Payment failed: ${error.message}`);
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // When redirect isn't required, Stripe won't navigate for us.
+        // UserSupport/CommunitySupport already navigate inside onSuccess.
         toast.success('🎉 Payment successful! Thank you for your support.');
-        onSuccess && onSuccess(paymentIntent);
+        if (onSuccess) {
+          onSuccess(paymentIntent);
+        } else {
+          navigate('/payment-success', {
+            state: {
+              paymentType: 'one-time',
+              amount,
+              interval: 'month',
+              communityName: 'Support',
+              paymentIntent,
+              communityId: communityId || null,
+              recipientUsername: recipientUserId ? String(recipientUserId) : null,
+              redirectTo: successRedirectTo || null,
+            },
+          });
+        }
       }
     } catch (err) {
       console.error('Payment error:', err);
@@ -233,7 +256,7 @@ const CheckoutForm = ({ amount, communityId, recipientUserId, personalMessage, o
   );
 };
 
-const StripePaymentForm = ({ amount, communityId, recipientUserId, personalMessage, onSuccess, onCancel }) => {
+const StripePaymentForm = ({ amount, communityId, recipientUserId, personalMessage, onSuccess, onCancel, successRedirectTo = null }) => {
   const options = {
     mode: 'payment',
     amount: amount,
@@ -273,6 +296,7 @@ const StripePaymentForm = ({ amount, communityId, recipientUserId, personalMessa
         personalMessage={personalMessage}
         onSuccess={onSuccess}
         onCancel={onCancel}
+  successRedirectTo={successRedirectTo}
       />
     </Elements>
   );
