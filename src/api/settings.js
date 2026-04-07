@@ -100,6 +100,19 @@ export const toggleJournalCommentNotification = async (toggle) => {
 	return response.data;
 };
 
+/**
+ * Toggle community notifications for the authenticated user.
+ *
+ * PATCH /users/community-notifications
+ * body: { toggle: boolean }
+ */
+export const toggleCommunityNotifications = async (toggle) => {
+	const response = await apiClient.patch("/users/community-notifications", {
+		toggle,
+	});
+	return response.data;
+};
+
 export default {
 	changePassword,
 	deleteAccount,
@@ -108,4 +121,5 @@ export default {
 	toggleJournalNewEntryNotification,
 	toggleJournalLikesNotification,
 	toggleJournalCommentNotification,
+	toggleCommunityNotifications,
 };

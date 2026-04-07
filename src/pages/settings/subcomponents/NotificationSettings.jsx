@@ -3,6 +3,7 @@ import ToggleSwitch from "./ToggleSwitch";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
+  toggleCommunityNotifications,
   toggleJournalCommentNotification,
   toggleJournalLikesNotification,
   toggleJournalNewEntryNotification,
@@ -41,6 +42,8 @@ const NotificationSettings = ({ value, onChange }) => {
     likes: false,
     comment: false,
   });
+  const [communityEnabled, setCommunityEnabled] = React.useState(true);
+  const [updatingCommunity, setUpdatingCommunity] = React.useState(false);
 
   React.useEffect(() => {
     const notifications = user?.journalNotifications || {};
@@ -51,12 +54,28 @@ const NotificationSettings = ({ value, onChange }) => {
     });
   }, [user]);
 
+  React.useEffect(() => {
+    const rawCommunityNotifications = user?.communityNotifications;
+
+    const normalizedFromUser =
+      typeof rawCommunityNotifications === "boolean"
+        ? rawCommunityNotifications
+        : rawCommunityNotifications?.enabled ?? rawCommunityNotifications?.toggle;
+
+    if (typeof normalizedFromUser === "boolean") {
+      setCommunityEnabled(normalizedFromUser);
+      return;
+    }
+
+    setCommunityEnabled((value?.communityMode || "all") !== "off");
+  }, [user, value?.communityMode]);
+
   const getErrorMessage = (error) => {
     return (
       error?.response?.data?.message ||
       error?.response?.data?.error ||
       error?.message ||
-      "Failed to update journal notification."
+      "Failed to update notification."
     );
   };
 
@@ -96,7 +115,47 @@ const NotificationSettings = ({ value, onChange }) => {
     }
   };
 
-  const communityMode = value?.communityMode || "all";
+  const handleCommunityToggle = async (nextValue) => {
+    const previousValue = communityEnabled;
+
+    setCommunityEnabled(nextValue);
+    setUpdatingCommunity(true);
+    onChange?.({
+      ...value,
+      communityMode: nextValue ? "all" : "off",
+    });
+
+    try {
+      const response = await toggleCommunityNotifications(nextValue);
+      const responseCommunity = response?.data?.communityNotifications;
+
+      const normalizedFromResponse =
+        typeof responseCommunity === "boolean"
+          ? responseCommunity
+          : responseCommunity?.enabled ?? responseCommunity?.toggle;
+
+      const finalValue =
+        typeof normalizedFromResponse === "boolean" ? normalizedFromResponse : nextValue;
+
+      setCommunityEnabled(finalValue);
+      onChange?.({
+        ...value,
+        communityMode: finalValue ? "all" : "off",
+      });
+
+      dispatch(updateUser({ communityNotifications: finalValue }));
+      toast.success(response?.message || "Community notifications updated successfully");
+    } catch (error) {
+      setCommunityEnabled(previousValue);
+      onChange?.({
+        ...value,
+        communityMode: previousValue ? "all" : "off",
+      });
+      toast.error(getErrorMessage(error));
+    } finally {
+      setUpdatingCommunity(false);
+    }
+  };
 
   return (
     <div>
@@ -132,15 +191,10 @@ const NotificationSettings = ({ value, onChange }) => {
         title="Community Notifications"
         right={
           <ToggleSwitch
-            checked={communityMode !== "off"}
-            onChange={(v) =>
-              onChange({
-                ...value,
-                // Keep shape stable: treat toggle as on/off; when on use 'all' as default.
-                communityMode: v ? "all" : "off",
-              })
-            }
-            label={communityMode !== "off" ? "On" : "Off"}
+            checked={communityEnabled}
+            onChange={handleCommunityToggle}
+            label={communityEnabled ? "On" : "Off"}
+            disabled={updatingCommunity}
           />
         }
       />
