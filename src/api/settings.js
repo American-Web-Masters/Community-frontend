@@ -17,7 +17,7 @@ export const changePassword = async (payload) => {
 };
 
 /**
- * Delete the current authenticated user's account.
+ * Delete the current authenticated user's account
  *
  * POST /users/delete-account
  * body: { currentPassword }
