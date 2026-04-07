@@ -43,7 +43,7 @@ const NotificationSettings = ({ value, onChange }) => {
   });
 
   React.useEffect(() => {
-    const notifications = user?.journalNotifications || {};
+    const notifications = user?.journalNotifications || {}
     setJournal({
       newEntry: notifications.newEntry ?? true,
       likes: notifications.likes ?? true,
