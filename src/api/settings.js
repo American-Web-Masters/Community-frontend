@@ -48,7 +48,7 @@ export const toggleDirectMessaging = async (payload) => {
 };
 
 /**
- * Toggle whether the current user's profile is private.
+ * Toggle whether the current user's profile is private
  *
  * PATCH /user-profiles/privacy/toggle
  * body: { togglePrivacy: boolean }
