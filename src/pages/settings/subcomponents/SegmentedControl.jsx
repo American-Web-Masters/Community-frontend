@@ -14,10 +14,10 @@ const SegmentedControl = ({ options, value, onChange, ariaLabel }) => {
 						key={opt.value}
 						type="button"
 						onClick={() => onChange(opt.value)}
-						className={`px-4 py-2 rounded-full text-[12px] sm:text-[13px] font-semibold transition-all duration-150 border ${
+						className={`px-4 py-2 rounded-full text-[12px] sm:text-[13px] font-semibold transition-all duration-150 border cursor-pointer ${
 							active
 								? "btn-blue-gradient text-white border-transparent shadow"
-								: "bg-[#d7eafc] text-gray-700 border-white/60 hover:bg-white"
+								: "bg-[#d7eafc] text-gray-700 border-white/60 hover:bg-primary-100"
 						}`}
 					>
 						{opt.label}

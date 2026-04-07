@@ -4,8 +4,16 @@ import apiClient from '../../api/client';
 
 const RecurringPaymentForm = ({ 
   amount,
+  /**
+   * mode:
+   * - 'community': recurring support to a community (default when communityId provided)
+   * - 'user': recurring support to a user (when recipientUserId provided)
+   * - 'app': recurring support to the platform/admin Stripe account
+   */
+  mode = null,
   communityId = null,
   recipientUserId = null,
+  description = null,
   onSuccess, 
   onCancel 
 }) => {
@@ -20,7 +28,9 @@ const RecurringPaymentForm = ({
     setIsLoading(true);
 
     try {
-      if (recipientUserId) {
+      const effectiveMode = mode || (recipientUserId ? 'user' : (communityId ? 'community' : 'app'));
+
+      if (effectiveMode === 'user') {
         // User-to-user recurring subscription
         const response = await apiClient.post('/subscriptions/user/create-subscripition', {
           amount: dollarAmount,
@@ -28,20 +38,21 @@ const RecurringPaymentForm = ({
           interval,
         });
 
-        // Backend returns sessionUrl for Stripe Checkout
         if (response.data?.data?.sessionUrl) {
           window.location.href = response.data.data.sessionUrl;
         } else {
           throw new Error('No session URL received from server');
         }
-      } else {
+        return;
+      }
+
+      if (effectiveMode === 'community') {
         // Community recurring subscription
-        // Store payment data in URL hash before redirect
         const paymentData = {
           amount: amount,
           paymentType: 'recurring',
           interval: interval,
-          communityId: communityId
+          communityId: communityId,
         };
         const encodedData = btoa(JSON.stringify(paymentData));
         window.location.hash = encodedData;
@@ -49,15 +60,31 @@ const RecurringPaymentForm = ({
         const response = await apiClient.post('/subscriptions/create', {
           communityId,
           amount: dollarAmount,
-          interval
+          interval,
+          ...(description ? { description } : {}),
         });
 
-        // Backend returns sessionUrl for Stripe Checkout
         if (response.data?.data?.sessionUrl) {
           window.location.href = response.data.data.sessionUrl;
         } else {
           throw new Error('No session URL received from server');
         }
+        return;
+      }
+
+      // Platform/admin recurring support
+      // Assumption: backend exposes a dedicated endpoint that creates a Checkout session
+      // for the app/admin Stripe account.
+      const response = await apiClient.post('/subscriptions/app/create', {
+        amount: dollarAmount,
+        interval,
+        ...(description ? { description } : {}),
+      });
+
+      if (response.data?.data?.sessionUrl) {
+        window.location.href = response.data.data.sessionUrl;
+      } else {
+        throw new Error('No session URL received from server');
       }
     } catch (error) {
       console.error('Subscription error:', error);

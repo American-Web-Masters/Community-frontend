@@ -17,7 +17,7 @@ export const changePassword = async (payload) => {
 };
 
 /**
- * Delete the current authenticated user's account.
+ * Delete the current authenticated user's account
  *
  * POST /users/delete-account
  * body: { currentPassword }
@@ -47,8 +47,79 @@ export const toggleDirectMessaging = async (payload) => {
 	return response.data;
 };
 
+/**
+ * Toggle whether the current user's profile is private
+ *
+ * PATCH /user-profiles/privacy/toggle
+ * body: { togglePrivacy: boolean }
+ *
+ * @param {{ togglePrivacy: boolean }} payload
+ * @returns {Promise<any>} API response data
+ */
+export const toggleProfilePrivacy = async (payload) => {
+	const response = await apiClient.patch("/user-profiles/privacy/toggle", payload);
+	return response.data;
+};
+
+/**
+ * Toggle journal new-entry notifications for the authenticated user.
+ *
+ * PATCH /users/journal-notifications/new-entry
+ * body: { toggle: boolean }
+ */
+export const toggleJournalNewEntryNotification = async (toggle) => {
+	const response = await apiClient.patch("/users/journal-notifications/new-entry", {
+		toggle,
+	});
+	return response.data;
+};
+
+/**
+ * Toggle journal likes notifications for the authenticated user.
+ *
+ * PATCH /users/journal-notifications/likes
+ * body: { toggle: boolean }
+ */
+export const toggleJournalLikesNotification = async (toggle) => {
+	const response = await apiClient.patch("/users/journal-notifications/likes", {
+		toggle,
+	});
+	return response.data;
+};
+
+/**
+ * Toggle journal comment notifications for the authenticated user.
+ *
+ * PATCH /users/journal-notifications/comment
+ * body: { toggle: boolean }
+ */
+export const toggleJournalCommentNotification = async (toggle) => {
+	const response = await apiClient.patch("/users/journal-notifications/comment", {
+		toggle,
+	});
+	return response.data;
+};
+
+/**
+ * Toggle community notifications for the authenticated user.
+ *
+ * PATCH /users/community-notifications
+ * body: { toggle: boolean }
+ */
+export const toggleCommunityNotifications = async (toggle) => {
+	const response = await apiClient.patch("/users/community-notifications", {
+		toggle,
+	});
+	return response.data;
+};
+
 export default {
 	changePassword,
 	deleteAccount,
 	toggleDirectMessaging,
+	toggleProfilePrivacy,
+	toggleJournalNewEntryNotification,
+	toggleJournalLikesNotification,
+	toggleJournalCommentNotification,
+	toggleCommunityNotifications,
 };

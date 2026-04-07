@@ -9,6 +9,7 @@ import {
 	AppInfoDataSettings,
 	SettingsCard,
 	SettingsTabs,
+	SettingsSupportCard,
 } from "./index";
 
 const Settings = () => {
@@ -92,6 +93,13 @@ const Settings = () => {
 									<AppInfoDataSettings />
 								</SettingsCard>
 							</>
+						) : activeTab === "support" ? (
+							<SettingsCard className="p-0 overflow-hidden">
+								<SettingsSupportCard
+									title="AO1 Community"
+									avatarSrc="/cross.png"
+								/>
+							</SettingsCard>
 						) : (
 							<SettingsCard className="p-6">
 								<div className="flex items-start justify-between gap-6">

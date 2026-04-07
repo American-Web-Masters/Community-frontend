@@ -4,7 +4,12 @@ import SettingsSectionRow from "./SettingsSectionRow";
 import SegmentedControl from "./SegmentedControl";
 import ChangePasswordModal from "./ChangePasswordModal";
 import DeleteAccountModal from "./DeleteAccountModal";
-import { changePassword, deleteAccount, toggleDirectMessaging } from "../../../api/settings.js";
+import {
+	changePassword,
+	deleteAccount,
+	toggleDirectMessaging,
+	toggleProfilePrivacy,
+} from "../../../api/settings.js";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../../store/userSlice.js";
@@ -23,6 +28,7 @@ const PrivacyAccountSettings = () => {
 	const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [togglingDM, setTogglingDM] = useState(false);
+	const [togglingPrivacy, setTogglingPrivacy] = useState(false);
 
 	const getErrorMessage = (error) => {
 		return (
@@ -74,6 +80,23 @@ const PrivacyAccountSettings = () => {
 		}
 	};
 
+	const handleToggleProfileVisibility = async (nextVisibility) => {
+		const previousVisibility = profileVisibility;
+		setProfileVisibility(nextVisibility);
+		setTogglingPrivacy(true);
+		try {
+			const togglePrivacy = nextVisibility === "private";
+			await toggleProfilePrivacy({ togglePrivacy });
+			toast.success(`Profile set to ${togglePrivacy ? "private" : "public"}`);
+		} catch (error) {
+			// rollback
+			setProfileVisibility(previousVisibility);
+			toast.error(getErrorMessage(error));
+		} finally {
+			setTogglingPrivacy(false);
+		}
+	};
+
 	const handleDelete = async ({ currentPassword }) => {
 		setSubmitting(true);
 		try {
@@ -116,7 +139,8 @@ const PrivacyAccountSettings = () => {
 							{ label: "Private", value: "private" },
 						]}
 						value={profileVisibility}
-						onChange={setProfileVisibility}
+						onChange={handleToggleProfileVisibility}
+						disabled={togglingPrivacy}
 					/>
 				}
 			/>

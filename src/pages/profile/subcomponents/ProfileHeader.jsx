@@ -3,11 +3,16 @@ import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { selectUser } from "../../../store/userSlice";
 import { updateUserProfile } from "../../../api/profile";
-import { MdCheck, MdClose, MdCameraAlt } from "react-icons/md";
+import { MdCheck, MdClose, MdCameraAlt, MdSettings, MdShare } from "react-icons/md";
 import { FaEdit } from "react-icons/fa";
 import toast from "react-hot-toast";
 
-const ProfileHeader = ({ userProfile, isLoading = false, onProfileUpdate }) => {
+const ProfileHeader = ({
+  userProfile,
+  isLoading = false,
+  onProfileUpdate,
+  isOwnProfile = false,
+}) => {
   const user = useSelector(selectUser);
   const location = useLocation();
   const navigate = useNavigate();
@@ -43,6 +48,7 @@ const ProfileHeader = ({ userProfile, isLoading = false, onProfileUpdate }) => {
   const showSkeleton = Boolean(isLoading && !userProfile);
 
   const handleEditClick = () => {
+    if (!isOwnProfile) return;
     setEditData({
       firstname: userProfile?.firstname || "",
       lastname: userProfile?.lastname || "",
@@ -80,6 +86,7 @@ const ProfileHeader = ({ userProfile, isLoading = false, onProfileUpdate }) => {
   };
 
   const handleSave = async () => {
+    if (!isOwnProfile) return;
     setHeaderLoading(true);
     try {
       const payload = {
@@ -153,7 +160,7 @@ const ProfileHeader = ({ userProfile, isLoading = false, onProfileUpdate }) => {
     <div className="bg-gradient-to-br from-blue-50 to-blue-100 w-4/6 mx-auto rounded-xl shadow-md overflow-hidden mb-6 max-md:w-[98%]">
       {/* Main Profile Section */}
       <div className="relative px-6 pt-6 pb-4">
-        {isEditing ? (
+  {isEditing ? (
           /* ── EDIT MODE ── */
           <div className="relative space-y-5">
             {/* Edit mode header row */}
@@ -443,66 +450,41 @@ const ProfileHeader = ({ userProfile, isLoading = false, onProfileUpdate }) => {
                 disabled={showSkeleton}
                 title="Share Profile"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-                  />
-                </svg>
+                <MdShare className="w-5 h-5" />
               </button>
 
-              {/* Edit Icon */}
-              <button
-                onClick={handleEditClick}
-                disabled={showSkeleton}
-                className={`p-2 text-gray-600 hover:text-blue-600 transition-colors cursor-pointer ${
-                  showSkeleton ? "opacity-60 cursor-not-allowed hover:text-gray-600" : ""
-                }`}
-                title="Edit Profile"
-              >
-                <FaEdit className="w-5 h-5" />
-              </button>
+              {/* Edit + Settings should only be visible on own profile */}
+              {isOwnProfile && (
+                <>
+                  {/* Edit Icon */}
+                  <button
+                    onClick={handleEditClick}
+                    disabled={showSkeleton}
+                    className={`p-2 text-gray-600 hover:text-blue-600 transition-colors cursor-pointer ${
+                      showSkeleton ? "opacity-60 cursor-not-allowed hover:text-gray-600" : ""
+                    }`}
+                    title="Edit Profile"
+                  >
+                    <FaEdit className="w-5 h-5" />
+                  </button>
 
-              {/* Settings Icon */}
-              <button
-                className="p-2 text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
-                onClick={() =>
-                  navigate(
-                    `/profile/${
-                      userProfile?.username || location.pathname.split("/profile/")[1]
-                    }/settings`
-                  )
-                }
-                disabled={showSkeleton}
-                title="Settings"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </button>
+                  {/* Settings Icon */}
+                  <button
+                    className="p-2 text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
+                    onClick={() =>
+                      navigate(
+                        `/profile/${
+                          userProfile?.username || location.pathname.split("/profile/")[1]
+                        }/settings`
+                      )
+                    }
+                    disabled={showSkeleton}
+                    title="Settings"
+                  >
+                    <MdSettings className="w-5 h-5" />
+                  </button>
+                </>
+              )}
               </div>
             </div>
           </>

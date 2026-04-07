@@ -8,6 +8,27 @@ import Header from "../../components/ui/Header";
 import CreateCommunityModal from "../../components/ui/CreateCommunityModal";
 import { getUserProfile } from "../../api";
 import { ProfileHeader, Posts, Communities, Testimony, Journal, SubscriptionMgt } from "./subcomponents";
+import { MdLock } from "react-icons/md";
+
+const PrivateProfileLockedState = ({ username }) => {
+  return (
+    <div className="relative overflow-hidden rounded-2xl shadow-md max-md:mx-3">
+      {/* Blurry, translucent background */}
+      <div className="absolute inset-0 bg-white/55 backdrop-blur-xl" />
+
+      {/* Content */}
+      <div className="relative p-10 text-center">
+        <div className="mx-auto w-16 h-16 rounded-full bg-white/60 backdrop-blur-md flex items-center justify-center mb-4 shadow-sm ring-1 ring-black/5">
+          <MdLock className="w-8 h-8 text-gray-600" />
+        </div>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">This profile is private</h3>
+        <p className="text-gray-700 text-sm max-w-md mx-auto">
+          @{username}'s posts, communities, testimonies, and journal are hidden.
+        </p>
+      </div>
+    </div>
+  );
+};
 
 const Profile = () => {
   const user = useSelector(selectUser);
@@ -125,6 +146,10 @@ const Profile = () => {
   const ActiveComponent = filterTabs.find(tab => tab.name === activeTab)?.component || Posts;
   const activeTabData = filterTabs.find(tab => tab.name === activeTab);
 
+  const isOwnProfile = user?.username === username;
+  const isPrivateProfile = Boolean(userProfile?.isPrivate);
+  const isLockedForViewer = !isOwnProfile && isPrivateProfile;
+
   return (
     <div className="min-h-screen light-background overflow-x-hidden">
       <Header
@@ -139,6 +164,7 @@ const Profile = () => {
         <ProfileHeader
           userProfile={userProfile}
           isLoading={loading}
+          isOwnProfile={isOwnProfile}
           onProfileUpdate={(updated) =>
             setUserProfile((prev) => ({ ...prev, ...updated }))
           }
@@ -168,7 +194,7 @@ const Profile = () => {
               </div>
 
               {/* Create Button - Large Desktop */}
-              {activeTabData?.buttonText && (
+              {activeTabData?.buttonText && !isLockedForViewer && isOwnProfile && (
                 <button
                   onClick={activeTabData.buttonAction}
                   className="btn-blue-gradient cursor-pointer text-white px-4 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-3 shadow-lg whitespace-nowrap"
@@ -202,7 +228,7 @@ const Profile = () => {
               </div>
 
               {/* Button sits below tabs and aligned to the right on sm..lg */}
-              {activeTabData?.buttonText && (
+              {activeTabData?.buttonText && !isLockedForViewer && isOwnProfile && (
                 <div className="w-full flex justify-end">
                   <button
                     onClick={activeTabData.buttonAction}
@@ -237,7 +263,7 @@ const Profile = () => {
             </div>
 
             {/* Mobile action button: full-width under tabs */}
-            {activeTabData?.buttonText && (
+            {activeTabData?.buttonText && !isLockedForViewer && isOwnProfile && (
               <div className="w-full sm:hidden mt-3">
                 <button
                   onClick={activeTabData.buttonAction}
@@ -252,7 +278,9 @@ const Profile = () => {
 
         {/* Tab Content */}
         <div className="max-sm:min-w-[95%] md:w-4/6 mx-auto overflow-x-hidden">
-          {activeTab === "Posts" ? (
+          {isLockedForViewer ? (
+            <PrivateProfileLockedState username={username} />
+          ) : activeTab === "Posts" ? (
             <Posts ref={postsRef} userProfile={userProfile} />
           ) : activeTab === "Communities" ? (
             <Communities ref={communitiesRef} userProfile={userProfile} />
