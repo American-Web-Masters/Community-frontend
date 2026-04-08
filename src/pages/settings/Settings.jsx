@@ -2,6 +2,9 @@ import React, { useMemo, useState } from "react";
 import Header from "../../components/ui/Header";
 import { useNavigate, useParams } from "react-router-dom";
 import { useLogout } from "../../hooks/useLogout";
+import { connectCalendar } from "../../api/calendar";
+import { FcGoogle } from "react-icons/fc";
+import toast from "react-hot-toast";
 
 import {
 	NotificationSettings,
@@ -35,6 +38,26 @@ const Settings = () => {
 		journal: { newEntry: true, likes: true, comments: true },
 		communityMode: "all",
 	});
+
+	const [isConnectingCalendar, setIsConnectingCalendar] = useState(false);
+
+	const handleCalendarConnect = async () => {
+		try {
+			setIsConnectingCalendar(true);
+			const response = await connectCalendar();
+
+			if (response.success) {
+				toast.success(response.message || "Redirecting to Google Calendar...");
+			} else {
+				toast.error(response.error || "Failed to connect calendar");
+			}
+		} catch (error) {
+			console.error("Calendar connection error:", error);
+			toast.error("Failed to connect calendar");
+		} finally {
+			setIsConnectingCalendar(false);
+		}
+	};
 
 	return (
 		<div className="min-h-screen light-background overflow-x-hidden">
@@ -99,6 +122,33 @@ const Settings = () => {
 									title="AO1 Community"
 									avatarSrc="/cross.png"
 								/>
+							</SettingsCard>
+						) : activeTab === "messaging" ? (
+							<SettingsCard className="p-6">
+								<div className="flex items-start justify-between gap-6 max-sm:flex-col">
+									<div className="w-full">
+										<h2 className="text-lg font-bold text-gray-900">Messaging &amp; Integrations</h2>
+										<div className="mt-6 border border-gray-200 rounded-xl p-4">
+											<h3 className="text-base font-bold text-gray-900">Calendar Integrations</h3>
+											<button
+												type="button"
+												onClick={handleCalendarConnect}
+												disabled={isConnectingCalendar}
+												className="mt-4 cursor-pointer inline-flex items-center justify-center gap-2 rounded-full border border-[#97a3d8] bg-white px-5 py-2 text-[18px] font-medium text-gray-800 transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-70"
+											>
+												<FcGoogle className="h-6 w-6" />
+												<span>{isConnectingCalendar ? "Connecting..." : "Google Calendar"}</span>
+											</button>
+										</div>
+									</div>
+									<button
+										type="button"
+										onClick={() => navigate(`/profile/${username}`)}
+										className="text-sm font-semibold text-blue-700 hover:text-blue-900"
+									>
+										Back to profile
+									</button>
+								</div>
 							</SettingsCard>
 						) : (
 							<SettingsCard className="p-6">
