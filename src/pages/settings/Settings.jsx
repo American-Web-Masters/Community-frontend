@@ -151,7 +151,7 @@ const Settings = () => {
 								/>
 							</SettingsCard>
 						) : activeTab === "messaging" ? (
-							<SettingsCard className="p-6">
+							<SettingsCard className="p-6 shadow-sm border border-white/60 bg-white">
 								<div className="flex items-start justify-between gap-6 max-sm:flex-col">
 									<div className="w-full">
 										<h2 className="text-lg font-bold text-gray-900">Messaging &amp; Integrations</h2>
