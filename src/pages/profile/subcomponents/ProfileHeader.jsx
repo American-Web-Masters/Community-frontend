@@ -419,7 +419,11 @@ const ProfileHeader = ({
 
               {/* Action Icons */}
             </div>
-            <div className="absolute top-4 right-3 flex items-center space-x-2 max-lg:flex-col-reverse pb-4">
+            <div
+              className={`absolute top-4 right-3 flex items-center lg:gap-2 pb-4 ${
+                isOwnProfile ? "max-lg:flex-col-reverse" : ""
+              }`}
+            >
               {/* Support Button */}
               <div>
                 <div className="flex justify-center align-center">
