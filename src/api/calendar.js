@@ -6,7 +6,7 @@ import apiClient from './client.js';
  */
 export const checkCalendarConnection = async () => {
   try {
-    console.log('Checking calendar connection...');
+    console.log('Checking calendar connection....');
     
     const response = await apiClient.get('/users/check-calendar-connection');
     
