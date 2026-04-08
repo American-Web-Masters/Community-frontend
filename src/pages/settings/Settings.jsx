@@ -98,7 +98,7 @@ const Settings = () => {
 
 			<div className="pt-4 pb-20">
 				<div className="w-[95%] mx-auto">
-					{/* Top bar icons shown in the screenshot are handled by Header */}
+					{/* Top bar icons shown in the screenshot are handled by header */}
 
 					{/* Tabs row */}
 					<div className="mt-5 flex items-center justify-between gap-4">
