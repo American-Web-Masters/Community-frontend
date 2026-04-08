@@ -64,7 +64,7 @@ const CheckoutForm = ({ amount, communityId, recipientUserId, personalMessage, o
         });
       } else {
         // App/admin payment (platform support)
-        response = await apiClient.post('/payments/app/create-payment-intent', {
+        response = await apiClient.post('/payments/application/create-payment-intent', {
           amount,
           personalMessage,
         });

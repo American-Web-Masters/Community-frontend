@@ -22,6 +22,7 @@ const SettingsSupportCard = ({
   const [personalMessage, setPersonalMessage] = useState('');
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [paymentType, setPaymentType] = useState('one-time'); // 'one-time' | 'recurring'
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const recurringInterval = 'month'; // fixed monthly
 
@@ -63,9 +64,19 @@ const SettingsSupportCard = ({
     setShowPaymentForm(true);
   };
 
+  const resetCard = () => {
+    setSelectedAmount(null);
+    setCustomAmount('');
+    setPersonalMessage('');
+    setPaymentType('one-time');
+  };
+
   const handlePaymentSuccess = () => {
-    // In settings context we simply return to the card.
+    // Refresh card UI after successful payment.
     setShowPaymentForm(false);
+    resetCard();
+    // Force remount of Stripe Elements if the user immediately pays again.
+    setRefreshKey((k) => k + 1);
   };
 
   const handlePaymentCancel = () => {
@@ -251,6 +262,7 @@ const SettingsSupportCard = ({
             </>
           ) : paymentType === 'one-time' ? (
             <StripePaymentForm
+              key={`one-time-${refreshKey}`}
               amount={selectedAmount}
               // App-admin support: StripePaymentForm should interpret "no recipient" as platform payment.
               // If the component currently requires a recipient, we’ll adjust it next.
@@ -260,6 +272,7 @@ const SettingsSupportCard = ({
             />
           ) : (
             <RecurringPaymentForm
+              key={`recurring-${refreshKey}`}
               amount={selectedAmount}
               mode="app"
               description={`Monthly support for ${displayName}`}
