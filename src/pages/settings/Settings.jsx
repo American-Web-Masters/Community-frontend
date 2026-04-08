@@ -53,7 +53,7 @@ const Settings = () => {
 			}
 		} catch (error) {
 			console.error("Calendar connection error:", error);
-			toast.error("Failed to connect calendar");
+			toast.error("Failed to connect calendar")
 		} finally {
 			setIsConnectingCalendar(false);
 		}
