@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Header from "../../components/ui/Header";
 import { useNavigate, useParams } from "react-router-dom";
 import { useLogout } from "../../hooks/useLogout";
-import { connectCalendar } from "../../api/calendar";
+import { checkCalendarConnection, connectCalendar } from "../../api/calendar";
 import { FcGoogle } from "react-icons/fc";
+import { FaCheckCircle } from "react-icons/fa";
 import toast from "react-hot-toast";
 
 import {
@@ -40,6 +41,32 @@ const Settings = () => {
 	});
 
 	const [isConnectingCalendar, setIsConnectingCalendar] = useState(false);
+	const [isCalendarConnected, setIsCalendarConnected] = useState(false);
+	const [isCalendarLoading, setIsCalendarLoading] = useState(false);
+
+	const checkCalendarStatus = async () => {
+		try {
+			setIsCalendarLoading(true);
+			const response = await checkCalendarConnection();
+
+			if (response.success) {
+				setIsCalendarConnected(!!response?.data?.isConnected);
+			} else {
+				setIsCalendarConnected(false);
+			}
+		} catch (error) {
+			console.error("Calendar status check error:", error);
+			setIsCalendarConnected(false);
+		} finally {
+			setIsCalendarLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		if (activeTab === "messaging") {
+			checkCalendarStatus();
+		}
+	}, [activeTab]);
 
 	const handleCalendarConnect = async () => {
 		try {
@@ -53,7 +80,7 @@ const Settings = () => {
 			}
 		} catch (error) {
 			console.error("Calendar connection error:", error);
-			toast.error("Failed to connect calendar")
+			toast.error("Failed to connect calendar");
 		} finally {
 			setIsConnectingCalendar(false);
 		}
@@ -130,15 +157,27 @@ const Settings = () => {
 										<h2 className="text-lg font-bold text-gray-900">Messaging &amp; Integrations</h2>
 										<div className="mt-6 border border-gray-200 rounded-xl p-4">
 											<h3 className="text-base font-bold text-gray-900">Calendar Integrations</h3>
-											<button
-												type="button"
-												onClick={handleCalendarConnect}
-												disabled={isConnectingCalendar}
-												className="mt-4 cursor-pointer inline-flex items-center justify-center gap-2 rounded-full border border-[#97a3d8] bg-white px-5 py-2 text-[18px] font-medium text-gray-800 transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-70"
-											>
-												<FcGoogle className="h-6 w-6" />
-												<span>{isConnectingCalendar ? "Connecting..." : "Google Calendar"}</span>
-											</button>
+											{isCalendarLoading ? (
+												<div className="mt-4 inline-flex items-center gap-2 text-sm text-gray-600">
+													<div className="h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+													<span>Checking calendar connection...</span>
+												</div>
+											) : isCalendarConnected ? (
+												<div className="mt-4 inline-flex items-center gap-2 text-green-600">
+													<FaCheckCircle className="h-5 w-5" />
+													<span className="text-sm font-medium">Google Calendar Connected</span>
+												</div>
+											) : (
+												<button
+													type="button"
+													onClick={handleCalendarConnect}
+													disabled={isConnectingCalendar}
+													className="mt-4 cursor-pointer inline-flex items-center justify-center gap-2 rounded-full border border-[#97a3d8] bg-white px-5 py-2 text-[18px] font-medium text-gray-800 transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-70"
+												>
+													<FcGoogle className="h-6 w-6" />
+													<span>{isConnectingCalendar ? "Connecting..." : "Google Calendar"}</span>
+												</button>
+											)}
 										</div>
 									</div>
 									<button
