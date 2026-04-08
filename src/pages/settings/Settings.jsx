@@ -63,7 +63,7 @@ const Settings = () => {
 
 					<div className="mt-6">
 						{activeTab === "notifications" ? (
-							<SettingsCard>
+							<SettingsCard className="shadow-sm border border-white/60 bg-white">
 								<NotificationSettings value={notifications} onChange={setNotifications} />
 								{/* <div className="h-px bg-blue-100 mx-6" /> */}
 							</SettingsCard>
@@ -76,7 +76,7 @@ const Settings = () => {
 									</p>
 								</div>
 								<div className="h-px bg-blue-100 mx-4" />
-							<SettingsCard>
+							<SettingsCard className="shadow-sm border border-white/60 bg-white">
 								<PrivacyAccountSettings />
 							</SettingsCard>
 							</>
@@ -89,7 +89,7 @@ const Settings = () => {
 									</p>
 								</div>
 								<div className="h-px bg-blue-100 mx-4" />
-								<SettingsCard>
+								<SettingsCard className="shadow-sm border border-white/60 bg-white">
 									<AppInfoDataSettings />
 								</SettingsCard>
 							</>
