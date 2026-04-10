@@ -5,6 +5,7 @@ import {
   HelpCenterCategoryTabs,
   HelpCenterForumTab,
   HelpCenterMainTabs,
+  HelpCenterSearchTab,
 } from "./subcomponents";
 
 const HelpCenter = () => {
@@ -56,6 +57,8 @@ const HelpCenter = () => {
 
         {activeMainTab === "Forum" ? (
           <HelpCenterForumTab />
+        ) : activeMainTab === "Search" ? (
+          <HelpCenterSearchTab />
         ) : (
           <>
             <div className="mt-4">
