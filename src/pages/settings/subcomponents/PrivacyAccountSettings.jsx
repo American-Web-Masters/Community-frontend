@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ToggleSwitch from "./ToggleSwitch";
 import SettingsSectionRow from "./SettingsSectionRow";
 import SegmentedControl from "./SegmentedControl";
@@ -11,8 +11,8 @@ import {
 	toggleProfilePrivacy,
 } from "../../../api/settings.js";
 import toast from "react-hot-toast";
-import { useDispatch } from "react-redux";
-import { setUser } from "../../../store/userSlice.js";
+import { useDispatch, useSelector } from "react-redux";
+import { selectUser, setUser, updateUser } from "../../../store/userSlice.js";
 import { clearUser } from "../../../store/userSlice.js";
 import { useNavigate } from "react-router-dom";
 
@@ -21,6 +21,9 @@ const Divider = () => <div className="h-px bg-blue-100 mx-4" />;
 const PrivacyAccountSettings = () => {
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
+	const user = useSelector(selectUser);
+	// These are *UI mirrors* of the server/user settings.
+	// We initialize + re-sync them from Redux so they don't reset when the settings tab unmounts/remounts.
 	const [directMessagesEnabled, setDirectMessagesEnabled] = useState(true);
 	const [profileVisibility, setProfileVisibility] = useState("public");
 
@@ -29,6 +32,23 @@ const PrivacyAccountSettings = () => {
 	const [submitting, setSubmitting] = useState(false);
 	const [togglingDM, setTogglingDM] = useState(false);
 	const [togglingPrivacy, setTogglingPrivacy] = useState(false);
+
+	useEffect(() => {
+		// NOTE: user property names can vary depending on backend shape.
+		// We support a few common candidates so the UI stays in sync.
+		const dmValue =
+			user?.allowDirectMessaging ??
+			user?.directMessagesEnabled ??
+			user?.directMessagingEnabled;
+		if (typeof dmValue === "boolean") {
+			setDirectMessagesEnabled(dmValue);
+		}
+
+		const isPrivate = user?.isPrivate ?? user?.profileIsPrivate ?? user?.privateProfile;
+		if (typeof isPrivate === "boolean") {
+			setProfileVisibility(isPrivate ? "private" : "public");
+		}
+	}, [user]);
 
 	const getErrorMessage = (error) => {
 		return (
@@ -70,10 +90,13 @@ const PrivacyAccountSettings = () => {
 		setTogglingDM(true);
 		try {
 			await toggleDirectMessaging({ allowDirectMessaging: nextValue });
+			// Persist in Redux so it survives unmount/remount.
+			dispatch(updateUser({ allowDirectMessaging: nextValue }));
 			toast.success(`Direct messages ${nextValue ? "enabled" : "disabled"}`);
 		} catch (error) {
 			// rollback
 			setDirectMessagesEnabled(previousValue);
+			dispatch(updateUser({ allowDirectMessaging: previousValue }));
 			toast.error(getErrorMessage(error));
 		} finally {
 			setTogglingDM(false);
@@ -87,10 +110,13 @@ const PrivacyAccountSettings = () => {
 		try {
 			const togglePrivacy = nextVisibility === "private";
 			await toggleProfilePrivacy({ togglePrivacy });
+			// Persist in Redux so it survives unmount/remount.
+			dispatch(updateUser({ isPrivate: togglePrivacy }));
 			toast.success(`Profile set to ${togglePrivacy ? "private" : "public"}`);
 		} catch (error) {
 			// rollback
 			setProfileVisibility(previousVisibility);
+			dispatch(updateUser({ isPrivate: previousVisibility === "private" }));
 			toast.error(getErrorMessage(error));
 		} finally {
 			setTogglingPrivacy(false);

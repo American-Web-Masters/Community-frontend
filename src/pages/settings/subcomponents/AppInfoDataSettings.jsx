@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import SettingsSectionRow from "./SettingsSectionRow";
 import AccordionRow from "./AccordionRow";
 
@@ -37,6 +38,8 @@ const VersionPill = ({ value }) => {
 };
 
 const AppInfoDataSettings = () => {
+	const navigate = useNavigate();
+
 	return (
 		<div>
 			<SettingsSectionRow
@@ -47,6 +50,33 @@ const AppInfoDataSettings = () => {
 			<Divider />
 
 			<SettingsSectionRow title="Legal & Policies" right={null} />
+			<div className="h-px bg-blue-100 mx-6" />
+
+			<button
+				type="button"
+				onClick={() => navigate("/help-center")}
+				className="w-full px-6 py-6 flex items-center justify-between gap-4 text-left hover:bg-blue-50/50 transition-colors"
+			>
+				<span className="text-[16px] font-semibold text-gray-900">Help Center</span>
+				<span className="text-gray-500" aria-hidden="true">
+					<svg
+						width="18"
+						height="18"
+						viewBox="0 0 24 24"
+						fill="none"
+						xmlns="http://www.w3.org/2000/svg"
+					>
+						<path
+							d="M9 6L15 12L9 18"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						/>
+					</svg>
+				</span>
+			</button>
+
 			<div className="h-px bg-blue-100 mx-6" />
 
 			<AccordionRow title="Terms of Service" defaultOpen={false}>

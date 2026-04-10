@@ -27,6 +27,7 @@ import StripeOnboardingSuccess from "../pages/communities/StripeOnboardingSucces
 import StripeOnboardingRefresh from "../pages/communities/StripeOnboardingRefresh";
 import { UserStripeOnboardingRefresh, UserStripeOnboardingSuccess } from "../pages/profile/subcomponents";
 import Settings from "../pages/settings/Settings";
+import HelpCenter from "../pages/help_center/HelpCenter";
 
 const Routes = () =>{
     return(
@@ -197,6 +198,14 @@ const Routes = () =>{
             element={
                 <ProtectedRoute>
                     <Settings />
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/help-center"
+            element={
+                <ProtectedRoute>
+                    <HelpCenter />
                 </ProtectedRoute>
             }
             />
