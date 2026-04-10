@@ -42,10 +42,10 @@ const HelpCenter = () => {
     <div className="min-h-screen light-background overflow-x-hidden pb-10">
       <Header showNotification={true} showFilter={true} showSearch={true} showLogout={false} />
 
-      <div className="px-2 mt-4">
-        <h1 className="text-[15px] text-[#102b56] font-medium">Help Center</h1>
+      <div className="px-3 mt-5">
+        <h1 className="text-[18px] text-[#102b56] font-medium">Help Center</h1>
 
-        <div className="mt-3">
+        <div className="mt-4">
           <HelpCenterMainTabs
             tabs={mainTabs}
             activeTab={activeMainTab}
@@ -53,7 +53,7 @@ const HelpCenter = () => {
           />
         </div>
 
-        <div className="mt-3">
+        <div className="mt-4">
           <HelpCenterCategoryTabs
             tabs={categoryTabs}
             activeTab={activeCategoryTab}
@@ -61,7 +61,7 @@ const HelpCenter = () => {
           />
         </div>
 
-        <section className="mt-4 space-y-2">
+        <section className="mt-5 space-y-3">
           {faqItems.map((item) => (
             <HelpCenterAccordionItem
               key={item.id}
