@@ -45,8 +45,9 @@ const SubscriptionMgt = () => {
           subscriptionType: sub.subscriptionType,
           // Community fields (when subscriptionType === 'community')
           communityName:
-            sub.communityId?.name ||
-            (sub.metadata?.communityName ?? "Unknown Community"),
+            (sub.subscriptionType !== 'community' && sub.subscriptionType !== 'user')
+              ? 'AO1 Community'
+              : (sub.communityId?.name || (sub.metadata?.communityName ?? "Unknown Community")),
           communityId: sub.communityId?._id,
           // Recipient / user fields (when subscriptionType === 'user')
           recipientId: sub.recipientProfileId?._id || null,
@@ -109,18 +110,13 @@ const SubscriptionMgt = () => {
   };
 
   const handleCancelSubscription = async (subscription) => {
-    // open confirm modal for this subscription
-    setSelectedToCancel(subscription);
-    setConfirmOpen(true);
-  };
-
-  const confirmCancel = async () => {
-    const subscription = selectedToCancel;
-    if (!subscription) return;
+    if (!subscription?.id) {
+      toast.error("Unable to cancel: missing subscription id");
+      return;
+    }
 
     try {
       setCancelingId(subscription.id);
-      setConfirmOpen(false);
 
       // Call the cancel API with database subscription ID
       const response = await cancelSubscription(subscription.id);
@@ -157,6 +153,8 @@ const SubscriptionMgt = () => {
       setConfirmOpen(false);
     }
   };
+
+  // Note: confirm modal UI was removed; cancellation happens immediately in handleCancelSubscription.
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -292,7 +290,11 @@ const SubscriptionMgt = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-xl font-semibold text-gray-900">{subscription.communityName}</h3>
+                        <h3 className="text-xl font-semibold text-gray-900">
+                          {(subscription.subscriptionType !== 'community' && subscription.subscriptionType !== 'user')
+                            ? 'AO1 Community'
+                            : subscription.communityName}
+                        </h3>
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(subscription.status, subscription.cancelAtPeriodEnd)}`}>
                         {getStatusText(subscription.status, subscription.cancelAtPeriodEnd)}
                       </span>
@@ -309,17 +311,19 @@ const SubscriptionMgt = () => {
 
                   {/* Action Buttons */}
                   <div className="flex space-x-3 mt-4 sm:mt-0">
-                    <button
-                      onClick={() => navigate(`/communities/${subscription.communityId}`)}
-                      className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
-                    >
-                      View Community
-                    </button>
+                    {subscription.subscriptionType === 'community' && subscription.communityId && (
+                      <button
+                        onClick={() => navigate(`/communities/${subscription.communityId}`)}
+                        className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
+                      >
+                        View Community
+                      </button>
+                    )}
                     {subscription.status === 'active' && !subscription.cancelAtPeriodEnd && (
                       <button
                         onClick={() => handleCancelSubscription(subscription)}
                         disabled={cancelingId === subscription.id}
-                        className="px-4 py-2 text-red-600 border border-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                        className="px-4 py-2 text-red-600 border border-red-600 rounded-lg hover:bg-red-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                       >
                         {cancelingId === subscription.id ? 'Cancelling...' : 'Cancel'}
                       </button>
