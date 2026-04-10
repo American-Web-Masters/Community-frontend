@@ -4,6 +4,7 @@ import {
   HelpCenterAccordionItem,
   HelpCenterCategoryTabs,
   HelpCenterForumTab,
+  HelpCenterLiveTab,
   HelpCenterMainTabs,
   HelpCenterSearchTab,
 } from "./subcomponents";
@@ -59,6 +60,8 @@ const HelpCenter = () => {
           <HelpCenterForumTab />
         ) : activeMainTab === "Search" ? (
           <HelpCenterSearchTab />
+        ) : activeMainTab === "Live" ? (
+          <HelpCenterLiveTab />
         ) : (
           <>
             <div className="mt-4">
