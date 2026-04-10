@@ -3,6 +3,7 @@ import Header from "../../components/ui/Header";
 import {
   HelpCenterAccordionItem,
   HelpCenterCategoryTabs,
+  HelpCenterForumTab,
   HelpCenterMainTabs,
 } from "./subcomponents";
 
@@ -53,24 +54,30 @@ const HelpCenter = () => {
           />
         </div>
 
-        <div className="mt-4">
-          <HelpCenterCategoryTabs
-            tabs={categoryTabs}
-            activeTab={activeCategoryTab}
-            onTabChange={setActiveCategoryTab}
-          />
-        </div>
+        {activeMainTab === "Forum" ? (
+          <HelpCenterForumTab />
+        ) : (
+          <>
+            <div className="mt-4">
+              <HelpCenterCategoryTabs
+                tabs={categoryTabs}
+                activeTab={activeCategoryTab}
+                onTabChange={setActiveCategoryTab}
+              />
+            </div>
 
-        <section className="mt-5 space-y-3">
-          {faqItems.map((item) => (
-            <HelpCenterAccordionItem
-              key={item.id}
-              item={item}
-              isOpen={openItemId === item.id}
-              onToggle={() => setOpenItemId((prev) => (prev === item.id ? null : item.id))}
-            />
-          ))}
-        </section>
+            <section className="mt-5 space-y-3">
+              {faqItems.map((item) => (
+                <HelpCenterAccordionItem
+                  key={item.id}
+                  item={item}
+                  isOpen={openItemId === item.id}
+                  onToggle={() => setOpenItemId((prev) => (prev === item.id ? null : item.id))}
+                />
+              ))}
+            </section>
+          </>
+        )}
       </div>
     </div>
   );
