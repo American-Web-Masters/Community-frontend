@@ -90,25 +90,30 @@ const PaymentSuccess = () => {
   const displayCommunityName = paymentDetails?.communityName || communityName || 'Community';
   // Resolve recipient username — present for user-profile payments (both one-time and recurring)
   const displayRecipientUsername = recipientUsername || paymentDetails?.recipientUsername || null;
+  // Optional redirect override (used for settings/app-support flows)
+  const redirectToOverride = paymentDetails?.redirectTo || paymentDetails?.returnTo || null;
   
   console.log('PaymentSuccess - Display amount:', displayAmount);
 
   useEffect(() => {
     // Auto-redirect after 5 seconds — go to user profile or communities depending on context
-    const redirectTo = displayRecipientUsername ? `/profile/${displayRecipientUsername}` : '/communities';
+    const redirectTo =
+      redirectToOverride ||
+      (displayRecipientUsername ? `/profile/${displayRecipientUsername}` : '/communities');
     const timer = setTimeout(() => {
       navigate(redirectTo);
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [navigate, displayRecipientUsername]);
+  }, [navigate, displayRecipientUsername, redirectToOverride]);
 
   const handleContinue = () => {
-    if (displayRecipientUsername) {
-      navigate(`/profile/${displayRecipientUsername}`);
-    } else {
-      navigate('/communities');
+    if (redirectToOverride) {
+      navigate(redirectToOverride);
+      return;
     }
+
+    navigate(displayRecipientUsername ? `/profile/${displayRecipientUsername}` : '/communities');
   };
 
   const formatInterval = (interval) => {

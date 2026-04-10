@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../../store/userSlice';
 import StripePaymentForm from '../../../components/ui/StripePaymentForm';
 import RecurringPaymentForm from '../../../components/ui/RecurringPaymentForm';
 
@@ -17,6 +19,7 @@ const SettingsSupportCard = ({
   title = 'AO1 Community',
   avatarSrc = '/cross.png',
 }) => {
+  const user = useSelector(selectUser);
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [customAmount, setCustomAmount] = useState('');
   const [personalMessage, setPersonalMessage] = useState('');
@@ -46,6 +49,9 @@ const SettingsSupportCard = ({
   const handleSendSupport = () => {
     if (!selectedAmount || selectedAmount < 50) return;
 
+  // When supporting the app from Settings, return the user to their own profile settings.
+  const returnTo = user?.username ? `/profile/${user.username}/settings` : '/settings';
+
     if (paymentType === 'recurring') {
       const storagePayload = JSON.stringify({
         paymentType,
@@ -54,9 +60,22 @@ const SettingsSupportCard = ({
         communityName: displayName,
         recipientUsername: 'AO1',
         username: 'AO1',
+    redirectTo: returnTo,
       });
 
       // Keep same storage keys as UserSupport for consistency with any existing success/refresh flows.
+      localStorage.setItem('pendingPayment', storagePayload);
+      sessionStorage.setItem('paymentDetails', storagePayload);
+    } else {
+      // One-time app support also needs a safe return path.
+      const storagePayload = JSON.stringify({
+        paymentType,
+        amount: selectedAmount,
+        communityName: displayName,
+        recipientUsername: 'AO1',
+        username: 'AO1',
+        redirectTo: returnTo,
+      });
       localStorage.setItem('pendingPayment', storagePayload);
       sessionStorage.setItem('paymentDetails', storagePayload);
     }
