@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Header from "../../components/ui/Header";
+import { getAllFaqs } from "../../api/faqs";
 import {
   HelpCenterAccordionItem,
   HelpCenterCategoryTabs,
@@ -12,34 +13,66 @@ import {
 const HelpCenter = () => {
   const [activeMainTab, setActiveMainTab] = useState("FAQ's");
   const [activeCategoryTab, setActiveCategoryTab] = useState("All");
-  const [openItemId, setOpenItemId] = useState(2);
+  const [openItemId, setOpenItemId] = useState(null);
+  const [faqItems, setFaqItems] = useState([]);
+  const [faqLoading, setFaqLoading] = useState(false);
+  const [faqError, setFaqError] = useState("");
 
   const mainTabs = useMemo(() => ["FAQ's", "Forum", "Search", "Live"], []);
   const categoryTabs = useMemo(() => ["All", "Notification", "Communities", "Profile"], []);
 
-  const faqItems = useMemo(
-    () => [
-      {
-        id: 1,
-        title: "How do I reset my password?",
-        answer:
-          "Go to login and select Forgot Password. Follow the reset link sent to your email and create a new password.",
-      },
-      {
-        id: 2,
-        title: "How do I join a community?",
-        answer:
-          "Browse communities by tapping the \"Explore\" tab, then tap \"Join\" on any community that interests you. You can also search for specific communities using the search function.",
-      },
-      {
-        id: 3,
-        title: "How do I change my notification setting?",
-        answer:
-          "Open your profile settings, then go to Notifications to enable or disable journal and community alerts.",
-      },
-    ],
-    []
-  );
+  useEffect(() => {
+    const loadFaqs = async () => {
+      try {
+        setFaqLoading(true);
+        setFaqError("");
+
+        const data = await getAllFaqs();
+        console.log("Raw FAQ data:", data);
+
+        const source = data?.data?.faqs
+
+        const normalizedFaqs = Array.isArray(source)
+          ? source.map((faq) => ({
+              id: faq._id || faq.id,
+              category: (faq.category || "").toLowerCase(),
+              title: faq.question || "Untitled question",
+              answer: faq.answeres || "",
+            }))
+          : [];
+
+        setFaqItems(normalizedFaqs);
+        setOpenItemId(normalizedFaqs[0]?.id || null);
+      } catch (error) {
+        console.error("Failed to fetch FAQs:", error);
+        setFaqError("Failed to load FAQs. Please try again.");
+      } finally {
+        setFaqLoading(false);
+      }
+    };
+
+    loadFaqs();
+  }, []);
+
+  const normalizedCategoryTab = useMemo(() => {
+    return activeCategoryTab.toLowerCase();
+  }, [activeCategoryTab]);
+
+  const filteredFaqItems = useMemo(() => {
+    if (normalizedCategoryTab === "all") {
+      return faqItems;
+    }
+
+    const categoryAliases = {
+      notification: ["notification", "notifications"],
+      communities: ["community", "communities"],
+      profile: ["profile"],
+    };
+
+    const allowed = categoryAliases[normalizedCategoryTab] || [normalizedCategoryTab];
+
+    return faqItems.filter((faq) => allowed.includes((faq.category || "").toLowerCase()));
+  }, [faqItems, normalizedCategoryTab]);
 
   return (
     <div className="min-h-screen light-background overflow-x-hidden pb-10">
@@ -73,14 +106,28 @@ const HelpCenter = () => {
             </div>
 
             <section className="mt-5 space-y-3">
-              {faqItems.map((item) => (
-                <HelpCenterAccordionItem
-                  key={item.id}
-                  item={item}
-                  isOpen={openItemId === item.id}
-                  onToggle={() => setOpenItemId((prev) => (prev === item.id ? null : item.id))}
-                />
-              ))}
+              {faqLoading ? (
+                <article className="rounded-md border border-[#d6e8fa] bg-white/95 px-4 py-5 text-[#12356c]">
+                  Loading FAQs...
+                </article>
+              ) : faqError ? (
+                <article className="rounded-md border border-[#f6caca] bg-white/95 px-4 py-5 text-red-600">
+                  {faqError}
+                </article>
+              ) : filteredFaqItems.length === 0 ? (
+                <article className="rounded-md border border-[#d6e8fa] bg-white/95 px-4 py-5 text-[#12356c]">
+                  No FAQs found for this category.
+                </article>
+              ) : (
+                filteredFaqItems.map((item) => (
+                  <HelpCenterAccordionItem
+                    key={item.id}
+                    item={item}
+                    isOpen={openItemId === item.id}
+                    onToggle={() => setOpenItemId((prev) => (prev === item.id ? null : item.id))}
+                  />
+                ))
+              )}
             </section>
           </>
         )}
