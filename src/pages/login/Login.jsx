@@ -7,12 +7,13 @@ import { FaUser, FaLock, FaChevronLeft, FaEye, FaEyeSlash } from 'react-icons/fa
 import { FcGoogle } from 'react-icons/fc';
 import { FaApple } from 'react-icons/fa';
 import { apiClient } from '../../api';
-import { setUser, selectIsLoggedIn } from '../../store/userSlice';
+import { setUser, selectIsLoggedIn, selectUser } from '../../store/userSlice';
 
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isLoggedIn = useSelector(selectIsLoggedIn);
+  const user = useSelector(selectUser);
   
   const [formData, setFormData] = useState({
     username: '',
@@ -26,9 +27,10 @@ const Login = () => {
   useEffect(() => {
     if (isLoggedIn) {
       console.log('User is already logged in, redirecting to home');
-      navigate('/', { replace: true });
+    const target = user?.role === 'admin' ? '/dashboard' : '/';
+    navigate(target, { replace: true });
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, navigate, user?.role]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -83,9 +85,9 @@ const Login = () => {
           // Navigate back to invite page
           navigate(`/invite/${pendingInvite}`);
         } else {
-          console.log('No pending invite found, navigating to home');
-          // Navigate to home page
-          navigate('/');
+          const target = user?.role === 'admin' ? '/dashboard' : '/';
+          console.log('No pending invite found, navigating to:', target);
+          navigate(target);
         }
         
       } else {
