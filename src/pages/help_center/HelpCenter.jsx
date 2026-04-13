@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import Header from "../../components/ui/Header";
-import { getAllFaqs } from "../../api/faqs";
+import { getAllFaqs, reactToFaq } from "../../api/faqs";
+import { selectUserId } from "../../store/userSlice";
+import toast from "react-hot-toast";
 import {
   HelpCenterAccordionItem,
   HelpCenterCategoryTabs,
@@ -11,12 +14,14 @@ import {
 } from "./subcomponents";
 
 const HelpCenter = () => {
+  const currentUserId = useSelector(selectUserId);
   const [activeMainTab, setActiveMainTab] = useState("FAQ's");
   const [activeCategoryTab, setActiveCategoryTab] = useState("All");
   const [openItemId, setOpenItemId] = useState(null);
   const [faqItems, setFaqItems] = useState([]);
   const [faqLoading, setFaqLoading] = useState(false);
   const [faqError, setFaqError] = useState("");
+  const [reactingFaqId, setReactingFaqId] = useState(null);
 
   const mainTabs = useMemo(() => ["FAQ's", "Forum", "Search", "Live"], []);
   const categoryTabs = useMemo(() => ["All", "Notification", "Communities", "Profile"], []);
@@ -32,12 +37,45 @@ const HelpCenter = () => {
 
         const source = data?.data?.faqs
 
+        const toId = (value) => {
+          if (!value) return null;
+          if (typeof value === "string") return value;
+          if (typeof value === "object") {
+            return value._id || value.id || null;
+          }
+          return null;
+        };
+
+        const getReactionTypeForUser = (faq) => {
+          const normalizedUserId = String(currentUserId || "");
+          if (!normalizedUserId) return null;
+
+          const useful = Array.isArray(faq?.useful) ? faq.useful : [];
+          const notUseful = Array.isArray(faq?.notUseful) ? faq.notUseful : [];
+
+          const hasUseful = useful.some((entry) => String(toId(entry) || "") === normalizedUserId);
+          if (hasUseful) return "useful";
+
+          const hasNotUseful = notUseful.some((entry) => String(toId(entry) || "") === normalizedUserId);
+          if (hasNotUseful) return "notUseful";
+
+          return null;
+        };
+
         const normalizedFaqs = Array.isArray(source)
           ? source.map((faq) => ({
               id: faq._id || faq.id,
               category: (faq.category || "").toLowerCase(),
               title: faq.question || "Untitled question",
-              answer: faq.answeres || "",
+              answer: faq.answer || faq.answeres || "",
+              usefulCount: typeof faq.usefulCount === "number" ? faq.usefulCount : Array.isArray(faq.useful) ? faq.useful.length : 0,
+              notUsefulCount:
+                typeof faq.notUsefulCount === "number"
+                  ? faq.notUsefulCount
+                  : Array.isArray(faq.notUseful)
+                    ? faq.notUseful.length
+                    : 0,
+              userReaction: getReactionTypeForUser(faq),
             }))
           : [];
 
@@ -52,7 +90,55 @@ const HelpCenter = () => {
     };
 
     loadFaqs();
-  }, []);
+  }, [currentUserId]);
+
+  const handleFaqReaction = async (faqId, reactionType) => {
+    const previousItems = faqItems;
+    const targetFaq = faqItems.find((faq) => faq.id === faqId);
+
+    if (!targetFaq) return;
+
+    const previousReaction = targetFaq.userReaction;
+    const isSameReaction = previousReaction === reactionType;
+
+    const optimisticItems = faqItems.map((faq) => {
+      if (faq.id !== faqId) return faq;
+
+      if (isSameReaction) {
+        return faq;
+      }
+
+      const next = { ...faq, userReaction: reactionType };
+
+      if (reactionType === "useful") {
+        next.usefulCount = (faq.usefulCount || 0) + 1;
+        next.notUsefulCount = Math.max(0, (faq.notUsefulCount || 0) - (previousReaction === "notUseful" ? 1 : 0));
+      } else {
+        next.notUsefulCount = (faq.notUsefulCount || 0) + 1;
+        next.usefulCount = Math.max(0, (faq.usefulCount || 0) - (previousReaction === "useful" ? 1 : 0));
+      }
+
+      return next;
+    });
+
+    if (!isSameReaction) {
+      setFaqItems(optimisticItems);
+    }
+
+    setReactingFaqId(faqId);
+    try {
+      await reactToFaq(faqId, reactionType);
+      toast.success(reactionType === "useful" ? "Marked as useful" : "Marked as not useful");
+    } catch (error) {
+      console.error("Failed to react to FAQ:", error);
+      if (!isSameReaction) {
+        setFaqItems(previousItems);
+      }
+      toast.error(error?.response?.data?.message || "Failed to save your reaction");
+    } finally {
+      setReactingFaqId(null);
+    }
+  };
 
   const normalizedCategoryTab = useMemo(() => {
     return activeCategoryTab.toLowerCase();
@@ -125,6 +211,8 @@ const HelpCenter = () => {
                     item={item}
                     isOpen={openItemId === item.id}
                     onToggle={() => setOpenItemId((prev) => (prev === item.id ? null : item.id))}
+                    onReact={handleFaqReaction}
+                    isReacting={reactingFaqId === item.id}
                   />
                 ))
               )}

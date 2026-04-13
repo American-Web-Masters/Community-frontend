@@ -9,6 +9,18 @@ export const getAllFaqs = async () => {
   return response.data;
 };
 
+/**
+ * React to FAQ as useful or notUseful.
+ * Endpoint: POST /api/v1/faqs/:faqId/reaction
+ */
+export const reactToFaq = async (faqId, reactionType) => {
+  const response = await apiClient.post(`/faqs/${faqId}/reaction`, {
+    reactionType,
+  });
+  return response.data;
+};
+
 export default {
   getAllFaqs,
+  reactToFaq,
 };
