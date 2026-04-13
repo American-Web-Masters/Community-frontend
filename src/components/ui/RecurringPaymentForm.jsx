@@ -75,7 +75,7 @@ const RecurringPaymentForm = ({
       // Platform/admin recurring support
       // Assumption: backend exposes a dedicated endpoint that creates a Checkout session
       // for the app/admin Stripe account.
-      const response = await apiClient.post('/subscriptions/app/create', {
+      const response = await apiClient.post('/subscriptions/application/create-subscription', {
         amount: dollarAmount,
         interval,
         ...(description ? { description } : {}),
