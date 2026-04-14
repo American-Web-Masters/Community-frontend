@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import {
   FaBars,
   FaChartLine,
+  FaQuestionCircle,
   FaUsers,
   FaRegCalendarAlt,
   FaRegBell,
@@ -17,6 +18,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
   const items = useMemo(
     () => [
       { to: '/dashboard', label: 'Overview', icon: FaChartLine, end: true },
+  { to: '/dashboard/faqs', label: "FAQs", icon: FaQuestionCircle },
       { to: '/dashboard/users', label: 'Users', icon: FaUsers },
       { to: '/dashboard/events', label: 'Events', icon: FaRegCalendarAlt },
       { to: '/dashboard/alerts', label: 'Alerts', icon: FaRegBell },

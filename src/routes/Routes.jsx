@@ -29,6 +29,7 @@ import { UserStripeOnboardingRefresh, UserStripeOnboardingSuccess } from "../pag
 import Settings from "../pages/settings/Settings";
 import HelpCenter from "../pages/help_center/HelpCenter";
 import { DashboardHome, DashboardLayout, DashboardPlaceholder } from "../features/dashboard";
+import DashboardFaqs from "../features/dashboard/pages/DashboardFaqs";
 
 const Routes = () =>{
     return(
@@ -259,6 +260,10 @@ const Routes = () =>{
                             }
                         >
                             <Route index element={<DashboardHome />} />
+                            <Route
+                                path="faqs"
+                                element={<DashboardFaqs />}
+                            />
                             <Route
                                 path="users"
                                 element={
