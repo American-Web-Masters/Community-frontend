@@ -8,6 +8,7 @@ import {
   FaRegCalendarAlt,
   FaRegBell,
   FaCog,
+  FaTimes,
 } from 'react-icons/fa';
 
 const cx = (...classes) => classes.filter(Boolean).join(' ');
@@ -27,14 +28,14 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
     [],
   );
 
-  const SidebarContent = (
+  const SidebarContent = ({ forceExpanded = false } = {}) => (
     <div className="h-full flex flex-col">
       <div className="h-16 px-4 flex items-center justify-between border-b border-black/5">
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="h-9 w-9 rounded-xl bg-primary-500 text-white flex items-center justify-center font-semibold shrink-0">
             A
           </div>
-          {!isCollapsed && (
+          {!(isCollapsed && !forceExpanded) && (
             <div className="min-w-0">
               <div className="text-sm font-semibold text-gray-900 truncate">Admin</div>
               <div className="text-xs text-gray-500 truncate">Dashboard</div>
@@ -42,6 +43,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
           )}
         </div>
 
+        {/* Desktop collapse/expand */}
         <button
           type="button"
           className="hidden md:inline-flex items-center justify-center h-9 w-9 rounded-xl hover:bg-black/5 text-gray-700"
@@ -51,14 +53,15 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
           <FaBars className="h-4 w-4" />
         </button>
 
-        <button
+        {/* Mobile drawer close */}
+        {isCollapsed && <button
           type="button"
           className="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-xl hover:bg-black/5 text-gray-700"
           onClick={() => setIsMobileOpen(false)}
           aria-label="Close sidebar"
         >
-          ✕
-        </button>
+          <FaTimes className="h-4 w-4" />
+        </button>}
       </div>
 
       <nav className="flex-1 p-3 space-y-1">
@@ -79,8 +82,13 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
                 )
               }
             >
-              <Icon className={cx('h-4 w-4 shrink-0', isCollapsed ? 'mx-auto' : '')} />
-              {!isCollapsed && <span className="truncate">{item.label}</span>}
+              <Icon
+                className={cx(
+                  'h-4 w-4 shrink-0',
+                  isCollapsed && !forceExpanded ? 'mx-auto' : '',
+                )}
+              />
+              {!(isCollapsed && !forceExpanded) && <span className="truncate">{item.label}</span>}
             </NavLink>
           );
         })}
@@ -103,38 +111,75 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
         </div>
       </div>
 
-      {/* Mobile open button (floating) */}
-      <button
-        type="button"
-        className="md:hidden fixed bottom-5 left-5 z-50 h-12 w-12 rounded-2xl shadow-lg bg-primary-500 text-white flex items-center justify-center"
-        onClick={() => setIsMobileOpen(true)}
-        aria-label="Open sidebar"
-      >
-        <FaBars className="h-5 w-5" />
-      </button>
-
-      {/* Mobile drawer */}
-      {isMobileOpen && (
-        <div className="md:hidden fixed inset-0 z-40">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setIsMobileOpen(false)} />
-          <div className="absolute inset-y-0 left-0 w-72 bg-white shadow-xl">
-            {/* Re-render sidebar non-collapsed on mobile */}
-            <DashboardSidebar isCollapsed={false} onToggle={() => {}} />
-          </div>
-        </div>
-      )}
     </div>
   );
 
   return (
-    <aside
-      className={cx(
-        'hidden md:block sticky top-0 h-screen bg-white/80 backdrop-blur border-r border-black/5',
-        isCollapsed ? 'w-20' : 'w-72',
+    <>
+      {/* Desktop sidebar */}
+      <aside
+        className={cx(
+          'hidden md:block sticky top-0 h-screen bg-white/80 backdrop-blur border-r border-black/5',
+          isCollapsed ? 'w-20' : 'w-72',
+        )}
+      >
+        {SidebarContent()}
+      </aside>
+
+      {/* Mobile: keep a mini-rail visible so tabs are always reachable */}
+      <aside className="md:hidden sticky top-0 h-screen w-16 bg-white/80 backdrop-blur border-r border-black/5">
+        <div className="h-full flex flex-col">
+          <div className="h-16 px-2 flex items-center justify-center border-b border-black/5">
+            <button
+              type="button"
+              className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-primary-500 text-white"
+              onClick={() => setIsMobileOpen(true)}
+              aria-label="Open sidebar"
+            >
+              <FaBars className="h-5 w-5" />
+            </button>
+          </div>
+
+          <nav className="flex-1 p-2 space-y-1">
+            {items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) =>
+                    cx(
+                      'group flex items-center justify-center px-2 py-3 rounded-xl text-sm transition-colors',
+                      isActive
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-gray-700 hover:bg-black/5',
+                    )
+                  }
+                  aria-label={item.label}
+                  title={item.label}
+                >
+                  <Icon className="h-4 w-4" />
+                </NavLink>
+              );
+            })}
+          </nav>
+        </div>
+      </aside>
+
+      {/* Mobile drawer */}
+      {isMobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-black/30"
+            onClick={() => setIsMobileOpen(false)}
+          />
+          <div className="absolute inset-y-0 left-0 w-72 bg-white shadow-xl">
+            {SidebarContent({ forceExpanded: true })}
+          </div>
+        </div>
       )}
-    >
-      {SidebarContent}
-    </aside>
+    </>
   );
 };
 

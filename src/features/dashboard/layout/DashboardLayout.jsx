@@ -22,7 +22,7 @@ const DashboardLayout = () => {
 
         <div className="flex-1 min-w-0">
           <header className="sticky top-0 z-30 h-16 bg-white/70 backdrop-blur border-b border-black/5">
-            <div className="h-full px-4 md:px-6 flex items-center justify-between">
+            <div className="h-full px-3 sm:px-4 md:px-6 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="text-sm text-gray-500">Admin</div>
                 <div className="text-lg font-semibold text-gray-900 truncate">{title}</div>
@@ -31,13 +31,13 @@ const DashboardLayout = () => {
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-black/5 hover:bg-black/10 text-sm text-gray-800"
+                  className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-black/5 hover:bg-black/10 text-sm text-gray-800"
                   onClick={() => navigate('/')}
                 >
                   Back to app
                 </button>
 
-                <div className="hidden sm:block h-9 w-px bg-black/10" />
+                <div className="hidden md:block h-9 w-px bg-black/10" />
 
                 <div className="text-right">
                   <div className="text-sm font-semibold text-gray-900 truncate max-w-[160px]">
