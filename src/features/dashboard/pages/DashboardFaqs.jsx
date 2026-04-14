@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { FaEdit, FaPlus, FaSearch, FaTrash } from "react-icons/fa";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { FaChevronDown, FaEdit, FaPlus, FaSearch, FaSyncAlt, FaTrash } from "react-icons/fa";
 import toast from "react-hot-toast";
 
 import {
@@ -39,6 +39,8 @@ const DashboardFaqs = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [refreshing, setRefreshing] = useState(false);
+
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
 
@@ -46,6 +48,9 @@ const DashboardFaqs = () => {
   const [selectedId, setSelectedId] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+
+  const formPanelRef = useRef(null);
+  const [highlightForm, setHighlightForm] = useState(false);
 
   const load = async () => {
     try {
@@ -59,6 +64,19 @@ const DashboardFaqs = () => {
       setError(e?.response?.data?.message || "Failed to load FAQs");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    if (loading || refreshing) return;
+    try {
+      setRefreshing(true);
+      await load();
+      toast.success("Refreshed");
+    } catch {
+      // load() already handles errors/toast via state; keep this silent
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -81,10 +99,19 @@ const DashboardFaqs = () => {
     });
   }, [items, search, categoryFilter]);
 
-  const startCreate = () => {
+  const startCreate = ({ highlight = false } = {}) => {
     setMode("create");
     setSelectedId(null);
     setForm(emptyForm);
+
+    if (highlight) {
+      // Scroll + highlight to guide the user to the form card
+      requestAnimationFrame(() => {
+        formPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        setHighlightForm(true);
+        window.setTimeout(() => setHighlightForm(false), 1100);
+      });
+    }
   };
 
   const startEdit = async (faqId) => {
@@ -102,6 +129,12 @@ const DashboardFaqs = () => {
         category: faq.category || "notification",
         question: faq.question || "",
         answeres: faq.answeres || "",
+      });
+
+      requestAnimationFrame(() => {
+        formPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        setHighlightForm(true);
+        window.setTimeout(() => setHighlightForm(false), 1100);
       });
     } catch (e) {
       console.error(e);
@@ -206,17 +239,16 @@ const DashboardFaqs = () => {
       <div className="rounded-3xl bg-white shadow-sm border border-black/5 p-5 md:p-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <div className="text-xs text-gray-500">Admin</div>
             <h1 className="text-xl md:text-2xl font-semibold text-gray-900">FAQs</h1>
             <p className="text-sm text-gray-500 mt-1">Create, edit, and remove FAQs shown in the Help Center.</p>
           </div>
 
           <button
             type="button"
-            onClick={startCreate}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl btn-blue-gradient text-white text-sm font-semibold"
+            onClick={() => startCreate({ highlight: true })}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl btn-blue-gradient text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
           >
-            <FaPlus className="h-4 w-4" />
+            <FaPlus className="h-4 w-4 cursor-pointer" />
             New FAQ
           </button>
         </div>
@@ -224,42 +256,50 @@ const DashboardFaqs = () => {
         <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="md:col-span-2">
             <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by question, answer, or category..."
-                className="w-full h-11 pl-10 pr-3 rounded-xl border border-black/10 bg-white outline-none focus:ring-2 focus:ring-primary-200"
+                className="w-full h-11 pl-4 pr-3 rounded-2xl border border-black/10 bg-white/80 backdrop-blur outline-none focus:ring-2 focus:ring-primary-200"
               />
             </div>
           </div>
 
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="h-11 px-3 rounded-xl border border-black/10 bg-white outline-none focus:ring-2 focus:ring-primary-200"
-          >
-            <option value="all">All categories</option>
-            {CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              aria-label="Filter FAQs by category"
+              className="w-full h-11 pl-3 pr-10 rounded-2xl border border-black/10 bg-white/80 backdrop-blur outline-none focus:ring-2 focus:ring-primary-200 appearance-none cursor-pointer"
+            >
+              <option value="all">All categories</option>
+              {CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+            <FaChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <section className="xl:col-span-2 rounded-2xl bg-white shadow-sm border border-black/5 overflow-hidden">
+        <section className="xl:col-span-2 rounded-2xl bg-white/90 backdrop-blur shadow-sm border border-black/5 overflow-hidden">
           <div className="px-5 py-4 border-b border-black/5 flex items-center justify-between">
             <div className="text-sm font-semibold text-gray-900">All FAQs</div>
             <button
               type="button"
-              onClick={load}
-              className="text-sm px-3 py-2 rounded-xl bg-black/5 hover:bg-black/10"
-              disabled={loading}
+              onClick={onRefresh}
+              className={
+                "text-sm px-3 py-2 rounded-2xl bg-black/5 hover:bg-black/10 cursor-pointer inline-flex items-center gap-2 transition-colors " +
+                ((loading || refreshing) ? "opacity-60 cursor-not-allowed" : "")
+              }
+              disabled={loading || refreshing}
             >
-              Refresh
+              <FaSyncAlt className={(refreshing || loading) ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+              {refreshing || loading ? "Refreshing..." : "Refresh"}
             </button>
           </div>
 
@@ -297,21 +337,21 @@ const DashboardFaqs = () => {
                         <button
                           type="button"
                           onClick={() => startEdit(faq.id)}
-                          className="h-10 w-10 rounded-xl bg-black/5 hover:bg-black/10 flex items-center justify-center"
+                          className="h-10 w-10 rounded-2xl bg-black/5 hover:bg-black/10 flex items-center justify-center cursor-pointer"
                           title="Edit"
                           disabled={saving && selectedId === faq.id}
                         >
-                          <FaEdit className="h-4 w-4 text-gray-800" />
+                          <FaEdit className="h-4 w-4 text-gray-800 cursor-pointer" />
                         </button>
 
                         <button
                           type="button"
                           onClick={() => onDelete(faq.id)}
-                          className="h-10 w-10 rounded-xl bg-red-50 hover:bg-red-100 flex items-center justify-center"
+                          className="h-10 w-10 rounded-2xl bg-red-50 hover:bg-red-100 flex items-center justify-center cursor-pointer"
                           title="Delete"
                           disabled={saving && selectedId === faq.id}
                         >
-                          <FaTrash className="h-4 w-4 text-red-600" />
+                          <FaTrash className="h-4 w-4 text-red-600 cursor-pointer" />
                         </button>
                       </div>
                     </div>
@@ -322,7 +362,15 @@ const DashboardFaqs = () => {
           )}
         </section>
 
-        <aside className="rounded-2xl bg-white shadow-sm border border-black/5 overflow-hidden">
+        <aside
+          ref={formPanelRef}
+          className={
+            "rounded-2xl backdrop-blur shadow-sm border overflow-hidden transition-colors " +
+            (highlightForm
+              ? "bg-primary-50/70 border-primary-200 ring-2 ring-primary-200"
+              : "bg-white/90 border-black/5")
+          }
+        >
           <div className="px-5 py-4 border-b border-black/5">
             <div className="text-sm font-semibold text-gray-900">
               {mode === "create" ? "Create FAQ" : "Edit FAQ"}
@@ -337,17 +385,20 @@ const DashboardFaqs = () => {
           <form onSubmit={onSubmit} className="p-5 space-y-4">
             <div>
               <label className="block text-xs font-semibold text-gray-700">Category</label>
-              <select
-                value={form.category}
-                onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
-                className="mt-2 w-full h-11 px-3 rounded-xl border border-black/10 bg-white outline-none focus:ring-2 focus:ring-primary-200"
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative mt-2">
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
+                  className="w-full h-11 pl-3 pr-10 rounded-2xl border border-black/10 bg-white/80 backdrop-blur outline-none focus:ring-2 focus:ring-primary-200 appearance-none cursor-pointer"
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+                <FaChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              </div>
             </div>
 
             <div>
@@ -355,7 +406,7 @@ const DashboardFaqs = () => {
               <input
                 value={form.question}
                 onChange={(e) => setForm((p) => ({ ...p, question: e.target.value }))}
-                className="mt-2 w-full h-11 px-3 rounded-xl border border-black/10 bg-white outline-none focus:ring-2 focus:ring-primary-200"
+                className="mt-2 w-full h-11 px-3 rounded-2xl border border-black/10 bg-white/80 backdrop-blur outline-none focus:ring-2 focus:ring-primary-200"
                 placeholder="Type the question..."
               />
             </div>
@@ -365,7 +416,7 @@ const DashboardFaqs = () => {
               <textarea
                 value={form.answeres}
                 onChange={(e) => setForm((p) => ({ ...p, answeres: e.target.value }))}
-                className="mt-2 w-full min-h-[140px] px-3 py-3 rounded-xl border border-black/10 bg-white outline-none focus:ring-2 focus:ring-primary-200 resize-none"
+                className="mt-2 w-full min-h-[140px] px-3 py-3 rounded-2xl border border-black/10 bg-white/80 backdrop-blur outline-none focus:ring-2 focus:ring-primary-200 resize-none"
                 placeholder="Type the answer..."
               />
             </div>
@@ -374,7 +425,7 @@ const DashboardFaqs = () => {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 h-11 rounded-xl btn-blue-gradient text-white text-sm font-semibold disabled:opacity-60"
+                className="flex-1 h-11 rounded-2xl btn-blue-gradient text-white text-sm font-semibold disabled:opacity-60 cursor-pointer"
               >
                 {saving ? "Saving..." : mode === "create" ? "Create" : "Update"}
               </button>
@@ -383,7 +434,7 @@ const DashboardFaqs = () => {
                 <button
                   type="button"
                   onClick={startCreate}
-                  className="h-11 px-4 rounded-xl bg-black/5 hover:bg-black/10 text-sm font-semibold text-gray-800"
+                  className="h-11 px-4 rounded-2xl bg-black/5 hover:bg-black/10 text-sm font-semibold text-gray-800 cursor-pointer"
                   disabled={saving}
                 >
                   Cancel
