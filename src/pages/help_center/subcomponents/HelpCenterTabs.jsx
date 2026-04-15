@@ -1,9 +1,8 @@
 import React from "react";
-import { IoSearchOutline } from "react-icons/io5";
 
 export const HelpCenterMainTabs = ({ tabs, activeTab, onTabChange }) => {
   return (
-    <div className="flex w-full sm:inline-flex sm:w-fit items-center bg-white/80 rounded-full p-1 shadow-sm border border-white/60 gap-1">
+    <div className="flex w-full sm:inline-flex sm:w-fit items-center bg-white/80 rounded-full p-1 shadow-sm border border-white/60 ">
       {tabs.map((tab) => {
         const isActive = tab === activeTab;
 
@@ -12,13 +11,12 @@ export const HelpCenterMainTabs = ({ tabs, activeTab, onTabChange }) => {
             key={tab}
             type="button"
             onClick={() => onTabChange(tab)}
-            className={`min-w-0 flex-1 sm:flex-none justify-center whitespace-nowrap px-3 sm:px-4 py-2.5 rounded-full text-[13px] sm:text-[12px] leading-none transition-all duration-200 inline-flex items-center gap-1.5 ${
+            className={`min-w-0 flex-1 sm:flex-none justify-center whitespace-nowrap px-3 sm:px-6 py-2.5 rounded-full text-[13px] leading-none transition-all duration-200 inline-flex items-center gap-1.5 ${
               isActive
                 ? "btn-blue-gradient text-white"
                 : "text-[#24467f] hover:bg-white/70"
             }`}
           >
-            {tab === "Search" ? <IoSearchOutline className="w-3.5 h-3.5" /> : null}
             <span className="truncate">{tab}</span>
           </button>
         );

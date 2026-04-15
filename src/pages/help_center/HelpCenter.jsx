@@ -10,7 +10,6 @@ import {
   HelpCenterForumTab,
   HelpCenterLiveTab,
   HelpCenterMainTabs,
-  HelpCenterSearchTab,
 } from "./subcomponents";
 
 const HelpCenter = () => {
@@ -23,7 +22,7 @@ const HelpCenter = () => {
   const [faqError, setFaqError] = useState("");
   const [reactingFaqId, setReactingFaqId] = useState(null);
 
-  const mainTabs = useMemo(() => ["FAQ's", "Forum", "Search", "Live"], []);
+  const mainTabs = useMemo(() => ["FAQ's", "Forum", "Live"], []);
   const categoryTabs = useMemo(() => ["All", "Notification", "Communities", "Profile"], []);
 
   useEffect(() => {
@@ -177,8 +176,6 @@ const HelpCenter = () => {
 
         {activeMainTab === "Forum" ? (
           <HelpCenterForumTab />
-        ) : activeMainTab === "Search" ? (
-          <HelpCenterSearchTab />
         ) : activeMainTab === "Live" ? (
           <HelpCenterLiveTab />
         ) : (
