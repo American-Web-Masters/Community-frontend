@@ -68,7 +68,7 @@ const HelpCenterForumTab = () => {
 
       <div className="mt-6 mb-4">
         <div className="flex items-end justify-between gap-3 flex-wrap">
-          <div>
+          <div className="w-full sm:w-auto">
             <div className="text-lg font-semibold text-[#102b56] mb-3">Answered Question</div>
             <HelpCenterMainTabs
               tabs={FORUM_TABS}
