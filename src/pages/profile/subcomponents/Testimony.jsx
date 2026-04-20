@@ -64,7 +64,11 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const userId = userProfile?.user?._id;
+  const userId = useMemo(() => {
+    const nestedUser = userProfile?.user;
+    if (typeof nestedUser === 'string') return nestedUser;
+    return nestedUser?._id || nestedUser?.id || userProfile?.userId || userProfile?._id || null;
+  }, [userProfile]);
 
   const isOwner = useMemo(() => {
     const viewerId = viewer?._id || viewer?.id || viewer?.user?._id;

@@ -28,6 +28,8 @@ import StripeOnboardingRefresh from "../pages/communities/StripeOnboardingRefres
 import { UserStripeOnboardingRefresh, UserStripeOnboardingSuccess } from "../pages/profile/subcomponents";
 import Settings from "../pages/settings/Settings";
 import HelpCenter from "../pages/help_center/HelpCenter";
+import { DashboardHome, DashboardLayout, DashboardPlaceholder } from "../features/dashboard";
+import DashboardFaqs from "../features/dashboard/pages/DashboardFaqs";
 
 const Routes = () =>{
     return(
@@ -247,6 +249,58 @@ const Routes = () =>{
                 </ProtectedRoute>
             }
             />
+
+                        {/* Admin dashboard (role-gated in ProtectedRoute + redirects after auth) */}
+                        <Route
+                            path="/dashboard"
+                            element={
+                                <ProtectedRoute requireRole="admin">
+                                    <DashboardLayout />
+                                </ProtectedRoute>
+                            }
+                        >
+                            <Route index element={<DashboardHome />} />
+                            <Route
+                                path="faqs"
+                                element={<DashboardFaqs />}
+                            />
+                            <Route
+                                path="users"
+                                element={
+                                    <DashboardPlaceholder
+                                        title="Users"
+                                        description="Manage users, roles, and access."
+                                    />
+                                }
+                            />
+                            <Route
+                                path="events"
+                                element={
+                                    <DashboardPlaceholder
+                                        title="Events"
+                                        description="Review events and schedules."
+                                    />
+                                }
+                            />
+                            <Route
+                                path="alerts"
+                                element={
+                                    <DashboardPlaceholder
+                                        title="Alerts"
+                                        description="Moderation and system alerts show up here."
+                                    />
+                                }
+                            />
+                            <Route
+                                path="settings"
+                                element={
+                                    <DashboardPlaceholder
+                                        title="Admin settings"
+                                        description="Configure platform-level options."
+                                    />
+                                }
+                            />
+                        </Route>
             {/* 
             <Route
             path="/my-subscriptions"

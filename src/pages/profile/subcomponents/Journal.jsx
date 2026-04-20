@@ -1,6 +1,6 @@
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState, useImperativeHandle } from 'react';
 import { useSelector } from 'react-redux';
-import { deleteJournalByUser, getJournalByUser } from '../../../api';
+import { deleteJournalByUser, getJournalById, getJournalByUser } from '../../../api';
 import { estimateReadTimeMin, formatRelativeTimeCompact, getInitials } from '../../../utils/profileUtils';
 import { FaTrash } from 'react-icons/fa';
 import { FiLink } from 'react-icons/fi';
@@ -58,12 +58,20 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [editInitialData, setEditInitialData] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Create modal
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const userId = userProfile?.user?._id;
+  const userId = useMemo(() => {
+    const nestedUser = userProfile?.user;
+    if (typeof nestedUser === 'string') return nestedUser;
+    return nestedUser?._id || nestedUser?.id || userProfile?.userId || userProfile?._id || null;
+  }, [userProfile]);
 
   const isOwner = useMemo(() => {
     const viewerId = viewer?._id || viewer?.id || viewer?.user?._id;
@@ -108,8 +116,28 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
   const requestDelete = useCallback((journalId) => {
     if (!journalId) return;
     setError('');
+    setEditError('');
     setDeleteTargetId(journalId);
     setIsDeleteOpen(true);
+  }, []);
+
+  const openEditModal = useCallback(async (journalId) => {
+    if (!journalId) return;
+    setError('');
+    setEditError('');
+    setEditLoading(true);
+
+    try {
+      const res = await getJournalById(journalId);
+      const journal = res?.data?.journal;
+      if (!journal?._id) throw new Error('Journal not found.');
+      setEditInitialData({ ...journal, id: journal._id });
+      setIsEditOpen(true);
+    } catch (err) {
+      setEditError(err?.response?.data?.message || err?.message || 'Failed to load journal.');
+    } finally {
+      setEditLoading(false);
+    }
   }, []);
 
   const confirmDelete = useCallback(async () => {
@@ -146,13 +174,13 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
   const displayedJournals = filteredJournals;
 
   const authorName = useMemo(() => {
-    const first = userProfile?.user?.firstname || '';
-    const last = userProfile?.user?.lastname || '';
-    return `${first} ${last}`.trim() || userProfile?.user?.username || 'User';
+    const first = userProfile?.user?.firstname || userProfile?.firstname || '';
+    const last = userProfile?.user?.lastname || userProfile?.lastname || '';
+    return `${first} ${last}`.trim() || userProfile?.user?.username || userProfile?.username || 'User';
   }, [userProfile]);
 
   const authorHandle = useMemo(() => {
-    const u = userProfile?.user?.username;
+    const u = userProfile?.user?.username || userProfile?.username;
     return u ? `@${u}` : null;
   }, [userProfile]);
 
@@ -178,6 +206,23 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
         }}
       />
 
+      <CreateJournalModal
+        isOpen={isEditOpen}
+        initialData={editInitialData}
+        onClose={() => {
+          if (editLoading) return;
+          setIsEditOpen(false);
+          setEditInitialData(null);
+          setEditError('');
+        }}
+        onSuccess={() => {
+          setIsEditOpen(false);
+          setEditInitialData(null);
+          setEditError('');
+          setRefreshKey((k) => k + 1);
+        }}
+      />
+
       <ConfirmModal
         isOpen={isDeleteOpen}
         onClose={() => {
@@ -191,6 +236,12 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
         confirmLabel={deleteLoading ? 'Deleting…' : 'Delete'}
         cancelLabel="Cancel"
       />
+
+      {editError ? (
+        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {editError}
+        </div>
+      ) : null}
 
       {/* Filter Tabs */}
       <div className="w-full bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-3 overflow-x-auto">
@@ -344,8 +395,14 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
 
                             <button
                               type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditModal(journalId);
+                              }}
                               className="w-10 h-10 rounded-xl border border-black/10 bg-white flex items-center justify-center hover:bg-gray-50 transition cursor-pointer"
                               aria-label="Edit journal"
+                              title="Edit"
+                              disabled={editLoading}
                             >
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 20H21" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

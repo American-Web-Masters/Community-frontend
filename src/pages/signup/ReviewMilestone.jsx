@@ -77,6 +77,9 @@ const ReviewMilestone = ({ onNext, onDataChange, onPrev }) => {
         // Clear registration data from localStorage
         signupUtils.resetSignup();
         localStorage.removeItem('registrationUserId');
+
+  // Role-based post-signup redirect
+  navigate(userData?.role === 'admin' ? '/dashboard' : '/survey', { replace: true });
         
         
       } else {
