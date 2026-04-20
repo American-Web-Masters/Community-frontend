@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import {
   FaBars,
   FaChartLine,
+  FaComments,
   FaQuestionCircle,
   FaUsers,
   FaRegCalendarAlt,
@@ -20,6 +21,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
     () => [
       { to: '/dashboard', label: 'Overview', icon: FaChartLine, end: true },
   { to: '/dashboard/faqs', label: "FAQs", icon: FaQuestionCircle },
+        { to: '/dashboard/forum', label: 'Forum', icon: FaComments },
       { to: '/dashboard/users', label: 'Users', icon: FaUsers },
       { to: '/dashboard/events', label: 'Events', icon: FaRegCalendarAlt },
       { to: '/dashboard/alerts', label: 'Alerts', icon: FaRegBell },
