@@ -166,7 +166,17 @@ const Profile = () => {
           isLoading={loading}
           isOwnProfile={isOwnProfile}
           onProfileUpdate={(updated) =>
-            setUserProfile((prev) => ({ ...prev, ...updated }))
+            setUserProfile((prev) => {
+              const merged = { ...(prev || {}), ...(updated || {}) };
+
+              // Some update responses return `user` as an id string (or omit it).
+              // Keep the original populated object so child tabs can still resolve user id.
+              if (!merged?.user || typeof merged.user !== "object") {
+                merged.user = prev?.user || merged.user;
+              }
+
+              return merged;
+            })
           }
         />
 

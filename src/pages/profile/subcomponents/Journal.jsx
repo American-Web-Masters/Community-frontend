@@ -63,7 +63,11 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
   // Create modal
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const userId = userProfile?.user?._id;
+  const userId = useMemo(() => {
+    const nestedUser = userProfile?.user;
+    if (typeof nestedUser === 'string') return nestedUser;
+    return nestedUser?._id || nestedUser?.id || userProfile?.userId || userProfile?._id || null;
+  }, [userProfile]);
 
   const isOwner = useMemo(() => {
     const viewerId = viewer?._id || viewer?.id || viewer?.user?._id;
@@ -146,13 +150,13 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
   const displayedJournals = filteredJournals;
 
   const authorName = useMemo(() => {
-    const first = userProfile?.user?.firstname || '';
-    const last = userProfile?.user?.lastname || '';
-    return `${first} ${last}`.trim() || userProfile?.user?.username || 'User';
+    const first = userProfile?.user?.firstname || userProfile?.firstname || '';
+    const last = userProfile?.user?.lastname || userProfile?.lastname || '';
+    return `${first} ${last}`.trim() || userProfile?.user?.username || userProfile?.username || 'User';
   }, [userProfile]);
 
   const authorHandle = useMemo(() => {
-    const u = userProfile?.user?.username;
+    const u = userProfile?.user?.username || userProfile?.username;
     return u ? `@${u}` : null;
   }, [userProfile]);
 
