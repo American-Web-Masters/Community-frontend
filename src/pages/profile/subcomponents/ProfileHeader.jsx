@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { selectUser } from "../../../store/userSlice";
@@ -6,6 +6,7 @@ import { updateUserProfile } from "../../../api/profile";
 import { MdCheck, MdClose, MdCameraAlt, MdSettings, MdShare } from "react-icons/md";
 import { FaEdit } from "react-icons/fa";
 import toast from "react-hot-toast";
+import useBiblePassageLookup from "../../../hooks/useBiblePassageLookup";
 
 const ProfileHeader = ({
   userProfile,
@@ -20,6 +21,9 @@ const ProfileHeader = ({
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [headerLoading, setHeaderLoading] = useState(false);
+  const [verseBook, setVerseBook] = useState("");
+  const [verseNumber, setVerseNumber] = useState("");
+  const [fetchedVerseReference, setFetchedVerseReference] = useState("");
   const [editData, setEditData] = useState({
     firstname: "",
     lastname: "",
@@ -29,6 +33,28 @@ const ProfileHeader = ({
     profilePicture: null,
     profilePicturePreview: null,
   });
+
+  const verseQuery = useMemo(() => {
+    const book = String(verseBook || "").trim();
+    const num = String(verseNumber || "").trim();
+    return book && num ? `${book} ${num}` : "";
+  }, [verseBook, verseNumber]);
+
+  const verseLookup = useBiblePassageLookup(verseQuery, {
+    enabled: Boolean(isEditing && verseQuery),
+    debounceMs: 450,
+  });
+
+  useEffect(() => {
+    if (!isEditing) return;
+    if (!verseLookup.data) return;
+
+    setEditData((prev) => ({
+      ...prev,
+      verse: verseLookup.data.text,
+    }));
+    setFetchedVerseReference(verseLookup.data.reference || "");
+  }, [isEditing, verseLookup.data]);
 
   // Use real data from API with fallback placeholders
   const profileData = {
@@ -58,6 +84,9 @@ const ProfileHeader = ({
       profilePicture: null,
       profilePicturePreview: userProfile?.profilePicture || null,
     });
+    setVerseBook("");
+    setVerseNumber("");
+    setFetchedVerseReference("");
     setIsEditing(true);
   };
 
@@ -72,6 +101,9 @@ const ProfileHeader = ({
       profilePicture: null,
       profilePicturePreview: null,
     });
+    setVerseBook("");
+    setVerseNumber("");
+    setFetchedVerseReference("");
   };
 
   const handleImageChange = (e) => {
@@ -169,7 +201,7 @@ const ProfileHeader = ({
               <div className="flex items-center space-x-2">
                 <button
                   onClick={handleSave}
-                  disabled={headerLoading}
+                  disabled={headerLoading || verseLookup.loading}
                   className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 disabled:opacity-50 flex items-center space-x-1"
                   title="Save changes"
                 >
@@ -281,15 +313,52 @@ const ProfileHeader = ({
                   <label className="block text-xs font-medium text-gray-700 mb-1">
                     Favourite Verse
                   </label>
-                  <input
-                    type="text"
+                  <div className="flex gap-3 max-sm:flex-col">
+                    <input
+                      type="text"
+                      value={verseBook}
+                      onChange={(e) => {
+                        setVerseBook(e.target.value);
+                        setFetchedVerseReference("");
+                      }}
+                      disabled={headerLoading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                      placeholder="Book (e.g., Psalm)"
+                      autoComplete="off"
+                    />
+                    <input
+                      type="text"
+                      value={verseNumber}
+                      onChange={(e) => {
+                        setVerseNumber(e.target.value);
+                        setFetchedVerseReference("");
+                      }}
+                      disabled={headerLoading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                      placeholder="Chapter:Verse (e.g., 118:24)"
+                      autoComplete="off"
+                    />
+                  </div>
+
+                  {verseLookup.loading ? (
+                    <p className="mt-2 text-xs text-gray-600">Fetching verse…</p>
+                  ) : null}
+
+                  {verseLookup.error ? (
+                    <p className="mt-2 text-xs text-red-600">{verseLookup.error}</p>
+                  ) : null}
+
+                  {fetchedVerseReference ? (
+                    <p className="mt-2 text-xs text-gray-600">Fetched: {fetchedVerseReference}</p>
+                  ) : null}
+
+                  <textarea
                     value={editData.verse}
-                    onChange={(e) =>
-                      setEditData((prev) => ({ ...prev, verse: e.target.value }))
-                    }
+                    readOnly
                     disabled={headerLoading}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-                    placeholder="Add your favourite verse"
+                    className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none disabled:opacity-50 resize-none"
+                    rows={3}
+                    placeholder="Verse text will appear here after lookup"
                   />
                 </div>
 
@@ -365,14 +434,7 @@ const ProfileHeader = ({
                         </h1>
                         <div className="flex items-center space-x-3">
                           <p className="text-gray-600 text-sm">@{profileData.username}</p>
-                          <span className="text-gray-400 text-sm">|</span>
-                          {/* Streak */}
-                          <div className="flex items-center space-x-1">
-                            <span className="text-orange-500">🔥</span>
-                            <span className="text-sm font-medium text-gray-700">
-                              {profileData.streak}
-                            </span>
-                          </div>
+                          
                         </div>
                       </>
                     )}

@@ -24,3 +24,6 @@ export * from './settings.js';
 
 // Export FAQs API functions
 export * from './faqs.js';
+
+// External Bible lookup API
+export * from './bible.js';
