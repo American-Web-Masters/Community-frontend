@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { createTestimony, updateTestimony } from '../../api/profile';
+import useBiblePassageLookup from '../../hooks/useBiblePassageLookup';
 
 const MAX_TAGS = 8;
 
@@ -14,6 +15,21 @@ const normalizeTags = (tags) =>
     )
   ).slice(0, MAX_TAGS);
 
+const splitBibleReference = (reference) => {
+  const raw = String(reference || '').trim().replace(/\s+/g, ' ');
+  if (!raw) return { book: '', number: '' };
+
+  const parts = raw.split(' ');
+  const last = parts[parts.length - 1];
+  if (/\d+\s*:\s*\d+/.test(last)) {
+    return {
+      book: parts.slice(0, -1).join(' '),
+      number: last,
+    };
+  }
+  return { book: raw, number: '' };
+};
+
 const CreateTestimonyModal = ({ isOpen, onClose, onSuccess, initialData = null }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -22,6 +38,8 @@ const CreateTestimonyModal = ({ isOpen, onClose, onSuccess, initialData = null }
     description: '',
     verseQuote: '',
     verseReference: '',
+    verseBook: '',
+    verseNumber: '',
     tags: [],
   });
 
@@ -38,10 +56,13 @@ const CreateTestimonyModal = ({ isOpen, onClose, onSuccess, initialData = null }
     setLoading(false);
 
     if (initialData) {
+      const ref = splitBibleReference(initialData?.verse?.reference || '');
       setForm({
         description: initialData.description || '',
         verseQuote: initialData?.verse?.quote || '',
         verseReference: initialData?.verse?.reference || '',
+        verseBook: ref.book || '',
+        verseNumber: ref.number || '',
         tags: Array.isArray(initialData.tags) ? initialData.tags : [],
       });
       return;
@@ -51,10 +72,34 @@ const CreateTestimonyModal = ({ isOpen, onClose, onSuccess, initialData = null }
       description: '',
       verseQuote: '',
       verseReference: '',
+      verseBook: '',
+      verseNumber: '',
       tags: [],
     });
     setNewTag('');
   }, [isOpen, initialData]);
+
+  const verseQuery = useMemo(() => {
+    const book = String(form.verseBook || '').trim();
+    const num = String(form.verseNumber || '').trim();
+    return book && num ? `${book} ${num}` : '';
+  }, [form.verseBook, form.verseNumber]);
+
+  const verseLookup = useBiblePassageLookup(verseQuery, {
+    enabled: Boolean(isOpen && verseQuery),
+    debounceMs: 450,
+  });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!verseLookup.data) return;
+
+    setForm((p) => ({
+      ...p,
+      verseQuote: verseLookup.data.text,
+      verseReference: verseLookup.data.reference,
+    }));
+  }, [isOpen, verseLookup.data]);
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget && !loading) onClose?.();
@@ -62,6 +107,17 @@ const CreateTestimonyModal = ({ isOpen, onClose, onSuccess, initialData = null }
 
   const setField = (key, value) => {
     setForm((p) => ({ ...p, [key]: value }));
+    setError('');
+  };
+
+  const setVerseField = (key, value) => {
+    setForm((p) => ({
+      ...p,
+      [key]: value,
+      // Clear fetched content when changing the query.
+      verseQuote: key === 'verseBook' || key === 'verseNumber' ? '' : p.verseQuote,
+      verseReference: key === 'verseBook' || key === 'verseNumber' ? '' : p.verseReference,
+    }));
     setError('');
   };
 
@@ -91,6 +147,24 @@ const CreateTestimonyModal = ({ isOpen, onClose, onSuccess, initialData = null }
     if (!form.description.trim()) {
       setError('Testimony story is required.');
       return;
+    }
+
+    const hasVerseInput = Boolean(String(form.verseBook || '').trim() || String(form.verseNumber || '').trim());
+    if (hasVerseInput) {
+      if (verseLookup.loading) {
+        setError('Please wait for the verse to finish loading.');
+        return;
+      }
+
+      if (verseLookup.error) {
+        setError(verseLookup.error || 'Please enter a valid verse reference.');
+        return;
+      }
+
+      if (!String(form.verseQuote || '').trim() || !String(form.verseReference || '').trim()) {
+        setError('Verse could not be loaded. Please check the reference.');
+        return;
+      }
     }
 
     setLoading(true);
@@ -195,18 +269,45 @@ const CreateTestimonyModal = ({ isOpen, onClose, onSuccess, initialData = null }
               <div className="rounded-3xl border border-gray-200 p-4">
                 <p className="text-sm font-semibold text-gray-800">Verse</p>
                 <div className="mt-3 space-y-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <input
+                      value={form.verseBook}
+                      onChange={(e) => setVerseField('verseBook', e.target.value)}
+                      className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-800 placeholder-gray-400 outline-none transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-[color:var(--color-primary-300)]"
+                      placeholder="Book (e.g., Psalms)"
+                      disabled={loading}
+                      autoComplete="off"
+                    />
+                    <input
+                      value={form.verseNumber}
+                      onChange={(e) => setVerseField('verseNumber', e.target.value)}
+                      className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-800 placeholder-gray-400 outline-none transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-[color:var(--color-primary-300)]"
+                      placeholder="Chapter:Verse (e.g., 118:24)"
+                      disabled={loading}
+                      autoComplete="off"
+                    />
+                  </div>
+
+                  {verseLookup.loading ? (
+                    <p className="text-xs text-gray-500">Fetching verse…</p>
+                  ) : null}
+
+                  {verseLookup.error ? (
+                    <p className="text-xs text-red-600">{verseLookup.error}</p>
+                  ) : null}
+
                   <textarea
                     value={form.verseQuote}
-                    onChange={(e) => setField('verseQuote', e.target.value)}
-                    className="min-h-[80px] sm:min-h-[88px] w-full resize-none rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-800 placeholder-gray-400 outline-none transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-[color:var(--color-primary-300)]"
-                    placeholder="Verse quote…"
+                    readOnly
+                    className="min-h-[80px] sm:min-h-[88px] w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 outline-none"
+                    placeholder="Verse text will appear here…"
                     disabled={loading}
                   />
                   <input
                     value={form.verseReference}
-                    onChange={(e) => setField('verseReference', e.target.value)}
-                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-800 placeholder-gray-400 outline-none transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-[color:var(--color-primary-300)]"
-                    placeholder="Reference (e.g., Jeremiah 29:11)"
+                    readOnly
+                    className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 outline-none"
+                    placeholder="Reference"
                     disabled={loading}
                   />
                 </div>
