@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
-import { createJournal } from '../../../api';
+import { createJournal, updateJournal } from '../../../api';
 import LinkedPrayerPicker from './LinkedPrayerPicker';
 import useBiblePassageLookup from '../../../hooks/useBiblePassageLookup';
 
@@ -75,8 +75,19 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
     setLoading(false);
 
     if (initialData) {
-      // Not requested yet, but keep it forward-compatible.
       const ref = splitBibleReference(initialData?.verse?.reference || '');
+      const initialPrayerId =
+        (typeof initialData?.prayer === 'string' && initialData.prayer) ||
+        (typeof initialData?.prayer === 'object' && (initialData?.prayer?._id || initialData?.prayer?.id)) ||
+        (typeof initialData?.linkedPrayer === 'string' && initialData.linkedPrayer) ||
+        (typeof initialData?.linkedPrayer === 'object' && (initialData?.linkedPrayer?._id || initialData?.linkedPrayer?.id)) ||
+        null;
+
+      const linkedPrayerObj =
+        (typeof initialData?.prayer === 'object' && initialData?.prayer) ||
+        (typeof initialData?.linkedPrayer === 'object' && initialData?.linkedPrayer) ||
+        null;
+
       setForm({
         description: initialData.description || '',
         verseQuote: initialData?.verse?.quote || '',
@@ -85,8 +96,10 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
         verseNumber: ref.number || '',
         tags: Array.isArray(initialData.tags) ? initialData.tags : [],
         mood: initialData.mood || 'Joyful',
-        prayer: initialData.prayer || null,
-  linkedPrayerPreview: null,
+        prayer: initialPrayerId ? String(initialPrayerId) : null,
+        linkedPrayerPreview: linkedPrayerObj
+          ? String(linkedPrayerObj?.content || linkedPrayerObj?.description || '').trim() || null
+          : null,
       });
       setNewTag('');
       return;
@@ -218,11 +231,17 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
         mood: form.mood,
       };
 
-      const res = await createJournal(payload);
+      const res = initialData?.id
+        ? await updateJournal(initialData.id, payload)
+        : await createJournal(payload);
       onSuccess?.(res);
       onClose?.();
     } catch (err) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to create journal entry.');
+      setError(
+        err?.response?.data?.message ||
+        err?.message ||
+        (initialData ? 'Failed to update journal entry.' : 'Failed to create journal entry.')
+      );
     } finally {
       setLoading(false);
     }

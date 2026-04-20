@@ -230,6 +230,22 @@ export const createJournal = async (data)=>{
   }
 }
 
+export const updateJournal = async (journalId, { description, verse, tags, mood, prayer }) => {
+  try {
+    const response = await apiClient.patch(`/journals/${journalId}`, {
+      description,
+      verse,
+      tags,
+      mood,
+      prayer,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating journal:', error);
+    throw error;
+  }
+};
+
 export default {
   getUserProfile,
   updateUserProfile,
@@ -244,5 +260,7 @@ export default {
   deleteTestimony,
   getJournalById,
   getJournalByUser,
-  deleteJournalByUser
+  deleteJournalByUser,
+  createJournal,
+  updateJournal,
 };
