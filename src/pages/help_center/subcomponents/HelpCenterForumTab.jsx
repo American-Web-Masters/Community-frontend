@@ -321,7 +321,7 @@ const HelpCenterForumTab = () => {
 
       {forumLoading ? (
         <div className="rounded-md border border-[#d6e8fa] bg-white/95 px-4 py-5 text-[#12356c]">
-          Loading forum posts...
+          Loading forum posts..
         </div>
       ) : forumError ? (
         <div className="rounded-md border border-[#f6caca] bg-white/95 px-4 py-5 text-red-600">
