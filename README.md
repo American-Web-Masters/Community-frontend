@@ -32,7 +32,7 @@ encouragement accessible to all
 
 ---
 
-## ❤️ **Values**
+## ❤️ **Values*
 
 ### ✨ Encouragement  
 We value encouragement as we lift one another up with words, prayers, and actions that bring hope.
