@@ -263,7 +263,7 @@ const HelpCenterForumTab = () => {
     creatingForum || !questionTitle.trim() || !questionDescription.trim() || !canCreateForum;
 
   return (
-    <section className="mt-5">
+    <section className="mt-5 mx-2">
       <div className="flex items-center justify-between">
         <h2 className="text-[20px] font-semibold text-primary-800 mb-4">Community Forum</h2>
       </div>
@@ -294,7 +294,7 @@ const HelpCenterForumTab = () => {
           type="button"
           disabled={createForumDisabled}
           onClick={handleCreateForum}
-          className="mt-5 px-6 py-2 rounded-full btn-blue-gradient text-white text-[12px] font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+          className="mt-5 px-6 py-2 rounded-full btn-blue-gradient text-white text-[12px] font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {creatingForum ? "Posting..." : "Post Question"}
         </button>
@@ -318,7 +318,7 @@ const HelpCenterForumTab = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search forum..."
-              className="w-full h-12 pl-11 pr-4 rounded-full bg-white/80 border border-white/60 shadow-sm text-[14px] text-[#24467f] placeholder:text-[#24467f]/50 outline-none"
+              className="w-full h-12 pl-11 pr-4 rounded-full bg-white/80 border border-white/60 shadow-sm text-[15px] font-semibold text-[#24467f] placeholder:text-[#24467f]/50 outline-none"
             />
           </div>
         </div>
