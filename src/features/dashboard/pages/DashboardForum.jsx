@@ -3,7 +3,7 @@ import { FaRegCommentDots, FaSyncAlt } from "react-icons/fa";
 import { HiOutlineChatBubbleLeft } from "react-icons/hi2";
 import toast from "react-hot-toast";
 
-import { addForumReply, getForums } from "../../../api/forums";
+import { addForumReply, getAllForums} from "../../../api/forums";
 
 const getInitials = (name = "User") => {
   const words = String(name).trim().split(/\s+/).filter(Boolean);
@@ -177,7 +177,7 @@ const DashboardForum = () => {
     try {
       setLoading(true);
       setError("");
-      const data = await getForums();
+      const data = await getAllForums();
       const forums = Array.isArray(data?.data?.forums) ? data.data.forums : [];
       setItems(forums.map(normalizeForum).filter(Boolean));
     } catch (e) {
