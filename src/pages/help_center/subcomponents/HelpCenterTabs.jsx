@@ -36,7 +36,7 @@ export const HelpCenterCategoryTabs = ({ tabs, activeTab, onTabChange }) => {
             key={tab}
             type="button"
             onClick={() => onTabChange(tab)}
-            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-[12px] leading-none transition-all duration-200 border cursor-pointer ${
+            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-[13px] leading-none transition-all duration-200 border cursor-pointer ${
               isActive
                 ? "btn-blue-gradient text-white border-transparent"
                 : "bg-white/70 text-[#24467f] border-white/70 hover:bg-white"
