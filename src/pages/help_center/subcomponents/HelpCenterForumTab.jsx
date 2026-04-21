@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
 import HelpCenterForumPostCard from "./HelpCenterForumPostCard";
 import { HelpCenterMainTabs } from "./HelpCenterTabs";
+import { useStableMasonry } from "../../../hooks/useStableMasonry";
 import {
   addForumReply,
   createForum,
@@ -252,6 +253,10 @@ const HelpCenterForumTab = () => {
     });
   }, [activeTab, currentUserId, forums, search]);
 
+  // Keep forum cards in a stable masonry layout so expanding one card
+  // doesn't force its row-mate to reserve empty vertical space.
+  const masonryColumns = useStableMasonry(filteredPosts, 2);
+
   const canCreateForum = Boolean(currentUserId);
 
   const createForumDisabled =
@@ -328,27 +333,34 @@ const HelpCenterForumTab = () => {
           {forumError}
         </div>
       ) : (
-        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+        <div className="mt-5">
           {filteredPosts.length === 0 ? (
             <div className="text-center text-primary-400 text-sm py-8">No posts found.</div>
           ) : (
-            filteredPosts.map((forum) => (
-              <HelpCenterForumPostCard
-                key={forum._id}
-                forum={forum}
-                currentUserId={currentUserId}
-                currentUserRole={currentUser?.role}
-                canManage={isForumManageable(forum, currentUserId, currentUser?.role)}
-                onAddReply={handleAddReply}
-                onReactReply={handleReactToReply}
-                onUpdateForum={handleUpdateForum}
-                onDeleteForum={handleDeleteForum}
-                isUpdating={updatingForumId === forum._id}
-                isDeleting={deletingForumId === forum._id}
-                isReplying={replyingForumId === forum._id}
-                reactingReplyKey={reactingReplyKey}
-              />
-            ))
+            <div className="stable-masonry-container">
+              {masonryColumns.map((columnItems, columnIndex) => (
+                <div key={columnIndex} className="masonry-column">
+                  {columnItems.map((forum) => (
+                    <div key={forum._id} className="masonry-item">
+                      <HelpCenterForumPostCard
+                        forum={forum}
+                        currentUserId={currentUserId}
+                        currentUserRole={currentUser?.role}
+                        canManage={isForumManageable(forum, currentUserId, currentUser?.role)}
+                        onAddReply={handleAddReply}
+                        onReactReply={handleReactToReply}
+                        onUpdateForum={handleUpdateForum}
+                        onDeleteForum={handleDeleteForum}
+                        isUpdating={updatingForumId === forum._id}
+                        isDeleting={deletingForumId === forum._id}
+                        isReplying={replyingForumId === forum._id}
+                        reactingReplyKey={reactingReplyKey}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           )}
         </div>
       )}

@@ -155,7 +155,11 @@ const HelpCenterForumPostCard = ({
               <h3 className="text-[18px] font-semibold leading-tight text-[#0f2f6a]">
                 {forum.questionTitle}
               </h3>
-              <p className="mt-1 text-[15px] text-[#6f7f99] leading-snug">
+              <p
+                className={`mt-1 text-[15px] text-[#6f7f99] leading-snug ${
+                  isReplyOpen ? "" : "line-clamp-2 min-h-[2.75rem]"
+                }`}
+              >
                 {forum.questionDescription}
               </p>
             </>
