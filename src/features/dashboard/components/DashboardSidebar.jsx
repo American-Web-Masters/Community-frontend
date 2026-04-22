@@ -96,22 +96,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
         })}
       </nav>
 
-      <div className="p-3 border-t border-black/5">
-        <div className={cx('rounded-xl bg-gradient-to-br from-primary-50 to-white p-3', isCollapsed && 'p-2')}>
-          {!isCollapsed ? (
-            <>
-              <div className="text-xs font-semibold text-gray-900">Tip</div>
-              <div className="text-xs text-gray-600 mt-1">
-                This is a sample admin area. Wire real stats here.
-              </div>
-            </>
-          ) : (
-            <div className="h-9 w-9 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center font-semibold">
-              i
-            </div>
-          )}
-        </div>
-      </div>
+      
 
     </div>
   );
