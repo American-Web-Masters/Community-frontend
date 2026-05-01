@@ -1,7 +1,7 @@
 import React from "react";
 import { IoChatbubbles } from "react-icons/io5";
 
-const HelpCenterLiveTab = () => {
+const HelpCenterLiveTab = ({ onStartChat }) => {
   return (
     <section className="mt-4 rounded-[10px] border border-[#cfe2f6] bg-white/95 min-h-[450px] flex items-center justify-center">
       <div className="text-center px-4">
@@ -14,7 +14,8 @@ const HelpCenterLiveTab = () => {
 
         <button
           type="button"
-          className="mt-6 py-2.5 px-8 rounded-full btn-blue-gradient text-white text-[14px] font-medium"
+          className="mt-6 py-2.5 px-8 rounded-full btn-blue-gradient text-white text-[14px] font-medium cursor-pointer"
+          onClick={onStartChat}
         >
           Start Chat
         </button>

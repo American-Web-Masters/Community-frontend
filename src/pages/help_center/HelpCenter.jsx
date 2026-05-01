@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import Header from "../../components/ui/Header";
 import { getAllFaqs, reactToFaq } from "../../api/faqs";
-import { selectUserId } from "../../store/userSlice";
+import { selectUser, selectUserId } from "../../store/userSlice";
+import TawkChat from "../../components/tawk_to/TawkChat";
+import { openTawk } from "../../services/tawkService";
 import toast from "react-hot-toast";
 import {
   HelpCenterAccordionItem,
@@ -14,8 +16,10 @@ import {
 
 const HelpCenter = () => {
   const currentUserId = useSelector(selectUserId);
+  const currentUser = useSelector(selectUser);
   const [activeMainTab, setActiveMainTab] = useState("FAQ's");
   const [activeCategoryTab, setActiveCategoryTab] = useState("All");
+  const [liveChatEnabled, setLiveChatEnabled] = useState(false);
   const [openItemId, setOpenItemId] = useState(null);
   const [faqItems, setFaqItems] = useState([]);
   const [faqLoading, setFaqLoading] = useState(false);
@@ -24,6 +28,17 @@ const HelpCenter = () => {
 
   const mainTabs = useMemo(() => ["FAQ's", "Forum", "Live"], []);
   const categoryTabs = useMemo(() => ["All", "Notification", "Communities", "Profile"], []);
+
+  useEffect(() => {
+    if (activeMainTab !== "Live" && liveChatEnabled) {
+      setLiveChatEnabled(false);
+    }
+  }, [activeMainTab, liveChatEnabled]);
+
+  const handleStartLiveChat = () => {
+    setLiveChatEnabled(true);
+    openTawk();
+  };
 
   useEffect(() => {
     const loadFaqs = async () => {
@@ -161,6 +176,7 @@ const HelpCenter = () => {
 
   return (
     <div className="min-h-screen light-background overflow-x-hidden pb-10">
+      <TawkChat user={currentUser} enabled={activeMainTab === "Live" && liveChatEnabled} />
       <Header showNotification={true} showFilter={true} showSearch={true} showLogout={false} />
 
       <div className="px-3 mt-5">
@@ -177,7 +193,7 @@ const HelpCenter = () => {
         {activeMainTab === "Forum" ? (
           <HelpCenterForumTab />
         ) : activeMainTab === "Live" ? (
-          <HelpCenterLiveTab />
+          <HelpCenterLiveTab onStartChat={handleStartLiveChat} />
         ) : (
           <>
             <div className="mt-4">
