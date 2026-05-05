@@ -110,7 +110,7 @@ const Header = ({
               {showNotification && (
                 <button
                   onClick={handleNotificationButtonClick}
-                  className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow duration-200 relative"
+                  className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow duration-200 relative cursor-pointer"
                 >
                   <IoNotificationsOutline className="w-5 h-5 text-gray-600" />
                   {unreadCount > 0 && (
@@ -193,7 +193,7 @@ const Header = ({
                       <button
                         key={item._id}
                         onClick={() => handleNotificationItemClick(item)}
-                        className={`w-full text-left px-3 py-3 rounded-xl mb-1 transition-colors ${
+                        className={`w-full text-left px-3 py-3 rounded-xl mb-1 transition-colors cursor-pointer ${
                           item.isRead ? 'bg-gray-50 hover:bg-gray-100' : 'bg-blue-50 hover:bg-blue-100'
                         }`}
                       >
