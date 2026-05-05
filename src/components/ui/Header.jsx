@@ -159,68 +159,108 @@ const Header = ({
         </div>
 
         {/* Notification Drawer */}
-        {showNotification && showNotificationsPanel && (
-          <div className="absolute z-40 left-2 right-2 mt-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-100 max-h-[65vh] overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-800">Notifications</h3>
-                <p className="text-xs text-gray-500">{unreadCount} unread</p>
-              </div>
-              <button
-                onClick={handleMarkAllAsRead}
-                className="text-xs font-medium text-blue-600 hover:text-blue-800"
-                disabled={unreadCount === 0}
-              >
-                Mark all read
-              </button>
+        {showNotification && (
+          <div
+            className={`absolute z-40 left-2 right-2 mt-4 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100/60 max-h-[75vh] flex flex-col overflow-hidden transform transition-all duration-300 origin-top ${
+              showNotificationsPanel
+                ? 'scale-100 opacity-100 translate-y-0 visible'
+                : 'scale-95 opacity-0 -translate-y-2 invisible pointer-events-none'
+            }`}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-white/60">
+            <div>
+              <h3 className="text-base font-bold text-gray-900 tracking-tight">Notifications</h3>
+              <p className="text-xs font-medium text-blue-600/80 mt-0.5">{unreadCount} unread message{unreadCount !== 1 ? 's' : ''}</p>
             </div>
+            <button
+              onClick={handleMarkAllAsRead}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all duration-200 ${
+                unreadCount === 0 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-blue-50 text-blue-600 hover:bg-blue-100 active:scale-95 cursor-pointer'
+              }`}
+              disabled={unreadCount === 0}
+            >
+              Mark all read
+            </button>
+          </div>
 
-            <div className="overflow-y-auto max-h-[50vh]">
-              {!notifications.length && !notificationsLoading && (
-                <div className="px-4 py-8 text-center text-sm text-gray-500">No notifications yet</div>
-              )}
+          <div className="overflow-y-auto flex-1 max-h-[55vh]">
+            {!notifications.length && !notificationsLoading && (
+              <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+                  <IoNotificationsOutline className="w-8 h-8 text-gray-400" />
+                </div>
+                <p className="text-sm font-semibold text-gray-800">You're all caught up!</p>
+                <p className="text-xs text-gray-500 mt-1">Check back later for new updates.</p>
+              </div>
+            )}
 
-              {['Today', 'Yesterday', 'Older'].map((group) => {
-                const list = groupedNotifications[group] || [];
-                if (!list.length) return null;
+            {Object.keys(groupedNotifications).map((group) => {
+              const list = groupedNotifications[group] || [];
+              if (!list.length) return null;
 
-                return (
-                  <div key={group} className="px-2 pt-2">
-                    <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+              return (
+                <div key={group} className="py-2">
+                  <div className="sticky top-0 bg-white/95 backdrop-blur-sm z-10 px-5 py-1.5 mb-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
                       {group}
                     </p>
+                  </div>
+                  <div className="px-3 space-y-1">
                     {list.map((item) => (
                       <button
                         key={item._id}
                         onClick={() => handleNotificationItemClick(item)}
-                        className={`w-full text-left px-3 py-3 rounded-xl mb-1 transition-colors cursor-pointer ${
-                          item.isRead ? 'bg-gray-50 hover:bg-gray-100' : 'bg-blue-50 hover:bg-blue-100'
+                        className={`w-full group text-left p-3 rounded-xl transition-all duration-200 cursor-pointer relative flex items-start gap-3 ${
+                          item.isRead 
+                            ? 'hover:bg-gray-50' 
+                            : 'bg-blue-50/50 hover:bg-blue-50'
                         }`}
                       >
-                        <p className="text-sm text-gray-800 leading-5">{buildNotificationText(item)}</p>
-                        <p className="text-[11px] text-gray-500 mt-1">{formatNotificationTime(item?.createdAt)}</p>
+                        {!item.isRead && (
+                          <span className="absolute top-5 left-1 w-1.5 h-1.5 rounded-full bg-blue-500" />
+                        )}
+                        
+                        <div className="flex-shrink-0 mt-0.5 ml-1">
+                           <div className={`w-9 h-9 rounded-full flex items-center justify-center ${item.isRead ? 'bg-gray-100 text-gray-500' : 'bg-blue-100 text-blue-600'}`}>
+                              <IoNotificationsOutline className="w-4.5 h-4.5" />
+                           </div>
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm leading-snug ${item.isRead ? 'text-gray-600' : 'text-gray-900 font-medium'}`}>
+                            {buildNotificationText(item)}
+                          </p>
+                          <p className={`text-[11px] mt-1 font-medium ${item.isRead ? 'text-gray-400' : 'text-blue-500/80'}`}>
+                            {formatNotificationTime(item?.createdAt)}
+                          </p>
+                        </div>
                       </button>
                     ))}
                   </div>
-                );
-              })}
+                </div>
+              );
+            })}
 
-              {notificationsLoading && (
-                <div className="px-4 py-4 text-xs text-gray-500">Loading notifications...</div>
-              )}
-            </div>
-
-            {pagination?.hasNextPage && (
-              <div className="px-4 py-3 border-t border-gray-100">
-                <button
-                  onClick={loadMoreNotifications}
-                  className="w-full py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700"
-                >
-                  Load more
-                </button>
+            {notificationsLoading && (
+              <div className="flex items-center justify-center py-6">
+                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
               </div>
             )}
           </div>
+
+          {pagination?.hasNextPage && (
+            <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/50 flex justify-center backdrop-blur-sm">
+              <button
+                onClick={loadMoreNotifications}
+                className="w-full max-w-[200px] py-2 px-4 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 shadow-sm text-sm font-semibold text-gray-700 transition-all duration-200 active:scale-95 hover:shadow-md cursor-pointer"
+              >
+                Load older
+              </button>
+            </div>
+          )}
+        </div>
         )}
         
         {/* Search Bar */}
