@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import { FaTimes, FaUpload } from 'react-icons/fa';
 import { apiClient } from '../../api';
-import { connectStripe } from '../../api/communities';
-import toast from 'react-hot-toast';
 
 const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showStripePrompt, setShowStripePrompt] = useState(false);
-  const [createdCommunity, setCreatedCommunity] = useState(null);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -99,8 +95,9 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
       if (response.data.success) {
         console.log('Community created successfully:', response.data.data);
         const community = response.data.data;
-        setCreatedCommunity(community);
-        setShowStripePrompt(true);
+        if (onSuccess) onSuccess(community);
+        resetForm();
+        onClose();
       } else {
         throw new Error(response.data?.message || 'Failed to create community');
       }
@@ -126,36 +123,6 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
     setCoverPhoto(null);
     setNewTag('');
     setError('');
-    setShowStripePrompt(false);
-    setCreatedCommunity(null);
-  };
-
-  const handleConnectStripe = async () => {
-    if (!createdCommunity) return;
-    
-    try {
-      setLoading(true);
-      const response = await connectStripe(createdCommunity._id);
-      
-      console.log('Stripe Connect Response:', response); // Debug log
-      
-      if (response.status === 'success' && response.data?.onboardingUrl) {
-        window.location.href = response.data.onboardingUrl;
-      } else {
-        toast.error('Failed to initialize Stripe Connect');
-      }
-    } catch (error) {
-      console.error('Stripe Connect error:', error);
-      toast.error('Failed to connect Stripe account');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSkipStripe = () => {
-    resetForm();
-    if (onSuccess && createdCommunity) onSuccess(createdCommunity);
-    onClose();
   };
 
   const handleBackdropClick = (e) => {
@@ -175,7 +142,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800">
-            {showStripePrompt ? 'Setup Payment Support' : 'Create Community'}
+            Create Community
           </h2>
           <button
             onClick={onClose}
@@ -186,60 +153,6 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
           </button>
         </div>
 
-        {showStripePrompt ? (
-          /* Stripe Connect Prompt */
-          <div className="p-6">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Community Created Successfully!</h3>
-              <p className="text-gray-600 mb-6">
-                Your community "{createdCommunity?.name}" has been created. Would you like to set up payment support 
-                to receive donations from your community members?
-              </p>
-            </div>
-
-            <div className="bg-blue-50 p-6 rounded-xl mb-6">
-              <h4 className="font-medium text-gray-800 mb-2">🎯 Enable Community Support</h4>
-              <p className="text-sm text-gray-600 mb-4">
-                Connect your Stripe account to receive donations and support from your community members. 
-                This is optional and can be set up later.
-              </p>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Secure payment processing through Stripe</li>
-                <li>• Direct payments to your account</li>
-                <li>• 5% platform fee on donations</li>
-                <li>• Can be configured anytime</li>
-              </ul>
-            </div>
-
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm">
-                {error}
-              </div>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleSkipStripe}
-                disabled={loading}
-                className="flex-1 py-3 px-6 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50"
-              >
-                Skip for Now
-              </button>
-              <button
-                onClick={handleConnectStripe}
-                disabled={loading}
-                className="flex-1 py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
-              >
-                {loading ? 'Setting up...' : 'Connect Stripe'}
-              </button>
-            </div>
-          </div>
-        ) : (
         <form onSubmit={handleSubmit} className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left Column */}
@@ -465,7 +378,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
             </button>
           </div>
         </form>
-        )}
+
       </div>
     </div>
   );
