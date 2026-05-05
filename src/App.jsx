@@ -7,6 +7,12 @@ import { setUser, clearUser, selectIsLoggedIn } from "./store/userSlice";
 import { apiClient } from "./api";
 import Routes from "./routes/Routes";
 import store from "./store";
+import { useNotificationBootstrap } from "./hooks/useNotifications";
+
+function NotificationBootstrap() {
+  useNotificationBootstrap();
+  return null;
+}
 
 function AuthenticatedApp() {
   const dispatch = useDispatch();
@@ -56,6 +62,7 @@ function AuthenticatedApp() {
 
   return (
     <Router>
+      <NotificationBootstrap />
       <Routes/>
       <Toaster
         position="top-center"

@@ -333,6 +333,26 @@ export const useMessagesController = () => {
     socket.emit("room:join", { roomType: "community", roomId: activeCommunityId });
   }, [socket, isConnected, chatMode, activeCommunityId]);
 
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    if (chatMode === "direct" && activeChat?._id) {
+      socket.emit("chat:open", { otherUserId: activeChat._id });
+      return () => {
+        socket.emit("chat:close");
+      };
+    }
+
+    if (chatMode === "group" && activeCommunityId) {
+      socket.emit("group:chat:open", { communityId: activeCommunityId });
+      return () => {
+        socket.emit("group:chat:close");
+      };
+    }
+
+    return undefined;
+  }, [socket, isConnected, chatMode, activeChat?._id, activeCommunityId]);
+
   const loadMoreMessages = async () => {
     if (!activeChat || loadingMore || !hasMoreMessages) return;
 

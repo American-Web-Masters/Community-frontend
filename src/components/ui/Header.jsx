@@ -1,6 +1,22 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { IoNotificationsOutline, IoSearchOutline, IoCloseOutline, IoClose } from "react-icons/io5";
 import { CiFilter } from "react-icons/ci";
+import {
+  selectNotifications,
+  selectNotificationsLoading,
+  selectNotificationsPagination,
+  selectNotificationsUnreadCount,
+} from "../../store/notificationSlice";
+import { selectUser } from "../../store/userSlice";
+import { useNotificationActions } from "../../hooks/useNotifications";
+import {
+  buildNotificationText,
+  formatNotificationTime,
+  getNotificationDateGroup,
+  getNotificationTargetPath,
+} from "../../utils/notificationUtils";
 
 const Header = ({ 
   showNotification = true, 
@@ -19,12 +35,69 @@ const Header = ({
   isFilterActive,
   activeFilters,
   onFilterChange,
-  onClearFilters
+  onClearFilters,
 }) => {
+  const navigate = useNavigate();
+  const user = useSelector(selectUser);
+  const notifications = useSelector(selectNotifications);
+  const unreadCount = useSelector(selectNotificationsUnreadCount);
+  const notificationsLoading = useSelector(selectNotificationsLoading);
+  const pagination = useSelector(selectNotificationsPagination);
+  const { loadMoreNotifications, markAllAsRead, markOneAsRead } = useNotificationActions();
+
+  const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
+
   const urgencyOptions = ['low', 'normal', 'high'];
   const moodOptions = ['😄', '😐', '😔', '😡', '😢'];
   const commonTags = ['healing', 'family', 'work', 'health', 'peace', 'guidance'];
   const shouldShowLogout = typeof showLogout === 'boolean' ? showLogout : !!onLogoutClick;
+
+  const groupedNotifications = useMemo(() => {
+    const grouped = {
+      Today: [],
+      Yesterday: [],
+      Older: [],
+    };
+
+    notifications.forEach((item) => {
+      const key = getNotificationDateGroup(item?.createdAt);
+      grouped[key] = grouped[key] || [];
+      grouped[key].push(item);
+    });
+
+    return grouped;
+  }, [notifications]);
+
+  const handleNotificationButtonClick = () => {
+    if (onNotificationClick) {
+      onNotificationClick();
+    }
+    setShowNotificationsPanel((prev) => !prev);
+  };
+
+  const handleNotificationItemClick = async (notification) => {
+    if (!notification) return;
+
+    if (!notification.isRead) {
+      try {
+        await markOneAsRead(notification._id);
+      } catch (error) {
+        console.error('Failed to mark notification as read:', error);
+      }
+    }
+
+    const targetPath = getNotificationTargetPath(notification, user?.username);
+    setShowNotificationsPanel(false);
+    navigate(targetPath);
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsRead();
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
+  };
 
   return (
     <>
@@ -36,10 +109,15 @@ const Header = ({
             <div className="flex-1">
               {showNotification && (
                 <button
-                  onClick={onNotificationClick}
-                  className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow duration-200"
+                  onClick={handleNotificationButtonClick}
+                  className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow duration-200 relative"
                 >
                   <IoNotificationsOutline className="w-5 h-5 text-gray-600" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] leading-5 font-semibold text-center">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
                 </button>
               )}
             </div>
@@ -79,6 +157,71 @@ const Header = ({
             </div>
           </div>
         </div>
+
+        {/* Notification Drawer */}
+        {showNotification && showNotificationsPanel && (
+          <div className="absolute z-40 left-2 right-2 mt-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-100 max-h-[65vh] overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-800">Notifications</h3>
+                <p className="text-xs text-gray-500">{unreadCount} unread</p>
+              </div>
+              <button
+                onClick={handleMarkAllAsRead}
+                className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                disabled={unreadCount === 0}
+              >
+                Mark all read
+              </button>
+            </div>
+
+            <div className="overflow-y-auto max-h-[50vh]">
+              {!notifications.length && !notificationsLoading && (
+                <div className="px-4 py-8 text-center text-sm text-gray-500">No notifications yet</div>
+              )}
+
+              {['Today', 'Yesterday', 'Older'].map((group) => {
+                const list = groupedNotifications[group] || [];
+                if (!list.length) return null;
+
+                return (
+                  <div key={group} className="px-2 pt-2">
+                    <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                      {group}
+                    </p>
+                    {list.map((item) => (
+                      <button
+                        key={item._id}
+                        onClick={() => handleNotificationItemClick(item)}
+                        className={`w-full text-left px-3 py-3 rounded-xl mb-1 transition-colors ${
+                          item.isRead ? 'bg-gray-50 hover:bg-gray-100' : 'bg-blue-50 hover:bg-blue-100'
+                        }`}
+                      >
+                        <p className="text-sm text-gray-800 leading-5">{buildNotificationText(item)}</p>
+                        <p className="text-[11px] text-gray-500 mt-1">{formatNotificationTime(item?.createdAt)}</p>
+                      </button>
+                    ))}
+                  </div>
+                );
+              })}
+
+              {notificationsLoading && (
+                <div className="px-4 py-4 text-xs text-gray-500">Loading notifications...</div>
+              )}
+            </div>
+
+            {pagination?.hasNextPage && (
+              <div className="px-4 py-3 border-t border-gray-100">
+                <button
+                  onClick={loadMoreNotifications}
+                  className="w-full py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700"
+                >
+                  Load more
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Search Bar */}
         {isSearchActive && (

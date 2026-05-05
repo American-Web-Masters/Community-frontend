@@ -28,5 +28,8 @@ export * from './faqs.js';
 // Export forums API functions
 export * from './forums.js';
 
+// Export notifications API functions
+export * from './notifications.js';
+
 // External Bible lookup API
 export * from './bible.js';

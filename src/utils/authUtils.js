@@ -59,6 +59,7 @@ export const performLogout = async () => {
     // Clear Redux store if available
     if (window.__REDUX_STORE__) {
       window.__REDUX_STORE__.dispatch({ type: 'user/clearUser' });
+      window.__REDUX_STORE__.dispatch({ type: 'notifications/resetNotifications' });
     }
     
     // Redirect to login

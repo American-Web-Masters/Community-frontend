@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import { IoMenu } from "react-icons/io5";
 import { IoPeopleOutline } from "react-icons/io5";
+import { useSearchParams } from "react-router-dom";
 import { scrollbarStyles } from "../../utils/MessageUtils";
 import { useMessagesController } from "./hooks/useMessagesController";
 
@@ -12,6 +13,7 @@ import MessageList from './subcomponents/MessageList';
 import MessageInput from './subcomponents/MessageInput';
 
 const Messages = () => {
+  const [searchParams] = useSearchParams();
   const {
     user,
     isLoggedIn,
@@ -64,6 +66,37 @@ const Messages = () => {
     sortUsers,
     formatTimestamp,
   } = useMessagesController();
+
+  useEffect(() => {
+    const chat = searchParams.get('chat');
+    const targetUserId = searchParams.get('user');
+    const targetCommunityId = searchParams.get('community');
+
+    if (chat === 'direct' && targetUserId && users.length > 0) {
+      const targetUser = users.find((item) => item._id === targetUserId);
+      if (targetUser) {
+        setChatMode('direct');
+        setActiveChat(targetUser);
+      }
+      return;
+    }
+
+    if (chat === 'group' && targetCommunityId && groupConversations.length > 0) {
+      const targetCommunity = groupConversations.find(
+        (item) => item._id === targetCommunityId || item.communityId === targetCommunityId
+      );
+      if (targetCommunity) {
+        setChatMode('group');
+        setActiveChat(targetCommunity);
+      }
+    }
+  }, [
+    searchParams,
+    users,
+    groupConversations,
+    setChatMode,
+    setActiveChat,
+  ]);
 
   if (!isLoggedIn || !user) {
     return (

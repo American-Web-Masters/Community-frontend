@@ -247,7 +247,6 @@ const PrayerPageLayout = ({
     <div className="min-h-screen light-background overflow-hidden">
       {/* Header */}
       <Header
-        onNotificationClick={() => console.log("Notification clicked")}
         onFilterClick={handleFilterClick}
         onSearchClick={handleSearchClick}
         onLogoutClick={onLogout}
