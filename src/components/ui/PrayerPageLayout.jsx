@@ -32,11 +32,20 @@ const PrayerPageLayout = ({
   onRefreshBookmarks,
   customRenderer = null,
   onPublishDraft = null, // New callback for publishing draft prayers
+  highlightedPrayerId = null
 }) => {
   const navigate = useNavigate();
   const currentUser = useSelector(selectUser);
   const [activeTab, setActiveTab] = useState(customTabs.length > 0 ? customTabs[0] : "All");
-  const [expandedCards, setExpandedCards] = useState(new Set());
+  
+  // Initialize expanded cards with highlighted prayer if present
+  const [expandedCards, setExpandedCards] = useState(() => {
+    const initialSet = new Set();
+    if (highlightedPrayerId) {
+      initialSet.add(highlightedPrayerId);
+    }
+    return initialSet;
+  });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -214,6 +223,19 @@ const PrayerPageLayout = ({
   };
 
   // Page specific configurations
+  // Scroll to highlighted prayer
+  useEffect(() => {
+    if (highlightedPrayerId && filteredPrayers.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(`prayer-card-${highlightedPrayerId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500); // Give masonry a moment to render
+    }
+  }, [highlightedPrayerId, filteredPrayers.length]);
+
+
   const pageConfigs = {
     "prayer-wall": {
       title: "Prayer Wall",
@@ -530,7 +552,15 @@ const PrayerPageLayout = ({
                       const userHasShared = isSharedByUser(prayer, currentUser?._id);
 
                       return (
-                        <div key={prayer._id || prayer.id} className="masonry-item">
+                        <div 
+                          key={prayer._id || prayer.id} 
+                          id={`prayer-card-${prayer._id || prayer.id}`}
+                          className={`masonry-item rounded-xl transition-all duration-700 ${
+                            highlightedPrayerId === (prayer._id || prayer.id) 
+                              ? 'ring-4 ring-blue-400 ring-offset-2 shadow-2xl scale-[1.02]' 
+                              : ''
+                          }`}
+                        >
                           <PrayerCard
                             prayer={prayer}
                             prayerId={prayer._id || prayer.id}

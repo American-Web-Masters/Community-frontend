@@ -68,7 +68,8 @@ export const getNotificationTargetPath = (notification, currentUsername) => {
     entityType === 'PRAYER' ||
     entityType === 'COMMENT'
   ) {
-    return prayerId ? `/updates?prayer=${encodeURIComponent(prayerId)}` : '/updates';
+    // When clicking a prayer notification, go to the prayer context via home feed
+    return prayerId ? `/?prayer=${encodeURIComponent(prayerId)}` : '/';
   }
 
   if (type === 'COMMUNITY_POST' || type === 'COMMUNITY_JOIN' || entityType === 'COMMUNITY') {
