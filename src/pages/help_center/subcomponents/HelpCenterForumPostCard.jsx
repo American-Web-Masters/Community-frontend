@@ -132,7 +132,7 @@ const HelpCenterForumPostCard = ({
                   type="button"
                   disabled={isUpdating}
                   onClick={handleSaveUpdate}
-                  className="px-4 py-1.5 rounded-full btn-blue-gradient text-white text-xs font-semibold disabled:opacity-60"
+                  className="px-4 py-1.5 rounded-full btn-blue-gradient text-white text-xs font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {isUpdating ? "Saving..." : "Save"}
                 </button>
@@ -144,7 +144,7 @@ const HelpCenterForumPostCard = ({
                     setEditDescription(forum.questionDescription || "");
                     setIsEditing(false);
                   }}
-                  className="px-4 py-1.5 rounded-full border border-primary-200 text-primary-700 text-xs font-semibold"
+                  className="px-4 py-1.5 rounded-full border border-primary-200 text-primary-700 text-xs font-semibold cursor-pointer disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
@@ -155,7 +155,11 @@ const HelpCenterForumPostCard = ({
               <h3 className="text-[18px] font-semibold leading-tight text-[#0f2f6a]">
                 {forum.questionTitle}
               </h3>
-              <p className="mt-1 text-[15px] text-[#6f7f99] leading-snug">
+              <p
+                className={`mt-1 text-[15px] text-[#6f7f99] leading-snug ${
+                  isReplyOpen ? "" : "line-clamp-2 min-h-[2.75rem]"
+                }`}
+              >
                 {forum.questionDescription}
               </p>
             </>
@@ -173,7 +177,7 @@ const HelpCenterForumPostCard = ({
               type="button"
               onClick={() => setIsReplyOpen((v) => !v)}
               aria-expanded={isReplyOpen}
-              className="inline-flex items-center gap-2 font-semibold text-[#0b2f90] hover:underline"
+              className="inline-flex items-center gap-2 font-semibold text-[#0b2f90] hover:underline cursor-pointer"
             >
               Reply
             </button>
@@ -183,7 +187,7 @@ const HelpCenterForumPostCard = ({
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center gap-1 text-[#0b2f90] font-semibold hover:underline"
+                  className="inline-flex items-center gap-1 text-[#0b2f90] font-semibold hover:underline cursor-pointer"
                 >
                   <FiEdit2 className="w-3.5 h-3.5" />
                   Edit
@@ -192,7 +196,7 @@ const HelpCenterForumPostCard = ({
                   type="button"
                   disabled={isDeleting}
                   onClick={() => onDeleteForum(forum._id)}
-                  className="inline-flex items-center gap-1 text-red-500 font-semibold hover:underline disabled:opacity-60"
+                  className="inline-flex items-center gap-1 text-red-500 font-semibold hover:underline cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <FiTrash2 className="w-3.5 h-3.5" />
                   {isDeleting ? "Deleting..." : "Delete"}
@@ -215,7 +219,7 @@ const HelpCenterForumPostCard = ({
                     type="button"
                     disabled={!replyText.trim() || isReplying}
                     onClick={handleSubmitReply}
-                    className="px-4 py-1.5 rounded-full btn-blue-gradient text-white text-xs font-semibold disabled:opacity-60"
+                    className="px-4 py-1.5 rounded-full btn-blue-gradient text-white text-xs font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {isReplying ? "Submitting..." : "Submit Reply"}
                   </button>
@@ -247,7 +251,7 @@ const HelpCenterForumPostCard = ({
                               usefulSelected
                                 ? "text-green-700 border-green-300 bg-green-50"
                                 : "text-green-600 border-green-200"
-                            }`}
+                            } cursor-pointer disabled:cursor-not-allowed`}
                           >
                             <FiThumbsUp className="w-3.5 h-3.5" />
                             Useful ({reply.usefulCount || 0})
@@ -260,7 +264,7 @@ const HelpCenterForumPostCard = ({
                               notUsefulSelected
                                 ? "text-red-600 border-red-300 bg-red-50"
                                 : "text-red-500 border-red-200"
-                            }`}
+                            } cursor-pointer disabled:cursor-not-allowed`}
                           >
                             <FiThumbsDown className="w-3.5 h-3.5" />
                             Not Useful ({reply.notUsefulCount || 0})

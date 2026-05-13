@@ -16,7 +16,7 @@ const HelpCenterAccordionItem = ({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full px-4 py-3 flex items-center justify-between text-left"
+        className={`w-full px-4 py-5 flex items-center justify-between text-left cursor-pointer ${!isOpen ? "hover:bg-[#f0f4fb]" : ""} transition-colors duration-200}`}
       >
         <span className="text-[16px] font-semibold text-[#12356c]">{item.title}</span>
         {isOpen ? (
@@ -39,7 +39,7 @@ const HelpCenterAccordionItem = ({
               type="button"
               disabled={isReacting}
               onClick={() => onReact?.(item.id, "useful")}
-              className={`font-medium hover:opacity-80 disabled:opacity-60 ${
+              className={`font-medium hover:opacity-80 disabled:opacity-60 cursor-pointer ${
                 isUsefulSelected ? "text-green-700" : "text-green-600"
               }`}
             >
@@ -49,13 +49,13 @@ const HelpCenterAccordionItem = ({
               type="button"
               disabled={isReacting}
               onClick={() => onReact?.(item.id, "notUseful")}
-              className={`font-medium hover:opacity-80 disabled:opacity-60 ${
+              className={`font-medium hover:opacity-80 disabled:opacity-60 cursor-pointer ${
                 isNotUsefulSelected ? "text-red-600" : "text-red-500"
               }`}
             >
               👎 Not Useful ({item.notUsefulCount || 0})
             </button>
-            <button type="button" className="text-[#6d8ebb] hover:underline">
+            <button type="button" className="text-[#6d8ebb] hover:underline cursor-pointer">
               View Related
             </button>
           </div>

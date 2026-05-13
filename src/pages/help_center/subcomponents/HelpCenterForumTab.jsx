@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
 import HelpCenterForumPostCard from "./HelpCenterForumPostCard";
 import { HelpCenterMainTabs } from "./HelpCenterTabs";
+import { useStableMasonry } from "../../../hooks/useStableMasonry";
 import {
   addForumReply,
   createForum,
@@ -252,13 +253,17 @@ const HelpCenterForumTab = () => {
     });
   }, [activeTab, currentUserId, forums, search]);
 
+  // Keep forum cards in a stable masonry layout so expanding one card
+  // doesn't force its row-mate to reserve empty vertical space.
+  const masonryColumns = useStableMasonry(filteredPosts, 2);
+
   const canCreateForum = Boolean(currentUserId);
 
   const createForumDisabled =
     creatingForum || !questionTitle.trim() || !questionDescription.trim() || !canCreateForum;
 
   return (
-    <section className="mt-5">
+    <section className="mt-5 mx-2">
       <div className="flex items-center justify-between">
         <h2 className="text-[20px] font-semibold text-primary-800 mb-4">Community Forum</h2>
       </div>
@@ -289,7 +294,7 @@ const HelpCenterForumTab = () => {
           type="button"
           disabled={createForumDisabled}
           onClick={handleCreateForum}
-          className="mt-5 px-6 py-2 rounded-full btn-blue-gradient text-white text-[12px] font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+          className="mt-5 px-6 py-2 rounded-full btn-blue-gradient text-white text-[12px] font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {creatingForum ? "Posting..." : "Post Question"}
         </button>
@@ -313,7 +318,7 @@ const HelpCenterForumTab = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search forum..."
-              className="w-full h-12 pl-11 pr-4 rounded-full bg-white/80 border border-white/60 shadow-sm text-[14px] text-[#24467f] placeholder:text-[#24467f]/50 outline-none"
+              className="w-full h-12 pl-11 pr-4 rounded-full bg-white/80 border border-white/60 shadow-sm text-[15px] font-semibold text-[#24467f] placeholder:text-[#24467f]/50 outline-none"
             />
           </div>
         </div>
@@ -328,27 +333,34 @@ const HelpCenterForumTab = () => {
           {forumError}
         </div>
       ) : (
-        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+        <div className="mt-5">
           {filteredPosts.length === 0 ? (
             <div className="text-center text-primary-400 text-sm py-8">No posts found.</div>
           ) : (
-            filteredPosts.map((forum) => (
-              <HelpCenterForumPostCard
-                key={forum._id}
-                forum={forum}
-                currentUserId={currentUserId}
-                currentUserRole={currentUser?.role}
-                canManage={isForumManageable(forum, currentUserId, currentUser?.role)}
-                onAddReply={handleAddReply}
-                onReactReply={handleReactToReply}
-                onUpdateForum={handleUpdateForum}
-                onDeleteForum={handleDeleteForum}
-                isUpdating={updatingForumId === forum._id}
-                isDeleting={deletingForumId === forum._id}
-                isReplying={replyingForumId === forum._id}
-                reactingReplyKey={reactingReplyKey}
-              />
-            ))
+            <div className="stable-masonry-container">
+              {masonryColumns.map((columnItems, columnIndex) => (
+                <div key={columnIndex} className="masonry-column">
+                  {columnItems.map((forum) => (
+                    <div key={forum._id} className="masonry-item">
+                      <HelpCenterForumPostCard
+                        forum={forum}
+                        currentUserId={currentUserId}
+                        currentUserRole={currentUser?.role}
+                        canManage={isForumManageable(forum, currentUserId, currentUser?.role)}
+                        onAddReply={handleAddReply}
+                        onReactReply={handleReactToReply}
+                        onUpdateForum={handleUpdateForum}
+                        onDeleteForum={handleDeleteForum}
+                        isUpdating={updatingForumId === forum._id}
+                        isDeleting={deletingForumId === forum._id}
+                        isReplying={replyingForumId === forum._id}
+                        reactingReplyKey={reactingReplyKey}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           )}
         </div>
       )}

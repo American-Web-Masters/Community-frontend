@@ -11,7 +11,7 @@ export const HelpCenterMainTabs = ({ tabs, activeTab, onTabChange }) => {
             key={tab}
             type="button"
             onClick={() => onTabChange(tab)}
-            className={`min-w-0 flex-1 sm:flex-none justify-center whitespace-nowrap px-3 sm:px-6 py-2.5 rounded-full text-[13px] leading-none transition-all duration-200 inline-flex items-center gap-1.5 ${
+            className={`min-w-0 flex-1 sm:flex-none justify-center whitespace-nowrap px-3 sm:px-6 py-2.5 rounded-full text-[13px] font-semibold leading-none transition-all duration-200 inline-flex items-center gap-1.5 cursor-pointer ${
               isActive
                 ? "btn-blue-gradient text-white"
                 : "text-[#24467f] hover:bg-white/70"
@@ -36,7 +36,7 @@ export const HelpCenterCategoryTabs = ({ tabs, activeTab, onTabChange }) => {
             key={tab}
             type="button"
             onClick={() => onTabChange(tab)}
-            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-[12px] leading-none transition-all duration-200 border ${
+            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-[13px] leading-none transition-all duration-200 border cursor-pointer ${
               isActive
                 ? "btn-blue-gradient text-white border-transparent"
                 : "bg-white/70 text-[#24467f] border-white/70 hover:bg-white"

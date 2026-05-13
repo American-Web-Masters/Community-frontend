@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
 import { useLogout } from "../../hooks/useLogout";
@@ -12,6 +13,8 @@ const Home = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useDispatch();
   const { logout } = useLogout();
+  const [searchParams] = useSearchParams();
+  const highlightedPrayerId = searchParams.get('prayer');
 
   const handleLogout = () => {
     logout();
@@ -105,6 +108,7 @@ const Home = () => {
       onRefresh={refresh}
       onCreatePrayer={handlePrayerCreated}
       useInfiniteScroll={true}
+      highlightedPrayerId={highlightedPrayerId}
     />
   );
 };

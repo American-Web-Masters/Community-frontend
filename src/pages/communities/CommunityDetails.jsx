@@ -197,6 +197,10 @@ const CommunityDetails = () => {
     });
   };
 
+  const handleChatClick = () => {
+    navigate(`/messages?chat=group&community=${encodeURIComponent(id)}`);
+  };
+
   const handleHeaderImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -827,7 +831,7 @@ const CommunityDetails = () => {
 
               {/* Action Buttons */}
               <div className="flex md:items-center space-x-3 flex-wrap gap-y-2">
-                <button className="cursor-pointer btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 justify-center">
+                <button onClick={handleChatClick} className="cursor-pointer btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 justify-center">
                   <span><PiChatText className="w-4 h-4" /></span>
                   <span>Chat</span>
                 </button>
