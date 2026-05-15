@@ -1,12 +1,26 @@
 import { FaCalendarAlt, FaClock, FaBell, FaEdit, FaTrash } from 'react-icons/fa';
 
-function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEvent, formatDate, formatTime, userTimeZone }) {
+function EventCard({
+  events,
+  isOwnerOrModerator,
+  handleEditEvent,
+  handleDeleteEvent,
+  handleStartInnerCircle,
+  handleJoinInnerCircle,
+  formatDate,
+  formatTime,
+  userTimeZone,
+}) {
   return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {events.map((event) => {
             // Use local time values for display, fallback to original if not available
             const displayDate = event.localEventDate || event.eventDate;
             const displayTime = event.localEventTime || event.eventTime;
+            const eventStatus = event.status || 'scheduled';
+            const isScheduled = eventStatus === 'scheduled';
+            const isLive = eventStatus === 'live';
+            const isEnded = eventStatus === 'ended';
             
             return (
             <div 
@@ -72,23 +86,34 @@ function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEv
               {/* Third div: Action Buttons */}
               <div className="px-4 py-3 mt-auto">
                 <div className="flex gap-2 flex-wrap">
-                  <button className="px-4 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors duration-200">
-                    <a
+                  {!isEnded && <a
+                        className="px-4 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors duration-200 inline-flex items-center"
                         href={event.calendarLink}
                         target="_blank"
                         rel="noopener noreferrer"
                         >
                         Add to Calendar
-                        </a>
-                  </button>
-                  {isOwnerOrModerator ? (
-                    <button className="px-4 py-1.5 btn-blue-gradient text-white rounded-full text-sm font-medium  duration-200 shadow-sm">
+                  </a>}
+                  {isScheduled && isOwnerOrModerator && (
+                    <button
+                      onClick={() => handleStartInnerCircle?.(event)}
+                      className="px-4 py-1.5 btn-blue-gradient text-white rounded-full text-sm font-medium duration-200 shadow-sm"
+                    >
                       Start Inner Circle
                     </button>
-                  ) : (
-                    <button className="px-4 py-1.5 bg-green-500 text-white rounded-full text-sm font-medium hover:bg-green-600 transition-colors duration-200 shadow-sm">
+                  )}
+                  {isLive && (
+                    <button
+                      onClick={() => handleJoinInnerCircle?.(event)}
+                      className="px-4 py-1.5 bg-green-500 text-white rounded-full text-sm font-medium hover:bg-green-600 transition-colors duration-200 shadow-sm"
+                    >
                       Join Inner Circle
                     </button>
+                  )}
+                  {isEnded && (
+                    <span className="px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-500 border border-gray-200">
+                      Ended
+                    </span>
                   )}
                 </div>
               </div>

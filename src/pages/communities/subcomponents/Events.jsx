@@ -5,6 +5,7 @@ import { selectUser } from '../../../store/userSlice';
 import CreateEventModal from './CreateEventModal';
 import DeleteEventModal from '../../../components/ui/DeleteEventModal';
 import apiClient from '../../../api/client';
+import { startInnerCircle, joinInnerCircle } from '../../../api/innerCircle';
 import EventCard from './EventCard';
 import toast from 'react-hot-toast';
 
@@ -43,6 +44,7 @@ const Events = ({ community, isOwnerOrModerator }) => {
     try {
       setLoading(true);
       const response = await apiClient.get(`/events/community/${community._id}`);
+      console.log('Fetch events response:', response);
       if (response.data.status === 'success') {
         // Parse and convert UTC times to local timezone for display
         const eventsWithLocalTime = response.data?.data?.events?.map(event => {
@@ -50,6 +52,7 @@ const Events = ({ community, isOwnerOrModerator }) => {
         }) || [];
         
         setEvents(eventsWithLocalTime);
+
       }
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -157,6 +160,56 @@ const Events = ({ community, isOwnerOrModerator }) => {
     setEventToDelete(null);
   };
 
+  const refreshEvents = async () => {
+    try {
+      const response = await apiClient.get(`/events/community/${community._id}`);
+      console.log('Refresh events response:', response);  
+      if (response.data.status === 'success') {
+        const eventsWithLocalTime = response.data?.data?.events?.map(event => {
+          return parseBackendDateTime(event, userTimeZone);
+        }) || [];
+
+        setEvents(eventsWithLocalTime);
+      }
+    } catch (error) {
+      console.error('Error refreshing events:', error);
+    }
+  };
+
+  const handleStartInnerCircle = async (event) => {
+    try {
+      const response = await startInnerCircle(event._id);
+
+      if (response?.status === 'success') {
+        toast.success(response.message || 'Inner Circle started successfully!');
+        await refreshEvents();
+        return;
+      }
+
+      toast.error(response?.message || 'Failed to start Inner Circle.');
+    } catch (error) {
+      console.error('Error starting Inner Circle:', error);
+      toast.error(error?.response?.data?.message || 'Failed to start Inner Circle.');
+    }
+  };
+
+  const handleJoinInnerCircle = async (event) => {
+    try {
+      const response = await joinInnerCircle(event._id);
+
+      if (response?.status === 'success') {
+        toast.success(response.message || 'Joined Inner Circle successfully!');
+        await refreshEvents();
+        return;
+      }
+
+      toast.error(response?.message || 'Failed to join Inner Circle.');
+    } catch (error) {
+      console.error('Error joining Inner Circle:', error);
+      toast.error(error?.response?.data?.message || 'Failed to join Inner Circle.');
+    }
+  };
+
   const formatDate = (dateString, timeString = null) => {
     if (!userTimeZone || !dateString) return 'Loading...';
     return formatLocalDate(dateString, timeString, userTimeZone);
@@ -198,6 +251,8 @@ const Events = ({ community, isOwnerOrModerator }) => {
           isOwnerOrModerator={isOwnerOrModerator} 
           handleEditEvent={handleEditEvent} 
           handleDeleteEvent={handleDeleteClick} 
+          handleStartInnerCircle={handleStartInnerCircle}
+          handleJoinInnerCircle={handleJoinInnerCircle}
           formatDate={formatDate} 
           formatTime={formatTime}
           userTimeZone={userTimeZone}
