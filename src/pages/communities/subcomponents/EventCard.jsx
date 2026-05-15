@@ -71,10 +71,7 @@ function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEv
 
               {/* Third div: Action Buttons */}
               <div className="px-4 py-3 mt-auto">
-                <div className="flex gap-3">
-                  <button className="btn-blue-gradient text-white px-4 py-1.5 rounded-full text-sm font-medium hover:shadow-md transition-shadow duration-200">
-                    Interested
-                  </button>
+                <div className="flex gap-2 flex-wrap">
                   <button className="px-4 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors duration-200">
                     <a
                         href={event.calendarLink}
@@ -84,6 +81,15 @@ function EventCard({ events, isOwnerOrModerator, handleEditEvent, handleDeleteEv
                         Add to Calendar
                         </a>
                   </button>
+                  {isOwnerOrModerator ? (
+                    <button className="px-4 py-1.5 btn-blue-gradient text-white rounded-full text-sm font-medium  duration-200 shadow-sm">
+                      Start Inner Circle
+                    </button>
+                  ) : (
+                    <button className="px-4 py-1.5 bg-green-500 text-white rounded-full text-sm font-medium hover:bg-green-600 transition-colors duration-200 shadow-sm">
+                      Join Inner Circle
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
