@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {  FaCalendarAlt} from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../../store/userSlice';
@@ -20,6 +21,7 @@ import { DateTime } from 'luxon';
 
 const Events = ({ community, isOwnerOrModerator }) => {
   const user = useSelector(selectUser);
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -194,20 +196,7 @@ const Events = ({ community, isOwnerOrModerator }) => {
   };
 
   const handleJoinInnerCircle = async (event) => {
-    try {
-      const response = await joinInnerCircle(event._id);
-
-      if (response?.status === 'success') {
-        toast.success(response.message || 'Joined Inner Circle successfully!');
-        await refreshEvents();
-        return;
-      }
-
-      toast.error(response?.message || 'Failed to join Inner Circle.');
-    } catch (error) {
-      console.error('Error joining Inner Circle:', error);
-      toast.error(error?.response?.data?.message || 'Failed to join Inner Circle.');
-    }
+    navigate(`/messages?chat=inner-circle&community=${community._id}&join=true`);
   };
 
   const formatDate = (dateString, timeString = null) => {
