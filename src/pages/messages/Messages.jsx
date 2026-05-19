@@ -303,6 +303,7 @@ const Messages = () => {
                   roomId={innerCircleRoomId}
                   initialToken={innerCircleToken}
                   onClose={handleCloseInnerCircle}
+                  allUsers={users}
                 />
               )}
             </div>
