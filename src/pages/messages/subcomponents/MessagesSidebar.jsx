@@ -116,31 +116,28 @@ const MessagesSidebar = ({
               <div className="absolute right-0 top-12 z-20 w-36 rounded-xl border border-gray-200 bg-white shadow-lg p-1.5">
                 <button
                   onClick={() => handleModeSwitch('direct')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                    !isGroupMode
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${!isGroupMode
                       ? 'bg-blue-50 text-[#03045E]'
                       : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   Direct Chats
                 </button>
                 <button
                   onClick={() => handleModeSwitch('group')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                    isGroupMode
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${isGroupMode
                       ? 'bg-blue-50 text-[#03045E]'
                       : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   Group Chats
                 </button>
                 <button
                   onClick={() => handleModeSwitch('inner-circle')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                    isInnerCircleMode
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${isInnerCircleMode
                       ? 'bg-blue-50 text-[#03045E]'
                       : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   Inner Circle
                 </button>
@@ -156,11 +153,10 @@ const MessagesSidebar = ({
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 ${
-                  activeTab === tab
+                className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 ${activeTab === tab
                     ? "btn-blue-gradient text-white shadow-sm"
                     : "bg-white/70 text-gray-700 hover:bg-white/90"
-                }`}
+                  }`}
               >
                 {tab}
               </button>
@@ -200,13 +196,11 @@ const MessagesSidebar = ({
                       <div
                         key={chat._id}
                         onClick={() => setActiveChat(chat)}
-                        className={`flex items-start space-x-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 group relative ${
-                          activeChat?._id === chat._id
+                        className={`flex items-start space-x-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 group relative ${activeChat?._id === chat._id
                             ? "bg-white shadow-sm"
                             : "hover:bg-white/50"
-                        } ${
-                          isPinned ? "border-l-2 border-blue-500" : ""
-                        }`}
+                          } ${isPinned ? "border-l-2 border-blue-500" : ""
+                          }`}
                       >
                         <div className="relative">
                           <img
@@ -264,11 +258,10 @@ const MessagesSidebar = ({
                       <div
                         key={communityId}
                         onClick={() => setActiveChat(community)}
-                        className={`flex items-start space-x-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 group relative ${
-                          activeChat?._id === communityId
+                        className={`flex items-start space-x-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 group relative ${activeChat?._id === communityId
                             ? 'bg-white shadow-sm'
                             : 'hover:bg-white/50'
-                        }`}
+                          }`}
                       >
                         <div className="relative">
                           <img
@@ -306,15 +299,15 @@ const MessagesSidebar = ({
                     const eventName = community.event?.eventName || 'Live Event';
                     const eventId = community.event?._id;
                     const isJoining = joiningInnerCircleId === eventId;
+                    const isJoined = activeChat?.event?._id === eventId;
 
                     return (
                       <div
                         key={`inner-circle-${eventId || communityId}`}
-                        className={`flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 group relative ${
-                          activeChat?.event?._id === eventId
+                        className={`flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 group relative ${activeChat?.event?._id === eventId
                             ? 'bg-white shadow-sm ring-1 ring-red-200'
                             : 'hover:bg-white/50 ring-1 ring-transparent hover:ring-red-100'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center space-x-3 flex-1 min-w-0">
                           <div className="relative">
@@ -342,12 +335,15 @@ const MessagesSidebar = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onJoinInnerCircle?.(community);
+                            if (!isJoined) onJoinInnerCircle?.(community);
                           }}
-                          disabled={isJoining}
-                          className="ml-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded-full shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                          disabled={isJoining || isJoined}
+                          className={`ml-2 px-3 py-1.5 text-white text-xs font-semibold rounded-full shadow-sm transition-colors cursor-pointer ${isJoined
+                              ? 'bg-green-500'
+                              : 'bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed'
+                            }`}
                         >
-                          {isJoining ? 'Joining...' : 'Join'}
+                          {isJoining ? 'Joining...' : isJoined ? 'Joined' : 'Join'}
                         </button>
                       </div>
                     );

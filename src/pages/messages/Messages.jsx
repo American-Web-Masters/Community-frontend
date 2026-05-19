@@ -14,7 +14,7 @@ import MessageInput from './subcomponents/MessageInput';
 import InnerCircleRoom from './subcomponents/InnerCircleRoom';
 
 const Messages = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     user,
     isLoggedIn,
@@ -77,13 +77,15 @@ const Messages = () => {
   const handleCloseInnerCircle = () => {
     resetInnerCircleSession();
     setActiveChat(null);
-    setChatMode('group');
+    setChatMode('inner-circle');
+    setSearchParams(new URLSearchParams({ chat: 'inner-circle' }), { replace: true });
   };
 
   useEffect(() => {
     const chat = searchParams.get('chat');
     const targetUserId = searchParams.get('user');
     const targetCommunityId = searchParams.get('community');
+    const autoJoin = searchParams.get('join') === 'true';
 
     if (chat === 'direct' && targetUserId && users.length > 0) {
       const targetUser = users.find((item) => item._id === targetUserId);
@@ -102,13 +104,39 @@ const Messages = () => {
         setChatMode('group');
         setActiveChat(targetCommunity);
       }
+      return;
+    }
+
+    if (chat === 'inner-circle') {
+      setChatMode('inner-circle');
+      if (targetCommunityId && liveInnerCircles.length > 0) {
+        const targetCommunity = liveInnerCircles.find(
+          (item) => item._id === targetCommunityId || item.communityId === targetCommunityId
+        );
+        if (targetCommunity) {
+          if (autoJoin && targetCommunity.event?._id !== innerCircleRoomId && targetCommunity.event?._id !== joiningInnerCircleId) {
+            handleJoinInnerCircle(targetCommunity);
+            setSearchParams((prev) => {
+              const p = new URLSearchParams(prev);
+              p.delete('join');
+              return p;
+            }, { replace: true });
+          } else if (!autoJoin) {
+            setActiveChat(targetCommunity);
+          }
+        }
+      }
     }
   }, [
     searchParams,
     users,
     groupConversations,
+    liveInnerCircles,
     setChatMode,
     setActiveChat,
+    innerCircleRoomId,
+    joiningInnerCircleId,
+    setSearchParams,
   ]);
 
   if (!isLoggedIn || !user) {
