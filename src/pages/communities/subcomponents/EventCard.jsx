@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { FaCalendarAlt, FaClock, FaBell, FaEdit, FaTrash } from 'react-icons/fa';
 
 function EventCard({
@@ -11,6 +12,24 @@ function EventCard({
   formatTime,
   userTimeZone,
 }) {
+  const [pendingAction, setPendingAction] = useState({ eventId: null, type: null });
+
+  const runAction = async (event, type, action) => {
+    if (!action) return;
+
+    setPendingAction({ eventId: event._id, type });
+
+    try {
+      await action(event);
+    } finally {
+      setPendingAction((current) => (
+        current.eventId === event._id && current.type === type
+          ? { eventId: null, type: null }
+          : current
+      ));
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {events.map((event) => {
@@ -25,12 +44,12 @@ function EventCard({
         return (
           <div
             key={event._id}
-            className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden border border-gray-100 flex flex-col"
+            className="bg-white rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ease-out overflow-hidden border border-gray-100 flex flex-col"
           >
             {/* First div: Calendar + Event Info + Icons */}
             <div className="px-4 py-3 flex">
               {/* Calendar Icon */}
-              <div className="w-10 h-10 btn-blue-gradient rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-gradient-to-br from-slate-700 via-zinc-800 to-neutral-900 rounded-lg flex items-center justify-center flex-shrink-0">
                 <FaCalendarAlt className="w-5 h-5 text-white" />
               </div>
 
@@ -87,7 +106,7 @@ function EventCard({
             <div className="px-4 py-3 mt-auto">
               <div className="flex gap-2 flex-wrap">
                 {!isEnded && <a
-                  className="px-4 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors duration-200 inline-flex items-center"
+                  className="px-4 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-50 hover:border-sky-300 transition-all duration-300 ease-out inline-flex items-center cursor-pointer"
                   href={event.calendarLink}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -96,18 +115,40 @@ function EventCard({
                 </a>}
                 {isScheduled && isOwnerOrModerator && (
                   <button
-                    onClick={() => handleStartInnerCircle?.(event)}
-                    className="px-4 py-1.5 btn-blue-gradient text-white rounded-full text-sm font-medium duration-200 shadow-sm"
+                    onClick={() => runAction(event, 'start', handleStartInnerCircle)}
+                    disabled={pendingAction.eventId === event._id && pendingAction.type === 'start'}
+                    className="group px-4 py-1.5 rounded-full text-sm font-medium text-white bg-gradient-to-r from-emerald-500 via-teal-500 to-lime-600 shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-out disabled:opacity-80 disabled:cursor-wait disabled:hover:scale-100 inline-flex items-center gap-2 cursor-pointer"
                   >
-                    Start Inner Circle
+                    {pendingAction.eventId === event._id && pendingAction.type === 'start' ? (
+                      <>
+                        <span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                        Starting...
+                      </>
+                    ) : (
+                      <>
+                        <span className="transition-transform duration-300 group-hover:translate-x-0.5 cursor-pointer">Start Inner Circle</span>
+                        <span className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
+                      </>
+                    )}
                   </button>
                 )}
                 {isLive && (
                   <button
-                    onClick={() => handleJoinInnerCircle?.(event)}
-                    className="px-4 py-1.5 bg-green-500 text-white rounded-full text-sm font-medium hover:bg-green-600 transition-colors duration-200 shadow-sm  cursor-pointer"
+                    onClick={() => runAction(event, 'join', handleJoinInnerCircle)}
+                    disabled={pendingAction.eventId === event._id && pendingAction.type === 'join'}
+                    className="group px-4 py-1.5 rounded-full text-sm font-medium text-white bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-out disabled:opacity-80 disabled:cursor-wait disabled:hover:scale-100 inline-flex items-center gap-2"
                   >
-                    Join Inner Circle
+                    {pendingAction.eventId === event._id && pendingAction.type === 'join' ? (
+                      <>
+                        <span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                        Joining...
+                      </>
+                    ) : (
+                      <>
+                        <span className="cursor-pointer">Join Inner Circle</span>
+                        <span className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
+                      </>
+                    )}
                   </button>
                 )}
                 {isEnded && (
