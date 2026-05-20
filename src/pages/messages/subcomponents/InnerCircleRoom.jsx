@@ -607,7 +607,7 @@ export const InnerCircleRoom = ({ activeChat, roomId, initialToken, onClose, all
         await liveKitService.connect(livekitUrl, token);
       } catch(err) {
         console.error("Failed to connect to LiveKit", err);
-        setError("Failed to connect to the voice room.");
+        setError(`Failed to connect to the voice room: ${err.message || 'Unknown error'}`);
       }
     };
     connectLiveKit();
@@ -625,11 +625,8 @@ export const InnerCircleRoom = ({ activeChat, roomId, initialToken, onClose, all
     } catch (err) {
       console.error(err);
     } finally {
-      await liveKitService.disconnect();
-      setToken(null);
-      setRoomState(createEmptyRoomState());
-      setError(null);
       onClose();
+      liveKitService.disconnect().catch(console.error);
     }
   }, [resolvedRoomId, socket, onClose]);
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import { IoMenu } from "react-icons/io5";
 import { IoPeopleOutline } from "react-icons/io5";
@@ -74,11 +74,19 @@ const Messages = () => {
     formatTimestamp,
   } = useMessagesController();
 
+  const justClosedRef = useRef(false);
+
   const handleCloseInnerCircle = () => {
+    justClosedRef.current = true;
     resetInnerCircleSession();
     setActiveChat(null);
     setChatMode('inner-circle');
     setSearchParams(new URLSearchParams({ chat: 'inner-circle' }), { replace: true });
+    
+    // Allow react-router to finish its update before re-enabling URL sync
+    setTimeout(() => {
+      justClosedRef.current = false;
+    }, 100);
   };
 
   useEffect(() => {
@@ -109,6 +117,10 @@ const Messages = () => {
 
     if (chat === 'inner-circle') {
       setChatMode('inner-circle');
+      
+      // Ignore URL sync if we just clicked "Leave" to prevent stale searchParams from restoring the chat
+      if (justClosedRef.current) return;
+
       if (targetCommunityId && liveInnerCircles.length > 0) {
         const targetCommunity = liveInnerCircles.find(
           (item) => item._id === targetCommunityId || item.communityId === targetCommunityId
