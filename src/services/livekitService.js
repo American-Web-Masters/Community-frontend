@@ -74,11 +74,22 @@ class LiveKitService {
   }
 
   async connect(url, token) {
+    if (this.room && this.room.state === 'connected' && this.currentToken === token) {
+      return true; // Already connected with this token
+    }
+    
+    this.currentToken = token;
+
     if (!this.room) {
       this.createRoom();
     }
     
-    // Disconnect if already connected
+    if (this.room.state === 'connecting') {
+      console.warn("Room is already connecting, ignoring duplicate connect call.");
+      return true;
+    }
+
+    // Disconnect if already connected with a different token
     if (this.room.state === 'connected') {
       await this.room.disconnect();
     }
@@ -103,24 +114,27 @@ class LiveKitService {
     if (!this.room || !this.room.localParticipant) {
       throw new Error("Room is not fully connected yet.");
     }
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch (err) {
-      console.error("MIC PERMISSION DENIED:", err);
-      throw new Error("Microphone permission denied by browser. Please allow microphone access.");
-    }
     
     try {
       await this.room.localParticipant.setMicrophoneEnabled(true);
+      this.notifyListeners();
     } catch (err) {
       console.error("LIVEKIT PUBLISH ERROR:", err);
+      if (err.message && err.message.includes("permission")) {
+        throw new Error("Microphone permission denied by browser.");
+      }
       throw new Error(`Failed to publish microphone: ${err.message}`);
     }
   }
 
   async disableMicrophone() {
     if (!this.room || !this.room.localParticipant) return;
-    await this.room.localParticipant.setMicrophoneEnabled(false);
+    try {
+      await this.room.localParticipant.setMicrophoneEnabled(false);
+      this.notifyListeners();
+    } catch (err) {
+      console.error("Failed to disable mic:", err);
+    }
   }
 
   subscribe(callback) {
