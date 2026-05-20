@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { LiveKitRoom, RoomAudioRenderer, useLocalParticipant, useParticipants, AudioTrack } from '@livekit/components-react';
-import { Track } from 'livekit-client';
 import '@livekit/components-styles';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../../store/userSlice';
 import { useSocket } from '../../../hooks/useSocket';
 import * as innerCircleApi from '../../../api/innerCircle';
 import toast from 'react-hot-toast';
+import liveKitService from '../../../services/livekitService';
 
 // Simple Avatar Component
 const Avatar = ({ name, profilePicture, size = "md", isSpeaking = false }) => {
@@ -122,6 +121,8 @@ const inferIsSpeaker = (roomState, currentUserId, hostId) => {
   if (!currentUserId) return false;
   const me = String(currentUserId);
 
+  if (hostId && String(hostId) === me) return true;
+
   const isListedSpeaker = roomState.speakers.some(
     (speaker) => String(speaker.userId) === me,
   );
@@ -143,6 +144,32 @@ const getEventTargetUserId = (payload) =>
   payload?.participantId ||
   null;
 
+// Hook to bridge LiveKitService state to React
+const useLiveKit = () => {
+  const [state, setState] = useState(liveKitService.getState() || {
+    connectionState: 'disconnected',
+    participants: [],
+    localParticipant: null,
+    activeSpeakers: [],
+    isMicEnabled: false
+  });
+
+  useEffect(() => {
+    const unsubscribe = liveKitService.subscribe((newState) => {
+      setState(newState || {
+        connectionState: 'disconnected',
+        participants: [],
+        localParticipant: null,
+        activeSpeakers: [],
+        isMicEnabled: false
+      });
+    });
+    return unsubscribe;
+  }, []);
+
+  return state;
+};
+
 // Main LiveKit UI wrapper
 const InnerCircleUI = ({
   roomId,
@@ -160,10 +187,21 @@ const InnerCircleUI = ({
   listeners,
 }) => {
   const user = useSelector(selectUser);
-  const { localParticipant } = useLocalParticipant();
-  const allParticipants = useParticipants();
-  const [isMuted, setIsMuted] = useState(false);
+  const lkState = useLiveKit();
+  const allParticipants = useMemo(() => {
+    const arr = [...(lkState.participants || [])];
+    if (lkState.localParticipant) arr.push(lkState.localParticipant);
+    return arr;
+  }, [lkState.participants, lkState.localParticipant]);
+
+  const activeSpeakersMap = useMemo(() => {
+    const map = new Set();
+    (lkState.activeSpeakers || []).forEach(speaker => map.add(String(speaker.identity)));
+    return map;
+  }, [lkState.activeSpeakers]);
+
   const [hasRaisedHand, setHasRaisedHand] = useState(false);
+  const canSpeak = isHost || isSpeaker;
 
   const hostParticipant = useMemo(() => {
     if (!hostId) return null;
@@ -172,15 +210,11 @@ const InnerCircleUI = ({
     );
   }, [hostId, speakers, listeners]);
 
-  console.log(hostParticipant)
   const hostDisplayName = hostParticipant?.name || hostName || "Host";
   const hostIsSpeaking = useMemo(() => {
     if (!hostId) return false;
-    const rtcParticipant = allParticipants.find(
-      (participant) => String(participant.identity) === String(hostId),
-    );
-    return Boolean(rtcParticipant?.isSpeaking);
-  }, [allParticipants, hostId]);
+    return activeSpeakersMap.has(String(hostId));
+  }, [activeSpeakersMap, hostId]);
 
   const stageSpeakers = useMemo(
     () => speakers.filter((speaker) => String(speaker.userId) !== String(hostId)),
@@ -192,18 +226,29 @@ const InnerCircleUI = ({
     [listeners, hostId],
   );
 
-  // Sync mic state with localParticipant
+  // Sync mic state
   useEffect(() => {
-    if (!localParticipant) return;
+    const syncMic = async () => {
+      // Only attempt to sync mic if the room is fully connected
+      if (lkState.connectionState !== 'connected') return;
 
-    if (isSpeaker) {
-      localParticipant.setMicrophoneEnabled(!isMuted).catch(console.error);
-      return;
-    }
-
-    if (isMuted) setIsMuted(false);
-    localParticipant.setMicrophoneEnabled(false).catch(console.error);
-  }, [isSpeaker, isMuted, localParticipant]);
+      if (canSpeak) {
+        if (!lkState.isMicEnabled) {
+          try {
+            await liveKitService.enableMicrophone();
+          } catch(err) {
+            console.error("Failed to enable mic:", err);
+            toast.error(err.message || "Failed to enable mic");
+          }
+        }
+      } else {
+        if (lkState.isMicEnabled) {
+          await liveKitService.disableMicrophone();
+        }
+      }
+    };
+    syncMic();
+  }, [canSpeak, lkState.isMicEnabled, lkState.connectionState]);
 
   // Check if I'm in queue
   useEffect(() => {
@@ -218,7 +263,17 @@ const InnerCircleUI = ({
     );
   }, [queue, user?._id]);
 
-  const toggleMute = () => setIsMuted(prev => !prev);
+  const toggleMute = async () => {
+    if (lkState.isMicEnabled) {
+      await liveKitService.disableMicrophone();
+    } else {
+      try {
+        await liveKitService.enableMicrophone();
+      } catch (err) {
+        toast.error(err.message || "Could not access microphone");
+      }
+    }
+  };
 
   const handleRaiseHand = async () => {
     try {
@@ -273,27 +328,12 @@ const InnerCircleUI = ({
   };
 
   const handleLeaveRoom = async () => {
-    if (localParticipant) {
-      await localParticipant.setMicrophoneEnabled(false).catch(console.error);
-    }
+    await liveKitService.disableMicrophone();
     await onLeave();
   };
 
   return (
     <div className="flex flex-col h-full bg-gray-50 p-4 rounded-xl shadow-inner relative">
-      <RoomAudioRenderer />
-
-      {/* Background tracks rendering for remote speakers */}
-      <div className="hidden">
-        {allParticipants.map((p) => {
-          const audioTrack = p.getTrackPublication(Track.Source.Microphone);
-          if (audioTrack && audioTrack.isSubscribed && audioTrack.track) {
-            return <AudioTrack key={p.identity} trackRef={{ participant: p, source: Track.Source.Microphone, publication: audioTrack }} />;
-          }
-          return null;
-        })}
-      </div>
-
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-2 pb-4 border-b border-gray-200">
         <div>
@@ -313,6 +353,9 @@ const InnerCircleUI = ({
                 You are host
               </span>
             )}
+            <span className="ml-2 text-xs uppercase bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
+              {lkState.connectionState}
+            </span>
           </div>
         </div>
         <button
@@ -325,9 +368,9 @@ const InnerCircleUI = ({
       </div>
 
       {/* Main Grid */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3 overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 overflow-hidden">
         {/* Stage / Speakers */}
-        <div className="col-span-1 md:col-span-2 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="col-span-1 md:col-span-1 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-4 bg-gray-50 border-b border-gray-100">
             <div className="text-xs uppercase tracking-wide text-gray-500">Host</div>
             <div className="mt-3 flex items-center gap-3">
@@ -353,10 +396,7 @@ const InnerCircleUI = ({
               <div className="text-sm text-gray-400 mt-6">No one else is on stage yet.</div>
             ) : (
               stageSpeakers.map((s) => {
-                const rtcParticipant = allParticipants.find(
-                  (p) => String(p.identity) === String(s.userId),
-                );
-                const isParticipantSpeaking = rtcParticipant?.isSpeaking || false;
+                const isParticipantSpeaking = activeSpeakersMap.has(String(s.userId));
                 const isMe = String(s.userId) === String(user?._id);
                 const speakerName = s.name || s.username || s.userName || "Speaker";
 
@@ -453,12 +493,12 @@ const InnerCircleUI = ({
       {/* Control Bar */}
       <div className="mt-6 flex flex-col sm:flex-row justify-center items-center gap-3 py-4 bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="flex gap-4">
-          {isSpeaker ? (
+            {canSpeak ? (
             <button
               onClick={toggleMute}
-              className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold text-white transition ${isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-800 hover:bg-gray-900'}`}
+              className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold text-white transition ${!lkState.isMicEnabled ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-800 hover:bg-gray-900'}`}
             >
-              {isMuted ? (
+              {!lkState.isMicEnabled ? (
                 <>
                   <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" height="1.2em" width="1.2em" xmlns="http://www.w3.org/2000/svg"><path d="M633.82 458.1l-157.8-121.38c22.88-29.77 35.98-67.22 35.98-112.72V192c0-17.67-14.32-32-31.98-32s-31.98 14.33-31.98 32v32c0 23.42-6.52 45.03-17.69 63.38L384.85 244.7c1.37-6.08 2.13-12.3 2.13-18.7V64c0-35.35-28.65-64-64-64s-64 28.65-64 64v107.03L38.18 10.63c-12.5-9.63-30.73-7.25-40.35 5.25-9.62 12.5-7.25 30.73 5.25 40.35l582.49 448.2c12.49 9.61 30.73 7.23 40.35-5.27 9.63-12.48 7.24-30.72-5.26-40.35M310.87 348.87l-44.57-34.28C261.2 316.59 256.63 318 251.98 318c-3.15 0-6.19-.52-9.15-1.25L173.34 263.3V192c0-17.67-14.33-32-31.98-32s-31.98 14.33-31.98 32v32c0 74.57 51.13 136.95 120.6 154.26V432H161.98c-17.67 0-31.98 14.33-31.98 32s14.32 32 31.98 32h206.5c1.86 0 3.65-.28 5.43-.53l-63.04-48.49V378.2c49.25-10.74 88.54-47.56 100-95.05L310.87 348.87z"></path></svg>
                   Unmute
@@ -558,6 +598,21 @@ export const InnerCircleRoom = ({ activeChat, roomId, initialToken, onClose, all
     fetchState();
   }, [resolvedRoomId, token, socket, fetchState]);
 
+  // Handle LiveKit connection explicitly whenever token changes
+  useEffect(() => {
+    if (!token) return;
+    const connectLiveKit = async () => {
+      try {
+        const livekitUrl = import.meta.env.VITE_LIVEKIT_URL;
+        await liveKitService.connect(livekitUrl, token);
+      } catch(err) {
+        console.error("Failed to connect to LiveKit", err);
+        setError("Failed to connect to the voice room.");
+      }
+    };
+    connectLiveKit();
+  }, [token]);
+
   // Handle Unmount / Leave
   const handleLeave = useCallback(async () => {
     if (!resolvedRoomId) {
@@ -570,12 +625,19 @@ export const InnerCircleRoom = ({ activeChat, roomId, initialToken, onClose, all
     } catch (err) {
       console.error(err);
     } finally {
+      await liveKitService.disconnect();
       setToken(null);
       setRoomState(createEmptyRoomState());
       setError(null);
       onClose();
     }
   }, [resolvedRoomId, socket, onClose]);
+
+  useEffect(() => {
+    return () => {
+      liveKitService.disconnect();
+    };
+  }, []);
 
   // Socket event listeners
   useEffect(() => {
@@ -618,27 +680,40 @@ export const InnerCircleRoom = ({ activeChat, roomId, initialToken, onClose, all
       fetchState();
     };
 
-    const onSpeakerApproved = (data) => {
+    const onSpeakerApproved = async (data) => {
       if (!isCurrentRoomEvent(data)) return;
       const targetUserId = getEventTargetUserId(data);
       const isForCurrentUser =
         !targetUserId || (user?._id && String(targetUserId) === String(user._id));
 
       if (isForCurrentUser && data.token) {
-        setToken(data.token);
+        // According to checklist:
+        // 1. disconnect existing room
+        // 2. reconnect using new token
+        // 3. enable microphone
+        await liveKitService.disconnect();
+        setToken(data.token); // Will trigger useEffect to reconnect
+        
         toast.success("You are now a speaker!");
       }
       fetchState();
     };
 
-    const onSpeakerDemoted = (data) => {
+    const onSpeakerDemoted = async (data) => {
       if (!isCurrentRoomEvent(data)) return;
       const targetUserId = getEventTargetUserId(data);
       const isForCurrentUser =
         !targetUserId || (user?._id && String(targetUserId) === String(user._id));
 
       if (isForCurrentUser && data.token) {
-        setToken(data.token);
+        // According to checklist:
+        // 1. disable mic
+        // 2. disconnect
+        // 3. reconnect with listener token
+        await liveKitService.disableMicrophone();
+        await liveKitService.disconnect();
+        setToken(data.token); // Will trigger useEffect to reconnect
+
         toast.info("You've been moved to listeners.");
       }
       fetchState();
@@ -683,13 +758,7 @@ export const InnerCircleRoom = ({ activeChat, roomId, initialToken, onClose, all
   }
 
   return (
-    <LiveKitRoom
-      serverUrl={import.meta.env.VITE_LIVEKIT_URL}
-      token={token}
-      connect={true}
-      data-lk-theme="default"
-      className="w-full flex-1"
-    >
+    <div className="w-full flex-1">
       <InnerCircleUI
         roomId={resolvedRoomId}
         activeChat={activeChat}
@@ -707,7 +776,7 @@ export const InnerCircleRoom = ({ activeChat, roomId, initialToken, onClose, all
         speakers={roomState.speakers}
         listeners={roomState.listeners}
       />
-    </LiveKitRoom>
+    </div>
   );
 };
 
