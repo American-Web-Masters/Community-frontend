@@ -12,11 +12,11 @@ const Avatar = ({ name, profilePicture, size = "md", isSpeaking = false }) => {
   const sizeClasses = {
     sm: "w-8 h-8 text-xs",
     md: "w-12 h-12 text-sm",
-    lg: "w-20 h-20 text-xl",
+    lg: "w-20 h-20 text-2xl",
   };
 
   return (
-    <div className={`relative rounded-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold overflow-hidden ${sizeClasses[size]} ${isSpeaking ? 'ring-4 ring-green-500 ring-opacity-50 animate-pulse' : 'ring-2 ring-gray-200'}`}>
+    <div className={`relative rounded-full flex items-center justify-center font-bold overflow-hidden shadow-sm transition-all duration-300 ${sizeClasses[size]} ${isSpeaking ? 'ring-4 ring-indigo-500/60 shadow-[0_0_15px_rgba(99,102,241,0.5)] scale-105' : 'ring-2 ring-white/80'} bg-gradient-to-br from-indigo-500 to-sky-400 text-white`}>
       {profilePicture ? (
         <img src={profilePicture} alt={name} className="w-full h-full object-cover" />
       ) : (
@@ -333,47 +333,61 @@ const InnerCircleUI = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 p-4 rounded-xl shadow-inner relative">
+    <div className="flex flex-col h-full bg-gradient-to-br from-[#eff3f9] via-white to-[#f0f4fd] p-4 sm:p-5 rounded-2xl relative overflow-hidden shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
+      
+      {/* Decorative background blobs */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-sky-400/10 rounded-full blur-3xl pointer-events-none translate-y-1/3 -translate-x-1/3"></div>
+      
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-2 pb-4 border-b border-gray-200">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-gray-200/60 relative z-10">
         <div>
-          <h2 className="text-xl font-extrabold text-gray-800 flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-            {activeChat?.name} - Inner Circle
-          </h2>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-            <span className="text-gray-500">
-              {speakers.length + listeners.length} Participants
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">
+              {activeChat?.name}
+            </h2>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-100/80 backdrop-blur-sm text-red-600 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm border border-red-200">
+              <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+              Live
+            </div>
+          </div>
+          
+          <div className="mt-1.5 flex flex-wrap items-center gap-2.5 text-[13px]">
+            <span className="font-medium text-slate-500 flex items-center gap-1.5 bg-white/60 px-2 py-0.5 rounded-md border border-slate-100">
+              <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M96 224c35.3 0 64-28.7 64-64s-28.7-64-64-64-64 28.7-64 64 28.7 64 64 64zm448 0c35.3 0 64-28.7 64-64s-28.7-64-64-64-64 28.7-64 64 28.7 64 64 64zm32 32h-64c-17.6 0-33.5 7.1-45.1 18.6 40.3 22.1 68.9 62 75.1 109.4h66c17.7 0 32-14.3 32-32v-32c0-35.3-28.7-64-64-64zm-256 0c61.9 0 112-50.1 112-112S381.9 32 320 32 208 82.1 208 144s50.1 112 112 112zm76.8 32h-8.3c-20.8 10-43.9 16-68.5 16s-47.6-6-68.5-16h-8.3C179.6 288 128 339.6 128 403.2V432c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48v-28.8c0-63.6-51.6-115.2-115.2-115.2zm-223.7-13.4C161.5 263.1 145.6 256 128 256H64c-35.3 0-64 28.7-64 64v32c0 17.7 14.3 32 32 32h66.1c6.2-47.4 34.8-87.3 75.1-109.4z"></path></svg>
+              {speakers.length + listeners.length}
             </span>
-            <span className="text-gray-400">•</span>
-            <span className="text-gray-500">Host</span>
-            <span className="font-semibold text-gray-700">{hostDisplayName}</span>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-500">Host: <span className="font-semibold text-slate-700">{hostDisplayName}</span></span>
             {isHost && (
-              <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-semibold">
+              <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-semibold border border-indigo-200">
                 You are host
               </span>
             )}
-            <span className="ml-2 text-xs uppercase bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
+            <span className={`ml-auto text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${lkState.connectionState === 'connected' ? 'bg-green-100 text-green-600 border border-green-200' : 'bg-slate-200 text-slate-600'}`}>
               {lkState.connectionState}
             </span>
           </div>
         </div>
         <button
           onClick={handleLeaveRoom}
-          className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-600 rounded-full font-semibold hover:bg-red-200 transition cursor-pointer"
+          className="flex items-center gap-2 px-5 py-2.5 bg-white border border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-50 hover:border-red-300 shadow-sm transition-all cursor-pointer group"
         >
-          <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M497 273L329 441c-15 15-41 4.5-41-17v-96H152c-13.3 0-24-10.7-24-24v-96c0-13.3 10.7-24 24-24h136V88c0-21.4 25.9-32 41-17l168 168c9.3 9.4 9.3 24.6 0 34zM192 436v-40c0-6.6-5.4-12-12-12H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h84c6.6 0 12-5.4 12-12V76c0-6.6-5.4-12-12-12H96c-53 0-96 43-96 96v256c0 53 43 96 96 96h84c6.6 0 12-5.4 12-12z"></path></svg>
+          <svg className="transition-transform group-hover:-translate-x-0.5" stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1.1em" width="1.1em" xmlns="http://www.w3.org/2000/svg"><path d="M497 273L329 441c-15 15-41 4.5-41-17v-96H152c-13.3 0-24-10.7-24-24v-96c0-13.3 10.7-24 24-24h136V88c0-21.4 25.9-32 41-17l168 168c9.3 9.4 9.3 24.6 0 34zM192 436v-40c0-6.6-5.4-12-12-12H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h84c6.6 0 12-5.4 12-12V76c0-6.6-5.4-12-12-12H96c-53 0-96 43-96 96v256c0 53 43 96 96 96h84c6.6 0 12-5.4 12-12z"></path></svg>
           Leave
         </button>
       </div>
 
-      {/* Main Grid */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 overflow-hidden">
-        {/* Stage / Speakers */}
-        <div className="col-span-1 md:col-span-1 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-4 bg-gray-50 border-b border-gray-100">
-            <div className="text-xs uppercase tracking-wide text-gray-500">Host</div>
-            <div className="mt-3 flex items-center gap-3">
+      {/* Main Layout Area - using min-h-0 to allow scrolling */}
+      <div className="flex-1 flex flex-col md:flex-row gap-4 min-h-0 relative z-10">
+        
+        {/* Stage Column */}
+        <div className="flex-[3] flex flex-col min-h-0 bg-white/80 backdrop-blur-md rounded-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+          
+          {/* Host Banner */}
+          <div className="p-4 bg-gradient-to-r from-indigo-50/50 to-transparent border-b border-slate-100">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-2">Host</div>
+            <div className="flex items-center gap-3">
               <Avatar
                 name={hostDisplayName}
                 profilePicture={hostParticipant?.profilePicture}
@@ -381,71 +395,104 @@ const InnerCircleUI = ({
                 isSpeaking={hostIsSpeaking}
               />
               <div>
-                <div className="text-sm font-semibold text-gray-900">{hostDisplayName}</div>
-                <div className="text-xs text-gray-500">
-                  {hostIsSpeaking ? "Speaking" : "Host"}
+                <div className="text-sm font-bold text-slate-800">{hostDisplayName}</div>
+                <div className="text-xs font-medium text-slate-500 mt-0.5 flex items-center gap-1.5">
+                  {hostIsSpeaking ? (
+                    <span className="text-indigo-500 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></span>
+                      <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></span>
+                      <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></span>
+                    </span>
+                  ) : "Listening..."}
                 </div>
               </div>
             </div>
           </div>
-          <div className="pl-4  pb-2 bg-gray-50 border-b border-gray-100 font-semibold text-gray-700">
-            Stage ({stageSpeakers.length})
+          
+          <div className="px-5 py-2.5 bg-white/50 border-b border-slate-100 flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
+              Stage
+            </span>
+            <span className="bg-slate-100 text-slate-600 py-0.5 px-2 rounded-md text-[10px] font-bold">
+              {stageSpeakers.length}
+            </span>
           </div>
-          <div className="p-4 flex-1 overflow-y-auto flex flex-wrap gap-4 justify-center content-start">
+
+          {/* Speakers Grid - flexible area with internal scrolling */}
+          <div className="flex-1 overflow-y-auto p-6 min-h-0">
             {stageSpeakers.length === 0 ? (
-              <div className="text-sm text-gray-400 mt-6">No one else is on stage yet.</div>
+              <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                  <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" height="1.8em" width="1.8em" className="text-slate-300" xmlns="http://www.w3.org/2000/svg"><path d="M192 256A112 112 0 1 0 80 144a111.94 111.94 0 0 0 112 112zm76.8 32h-8.3c-20.8 10-43.9 16-68.5 16s-47.6-6-68.5-16h-8.3C88.4 288 40 336.4 40 396.8V432c0 26.5 21.5 48 48 48h208c26.5 0 48-21.5 48-48v-35.2c0-60.4-48.4-108.8-108.8-108.8zM560 256a112 112 0 1 0-112-112 111.94 111.94 0 0 0 112 112zm-76.8 32h-8.3c-20.8 10-43.9 16-68.5 16s-47.6-6-68.5-16h-8.3c-60.4 0-108.8 48.4-108.8 108.8V432c0 26.5 21.5 48 48 48h208c26.5 0 48-21.5 48-48v-35.2c0-60.4-48.4-108.8-108.8-108.8z"></path></svg>
+                </div>
+                <p className="text-sm font-medium text-slate-400">The stage is waiting for speakers.</p>
+              </div>
             ) : (
-              stageSpeakers.map((s) => {
-                const isParticipantSpeaking = activeSpeakersMap.has(String(s.userId));
-                const isMe = String(s.userId) === String(user?._id);
-                const speakerName = s.name || s.username || s.userName || "Speaker";
+              <div className="flex flex-wrap gap-8 justify-center items-start content-start">
+                {stageSpeakers.map((s) => {
+                  const isParticipantSpeaking = activeSpeakersMap.has(String(s.userId));
+                  const isMe = String(s.userId) === String(user?._id);
+                  const speakerName = s.name || s.username || s.userName || "Speaker";
 
-                return (
-                  <div key={s.userId} className="flex flex-col items-center gap-2 group relative">
-                    <Avatar name={speakerName} profilePicture={s.profilePicture} size="lg" isSpeaking={isParticipantSpeaking} />
-                    <span className="font-medium text-gray-800 flex items-center gap-1">
-                      {speakerName} {isMe && "(You)"}
-                    </span>
+                  return (
+                    <div key={s.userId} className="flex flex-col items-center gap-3 group relative w-24">
+                      <Avatar name={speakerName} profilePicture={s.profilePicture} size="lg" isSpeaking={isParticipantSpeaking} />
+                      <div className="text-center">
+                        <span className="font-semibold text-sm text-slate-800 line-clamp-1 leading-tight">
+                          {speakerName}
+                        </span>
+                        {isMe && <span className="text-[10px] text-indigo-500 font-bold bg-indigo-50 px-1.5 py-0.5 rounded mt-0.5 inline-block">YOU</span>}
+                      </div>
 
-                    {canManageSpeakers && !isMe && (
-                      <button
-                        onClick={() => handleDemote(s)}
-                        className="absolute -top-2 -right-2 bg-gray-800 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition shadow-lg cursor-pointer"
-                        title="Move to listeners"
-                      >
-                        <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C71.8 304 0 375.8 0 481.3c0 17 13.8 30.7 30.7 30.7H417.3c17 0 30.7-13.8 30.7-30.7C448 375.8 376.2 304 269.7 304H178.3zM608 64H416c-17.7 0-32 14.3-32 32v32c0 17.7 14.3 32 32 32h192c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32z"></path></svg>
-                      </button>
-                    )}
-                  </div>
-                );
-              })
+                      {canManageSpeakers && !isMe && (
+                        <button
+                          onClick={() => handleDemote(s)}
+                          className="absolute -top-1 -right-1 bg-slate-800 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-xl hover:scale-110 hover:bg-red-500 cursor-pointer z-10"
+                          title="Move to listeners"
+                        >
+                          <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C71.8 304 0 375.8 0 481.3c0 17 13.8 30.7 30.7 30.7H417.3c17 0 30.7-13.8 30.7-30.7C448 375.8 376.2 304 269.7 304H178.3zM608 64H416c-17.7 0-32 14.3-32 32v32c0 17.7 14.3 32 32 32h192c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32z"></path></svg>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
 
-        {/* Listeners & Queue */}
-        <div className="flex flex-col gap-4 overflow-hidden">
+        {/* Right Column: Listeners & Queue */}
+        <div className="flex-[2] flex flex-col gap-4 min-h-0">
+          
+          {/* Raised Hands Queue */}
           {canManageSpeakers && queue.length > 0 && (
-            <div className="bg-yellow-50 rounded-xl shadow-sm border border-yellow-200 flex flex-col max-h-60">
-              <div className="p-3 bg-yellow-100 font-semibold text-yellow-800 border-b border-yellow-200">Raised Hands ({queue.length})</div>
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            <div className="flex flex-col max-h-[45%] bg-amber-50/80 backdrop-blur-md rounded-2xl border border-amber-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden shrink-0">
+              <div className="px-4 py-2.5 bg-gradient-to-r from-amber-100/80 to-transparent border-b border-amber-200/50 flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-800">
+                  Raised Hands
+                </span>
+                <span className="bg-amber-200 text-amber-800 py-0.5 px-2 rounded-md text-[10px] font-bold">
+                  {queue.length}
+                </span>
+              </div>
+              <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
                 {queue.map(q => {
                   const queueName = q.name || q.username || q.userName || "Listener";
                   const queueHandle = q.username || q.userName;
                   return (
-                    <div key={q.userId} className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-yellow-100">
-                      <div className="flex items-center gap-3 truncate">
+                    <div key={q.userId} className="flex items-center justify-between bg-white p-2.5 rounded-xl shadow-sm border border-amber-100 hover:border-amber-200 transition-colors">
+                      <div className="flex items-center gap-3 truncate pr-2">
                         <Avatar name={queueName} profilePicture={q.profilePicture} size="md" />
                         <div className="min-w-0">
-                          <div className="text-base font-medium text-gray-800 truncate">{queueName}</div>
+                          <div className="text-sm font-bold text-slate-800 truncate">{queueName}</div>
                           {queueHandle && (
-                            <div className="text-xs text-gray-500 truncate">@{queueHandle}</div>
+                            <div className="text-[10px] font-medium text-slate-400 truncate">@{queueHandle}</div>
                           )}
                         </div>
                       </div>
                       <button
                         onClick={() => handleApprove(q)}
-                        className="text-green-700 hover:text-green-800 bg-green-100 hover:bg-green-200 px-3 py-2 rounded-lg font-medium text-sm transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                        className="shrink-0 text-emerald-700 hover:text-white bg-emerald-100 hover:bg-emerald-500 px-3 py-1.5 rounded-lg font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
                         title="Approve to speak"
                       >
                         <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 448 512" height="1.1em" width="1.1em" xmlns="http://www.w3.org/2000/svg"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"></path></svg>
@@ -458,32 +505,46 @@ const InnerCircleUI = ({
             </div>
           )}
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex-1 flex flex-col overflow-hidden">
-            <div className="p-3 bg-gray-50 border-b border-gray-100 font-semibold text-gray-700">
-              Listeners ({stageListeners.length})
+          {/* Listeners Container */}
+          <div className="flex-1 flex flex-col min-h-0 bg-white/80 backdrop-blur-md rounded-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+            <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                Listeners
+              </span>
+              <span className="bg-slate-200 text-slate-600 py-0.5 px-2 rounded-md text-[10px] font-bold">
+                {stageListeners.length}
+              </span>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            
+            <div className="flex-1 overflow-y-auto p-4 min-h-0">
               {stageListeners.length === 0 ? (
-                <div className="text-sm text-gray-400">No listeners yet.</div>
+                <div className="h-full flex flex-col items-center justify-center text-center">
+                  <p className="text-sm font-medium text-slate-400">No listeners yet.</p>
+                </div>
               ) : (
-                stageListeners.map((listener) => {
-                  const isMe = String(listener.userId) === String(user?._id);
-                  const listenerName = listener.name || listener.username || listener.userName || "Listener";
-                  const listenerHandle = listener.username || listener.userName;
-                  return (
-                    <div key={listener.userId} className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-2">
-                      <Avatar name={listenerName} profilePicture={listener.profilePicture} size="sm" />
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold text-gray-800 truncate">
-                          {listenerName} {isMe && "(You)"}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {listenerHandle ? `@${listenerHandle}` : "Listener"}
+                <div className="space-y-2">
+                  {stageListeners.map((listener) => {
+                    const isMe = String(listener.userId) === String(user?._id);
+                    const listenerName = listener.name || listener.username || listener.userName || "Listener";
+                    const listenerHandle = listener.username || listener.userName;
+                    return (
+                      <div key={listener.userId} className="flex items-center gap-3 bg-white hover:bg-slate-50 rounded-xl px-3 py-2 border border-slate-100 transition-colors">
+                        <Avatar name={listenerName} profilePicture={listener.profilePicture} size="sm" />
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-slate-800 truncate flex items-center gap-2">
+                            {listenerName}
+                            {isMe && <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">YOU</span>}
+                          </div>
+                          {listenerHandle && (
+                            <div className="text-[11px] font-medium text-slate-400 truncate">
+                              @{listenerHandle}
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
@@ -491,49 +552,49 @@ const InnerCircleUI = ({
       </div>
 
       {/* Control Bar */}
-      <div className="mt-6 flex flex-col sm:flex-row justify-center items-center gap-3 py-4 bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="mt-5 flex-shrink-0 flex flex-col sm:flex-row justify-center items-center gap-3 py-3.5 bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-white relative z-10">
         <div className="flex gap-4">
             {canSpeak ? (
             <button
               onClick={toggleMute}
-              className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold text-white transition ${!lkState.isMicEnabled ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-800 hover:bg-gray-900'}`}
+              className={`flex items-center gap-2 px-8 py-3.5 rounded-full font-bold text-white transition-all duration-300 shadow-md hover:shadow-lg cursor-pointer transform hover:-translate-y-0.5 ${!lkState.isMicEnabled ? 'bg-gradient-to-r from-red-500 to-rose-600 shadow-red-500/20' : 'bg-gradient-to-r from-slate-700 to-slate-900 shadow-slate-900/20'}`}
             >
               {!lkState.isMicEnabled ? (
                 <>
-                  <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" height="1.2em" width="1.2em" xmlns="http://www.w3.org/2000/svg"><path d="M633.82 458.1l-157.8-121.38c22.88-29.77 35.98-67.22 35.98-112.72V192c0-17.67-14.32-32-31.98-32s-31.98 14.33-31.98 32v32c0 23.42-6.52 45.03-17.69 63.38L384.85 244.7c1.37-6.08 2.13-12.3 2.13-18.7V64c0-35.35-28.65-64-64-64s-64 28.65-64 64v107.03L38.18 10.63c-12.5-9.63-30.73-7.25-40.35 5.25-9.62 12.5-7.25 30.73 5.25 40.35l582.49 448.2c12.49 9.61 30.73 7.23 40.35-5.27 9.63-12.48 7.24-30.72-5.26-40.35M310.87 348.87l-44.57-34.28C261.2 316.59 256.63 318 251.98 318c-3.15 0-6.19-.52-9.15-1.25L173.34 263.3V192c0-17.67-14.33-32-31.98-32s-31.98 14.33-31.98 32v32c0 74.57 51.13 136.95 120.6 154.26V432H161.98c-17.67 0-31.98 14.33-31.98 32s14.32 32 31.98 32h206.5c1.86 0 3.65-.28 5.43-.53l-63.04-48.49V378.2c49.25-10.74 88.54-47.56 100-95.05L310.87 348.87z"></path></svg>
+                  <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" height="1.3em" width="1.3em" xmlns="http://www.w3.org/2000/svg"><path d="M633.82 458.1l-157.8-121.38c22.88-29.77 35.98-67.22 35.98-112.72V192c0-17.67-14.32-32-31.98-32s-31.98 14.33-31.98 32v32c0 23.42-6.52 45.03-17.69 63.38L384.85 244.7c1.37-6.08 2.13-12.3 2.13-18.7V64c0-35.35-28.65-64-64-64s-64 28.65-64 64v107.03L38.18 10.63c-12.5-9.63-30.73-7.25-40.35 5.25-9.62 12.5-7.25 30.73 5.25 40.35l582.49 448.2c12.49 9.61 30.73 7.23 40.35-5.27 9.63-12.48 7.24-30.72-5.26-40.35M310.87 348.87l-44.57-34.28C261.2 316.59 256.63 318 251.98 318c-3.15 0-6.19-.52-9.15-1.25L173.34 263.3V192c0-17.67-14.33-32-31.98-32s-31.98 14.33-31.98 32v32c0 74.57 51.13 136.95 120.6 154.26V432H161.98c-17.67 0-31.98 14.33-31.98 32s14.32 32 31.98 32h206.5c1.86 0 3.65-.28 5.43-.53l-63.04-48.49V378.2c49.25-10.74 88.54-47.56 100-95.05L310.87 348.87z"></path></svg>
                   Unmute
                 </>
               ) : (
                 <>
-                  <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 352 512" height="1.2em" width="1.2em" xmlns="http://www.w3.org/2000/svg"><path d="M176 352c53.02 0 96-42.98 96-96V96c0-53.02-42.98-96-96-96S80 42.98 80 96v160c0 53.02 42.98 96 96 96zm160-160h-16c-8.84 0-16 7.16-16 16v48c0 74.8-64.49 134.82-140.79 127.38C96.71 373.97 48 318.11 48 250.3V208c0-8.84-7.16-16-16-16H16c-8.84 0-16 7.16-16 16v40.16c0 89.64 63.97 169.55 152 181.69V464H96c-8.84 0-16 7.16-16 16v16c0 8.84 7.16 16 16 16h160c8.84 0 16-7.16 16-16v-16c0-8.84-7.16-16-16-16h-56v-33.77C285.71 418.47 352 344.9 352 256v-48c0-8.84-7.16-16-16-16z"></path></svg>
+                  <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 352 512" height="1.3em" width="1.3em" xmlns="http://www.w3.org/2000/svg"><path d="M176 352c53.02 0 96-42.98 96-96V96c0-53.02-42.98-96-96-96S80 42.98 80 96v160c0 53.02 42.98 96 96 96zm160-160h-16c-8.84 0-16 7.16-16 16v48c0 74.8-64.49 134.82-140.79 127.38C96.71 373.97 48 318.11 48 250.3V208c0-8.84-7.16-16-16-16H16c-8.84 0-16 7.16-16 16v40.16c0 89.64 63.97 169.55 152 181.69V464H96c-8.84 0-16 7.16-16 16v16c0 8.84 7.16 16 16 16h160c8.84 0 16-7.16 16-16v-16c0-8.84-7.16-16-16-16h-56v-33.77C285.71 418.47 352 344.9 352 256v-48c0-8.84-7.16-16-16-16z"></path></svg>
                   Mute
                 </>
               )}
             </button>
           ) : (
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <button
                 onClick={handleRaiseHand}
                 disabled={hasRaisedHand}
-                className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition text-white ${hasRaisedHand ? 'bg-yellow-300 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600 cursor-pointer'}`}
+                className={`flex items-center gap-2 px-8 py-3.5 rounded-full font-bold transition-all duration-300 text-white shadow-md hover:-translate-y-0.5 ${hasRaisedHand ? 'bg-amber-300 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-amber-500 to-orange-500 shadow-amber-500/30 hover:shadow-lg cursor-pointer'}`}
               >
-                <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1.2em" width="1.2em" xmlns="http://www.w3.org/2000/svg"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v208c0 8.8-7.2 16-16 16s-16-7.2-16-16V64c0-17.7-14.3-32-32-32s-32 14.3-32 32v208c0 8.8-7.2 16-16 16s-16-7.2-16-16v-96c0-17.7-14.3-32-32-32s-32 14.3-32 32v184c0 37.7 20.3 72.1 52.8 89.9l46.7 25.5C216.5 491.5 252 512 289.4 512H384c53 0 96-43 96-96V256c0-35.3-28.7-64-64-64h-32c-17.7 0-32 14.3-32 32v112c0 8.8-7.2 16-16 16s-16-7.2-16-16V32z"></path></svg>
-                Raise Hand
+                <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1.3em" width="1.3em" xmlns="http://www.w3.org/2000/svg"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v208c0 8.8-7.2 16-16 16s-16-7.2-16-16V64c0-17.7-14.3-32-32-32s-32 14.3-32 32v208c0 8.8-7.2 16-16 16s-16-7.2-16-16v-96c0-17.7-14.3-32-32-32s-32 14.3-32 32v184c0 37.7 20.3 72.1 52.8 89.9l46.7 25.5C216.5 491.5 252 512 289.4 512H384c53 0 96-43 96-96V256c0-35.3-28.7-64-64-64h-32c-17.7 0-32 14.3-32 32v112c0 8.8-7.2 16-16 16s-16-7.2-16-16V32z"></path></svg>
+                {hasRaisedHand ? 'Request Sent' : 'Raise Hand'}
               </button>
               {hasRaisedHand && (
                 <button
                   onClick={handleWithdrawHand}
-                  className="flex items-center gap-2 px-6 py-3 rounded-full font-bold transition text-white bg-orange-500 hover:bg-orange-600 cursor-pointer"
+                  className="flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all duration-200 text-white bg-slate-400 hover:bg-slate-500 cursor-pointer"
                 >
-                  Withdraw Request
+                  Withdraw
                 </button>
               )}
             </div>
           )}
         </div>
         {!isSpeaker && hasRaisedHand && (
-          <div className="text-xs text-gray-500">
-            Your request is visible to the host.
+          <div className="absolute -top-7 text-[11px] font-medium text-slate-500 bg-white/80 px-3 py-1 rounded-full shadow-sm border border-slate-100">
+            Waiting for host to approve...
           </div>
         )}
       </div>
@@ -765,7 +826,7 @@ export const InnerCircleRoom = ({ activeChat, roomId, initialToken, onClose, all
   }
 
   return (
-    <div className="w-full flex-1">
+    <div className="w-full flex-1 flex flex-col min-h-0">
       <InnerCircleUI
         roomId={resolvedRoomId}
         activeChat={activeChat}
