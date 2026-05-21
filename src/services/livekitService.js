@@ -78,21 +78,22 @@ class LiveKitService {
       return true; // Already connected with this token
     }
     
-    this.currentToken = token;
-
-    if (!this.room) {
-      this.createRoom();
-    }
-    
-    if (this.room.state === 'connecting') {
+    if (this.room && this.room.state === 'connecting' && this.currentToken === token) {
       console.warn("Room is already connecting, ignoring duplicate connect call.");
       return true;
     }
+    
+    this.currentToken = token;
 
-    // Disconnect if already connected with a different token
-    if (this.room.state === 'connected') {
-      await this.room.disconnect();
+    if (this.room && (this.room.state === 'connected' || this.room.state === 'connecting')) {
+      const roomToDisconnect = this.room;
+      this.room = null;
+      await roomToDisconnect.disconnect();
     }
+
+    // LiveKit Room objects cannot be reused after they are disconnected.
+    // Always create a fresh room instance when connecting with a new token or reconnecting.
+    this.createRoom();
 
     try {
       await this.room.connect(url, token);
@@ -105,8 +106,9 @@ class LiveKitService {
 
   async disconnect() {
     if (this.room) {
-      await this.room.disconnect();
+      const roomToDisconnect = this.room;
       this.room = null;
+      await roomToDisconnect.disconnect();
     }
   }
 
