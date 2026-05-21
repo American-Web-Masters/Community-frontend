@@ -360,7 +360,7 @@ const InnerCircleUI = ({
         </div>
         <button
           onClick={handleLeaveRoom}
-          className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-600 rounded-full font-semibold hover:bg-red-200 transition"
+          className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-600 rounded-full font-semibold hover:bg-red-200 transition cursor-pointer"
         >
           <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M497 273L329 441c-15 15-41 4.5-41-17v-96H152c-13.3 0-24-10.7-24-24v-96c0-13.3 10.7-24 24-24h136V88c0-21.4 25.9-32 41-17l168 168c9.3 9.4 9.3 24.6 0 34zM192 436v-40c0-6.6-5.4-12-12-12H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h84c6.6 0 12-5.4 12-12V76c0-6.6-5.4-12-12-12H96c-53 0-96 43-96 96v256c0 53 43 96 96 96h84c6.6 0 12-5.4 12-12z"></path></svg>
           Leave
@@ -410,7 +410,7 @@ const InnerCircleUI = ({
                     {canManageSpeakers && !isMe && (
                       <button
                         onClick={() => handleDemote(s)}
-                        className="absolute -top-2 -right-2 bg-gray-800 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition shadow-lg"
+                        className="absolute -top-2 -right-2 bg-gray-800 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition shadow-lg cursor-pointer"
                         title="Move to listeners"
                       >
                         <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C71.8 304 0 375.8 0 481.3c0 17 13.8 30.7 30.7 30.7H417.3c17 0 30.7-13.8 30.7-30.7C448 375.8 376.2 304 269.7 304H178.3zM608 64H416c-17.7 0-32 14.3-32 32v32c0 17.7 14.3 32 32 32h192c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32z"></path></svg>
@@ -445,7 +445,7 @@ const InnerCircleUI = ({
                       </div>
                       <button
                         onClick={() => handleApprove(q)}
-                        className="text-green-700 hover:text-green-800 bg-green-100 hover:bg-green-200 px-3 py-2 rounded-lg font-medium text-sm transition flex items-center gap-1.5 shadow-sm"
+                        className="text-green-700 hover:text-green-800 bg-green-100 hover:bg-green-200 px-3 py-2 rounded-lg font-medium text-sm transition flex items-center gap-1.5 shadow-sm cursor-pointer"
                         title="Approve to speak"
                       >
                         <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 448 512" height="1.1em" width="1.1em" xmlns="http://www.w3.org/2000/svg"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"></path></svg>
@@ -515,7 +515,7 @@ const InnerCircleUI = ({
               <button
                 onClick={handleRaiseHand}
                 disabled={hasRaisedHand}
-                className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition text-white ${hasRaisedHand ? 'bg-yellow-300 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600'}`}
+                className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition text-white ${hasRaisedHand ? 'bg-yellow-300 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600 cursor-pointer'}`}
               >
                 <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1.2em" width="1.2em" xmlns="http://www.w3.org/2000/svg"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v208c0 8.8-7.2 16-16 16s-16-7.2-16-16V64c0-17.7-14.3-32-32-32s-32 14.3-32 32v208c0 8.8-7.2 16-16 16s-16-7.2-16-16v-96c0-17.7-14.3-32-32-32s-32 14.3-32 32v184c0 37.7 20.3 72.1 52.8 89.9l46.7 25.5C216.5 491.5 252 512 289.4 512H384c53 0 96-43 96-96V256c0-35.3-28.7-64-64-64h-32c-17.7 0-32 14.3-32 32v112c0 8.8-7.2 16-16 16s-16-7.2-16-16V32z"></path></svg>
                 Raise Hand
@@ -523,7 +523,7 @@ const InnerCircleUI = ({
               {hasRaisedHand && (
                 <button
                   onClick={handleWithdrawHand}
-                  className="flex items-center gap-2 px-6 py-3 rounded-full font-bold transition text-white bg-orange-500 hover:bg-orange-600"
+                  className="flex items-center gap-2 px-6 py-3 rounded-full font-bold transition text-white bg-orange-500 hover:bg-orange-600 cursor-pointer"
                 >
                   Withdraw Request
                 </button>
