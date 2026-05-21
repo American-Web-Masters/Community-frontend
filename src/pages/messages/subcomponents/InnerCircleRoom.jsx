@@ -601,16 +601,26 @@ export const InnerCircleRoom = ({ activeChat, roomId, initialToken, onClose, all
   // Handle LiveKit connection explicitly whenever token changes
   useEffect(() => {
     if (!token) return;
+    let isMounted = true;
     const connectLiveKit = async () => {
       try {
         const livekitUrl = import.meta.env.VITE_LIVEKIT_URL;
         await liveKitService.connect(livekitUrl, token);
       } catch(err) {
+        if (!isMounted) return; // Ignore errors if component unmounted
+        if (err.message === 'Client initiated disconnect' || err.message.includes('Client initiated disconnect')) {
+          console.warn('LiveKit connect aborted due to intentional disconnect.');
+          return;
+        }
         console.error("Failed to connect to LiveKit", err);
         setError(`Failed to connect to the voice room: ${err.message || 'Unknown error'}`);
       }
     };
     connectLiveKit();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [token]);
 
   // Handle Unmount / Leave
