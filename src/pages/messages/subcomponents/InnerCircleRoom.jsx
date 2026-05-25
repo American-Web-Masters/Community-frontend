@@ -201,6 +201,7 @@ const InnerCircleUI = ({
   }, [lkState.activeSpeakers]);
 
   const [hasRaisedHand, setHasRaisedHand] = useState(false);
+  const [showConfirmEnd, setShowConfirmEnd] = useState(false);
   const canSpeak = isHost || isSpeaker;
 
   const hostParticipant = useMemo(() => {
@@ -333,14 +334,14 @@ const InnerCircleUI = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-[#eff3f9] via-white to-[#f0f4fd] p-4 sm:p-5 rounded-2xl relative overflow-hidden shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
+    <div className="flex flex-col h-full bg-gradient-to-br from-[#eff3f9] via-white to-[#f0f4fd] p-4  rounded-2xl relative overflow-hidden shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
       
       {/* Decorative background blobs */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-sky-400/10 rounded-full blur-3xl pointer-events-none translate-y-1/3 -translate-x-1/3"></div>
       
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-gray-200/60 relative z-10">
+      <div className="flex flex-wrap items-center justify-between gap-3 h-18 mb-3 pb-3 border-b border-gray-200/60 relative z-10">
         <div>
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">
@@ -369,13 +370,24 @@ const InnerCircleUI = ({
             </span>
           </div>
         </div>
-        <button
-          onClick={handleLeaveRoom}
-          className="flex items-center gap-2 px-5 py-2.5 bg-white border border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-50 hover:border-red-300 shadow-sm transition-all cursor-pointer group"
-        >
-          <svg className="transition-transform group-hover:-translate-x-0.5" stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1.1em" width="1.1em" xmlns="http://www.w3.org/2000/svg"><path d="M497 273L329 441c-15 15-41 4.5-41-17v-96H152c-13.3 0-24-10.7-24-24v-96c0-13.3 10.7-24 24-24h136V88c0-21.4 25.9-32 41-17l168 168c9.3 9.4 9.3 24.6 0 34zM192 436v-40c0-6.6-5.4-12-12-12H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h84c6.6 0 12-5.4 12-12V76c0-6.6-5.4-12-12-12H96c-53 0-96 43-96 96v256c0 53 43 96 96 96h84c6.6 0 12-5.4 12-12z"></path></svg>
-          Leave
-        </button>
+        <div className="flex items-center gap-2">
+          {isHost && (
+            <button
+              onClick={() => setShowConfirmEnd(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 hover:text-red-600 hover:border-red-200 shadow-sm transition-all cursor-pointer group text-sm"
+            >
+              <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="1.1em" width="1.1em" xmlns="http://www.w3.org/2000/svg"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><line x1="9" x2="15" y1="9" y2="15"></line><line x1="15" x2="9" y1="9" y2="15"></line></svg>
+              End Room
+            </button>
+          )}
+          <button
+            onClick={handleLeaveRoom}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-50 hover:border-red-300 shadow-sm transition-all cursor-pointer group text-sm"
+          >
+            <svg className="transition-transform group-hover:-translate-x-0.5" stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1.1em" width="1.1em" xmlns="http://www.w3.org/2000/svg"><path d="M497 273L329 441c-15 15-41 4.5-41-17v-96H152c-13.3 0-24-10.7-24-24v-96c0-13.3 10.7-24 24-24h136V88c0-21.4 25.9-32 41-17l168 168c9.3 9.4 9.3 24.6 0 34zM192 436v-40c0-6.6-5.4-12-12-12H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h84c6.6 0 12-5.4 12-12V76c0-6.6-5.4-12-12-12H96c-53 0-96 43-96 96v256c0 53 43 96 96 96h84c6.6 0 12-5.4 12-12z"></path></svg>
+            Leave
+          </button>
+        </div>
       </div>
 
       {/* Main Layout Area - using min-h-0 to allow scrolling */}
@@ -598,6 +610,43 @@ const InnerCircleUI = ({
           </div>
         )}
       </div>
+
+      {/* Confirmation End Modal */}
+      {showConfirmEnd && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm rounded-2xl">
+          <div className="bg-white p-6 rounded-2xl shadow-xl border border-slate-100 max-w-sm w-full mx-4 transform transition-all">
+            <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-4 mx-auto">
+              <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="1.5em" width="1.5em" xmlns="http://www.w3.org/2000/svg"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+            <h3 className="text-xl font-bold text-center text-slate-800 mb-2">End Inner Circle?</h3>
+            <p className="text-sm text-center text-slate-500 mb-6">
+              Are you sure you want to end this Inner Circle? This will disconnect all participants and close the room permanently.
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowConfirmEnd(false)}
+                className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={async () => {
+                  try {
+                    await innerCircleApi.endInnerCircle(roomId);
+                    toast.success("Inner Circle ended successfully");
+                    window.location.reload();
+                  } catch (error) {
+                    toast.error("Failed to end Inner Circle");
+                  }
+                }}
+                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold shadow-md shadow-red-500/20 transition-all cursor-pointer"
+              >
+                End Room
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -610,6 +659,7 @@ export const InnerCircleRoom = ({ activeChat, roomId, initialToken, onClose, all
   const [token, setToken] = useState(initialToken || null);
   const [roomState, setRoomState] = useState(() => createEmptyRoomState());
   const [error, setError] = useState(null);
+  const [roomEndedByHost, setRoomEndedByHost] = useState(false);
 
   const hostId = activeChat?.event?.createdBy?._id || activeChat?.event?.createdBy;
   const hostName = useMemo(() => {
@@ -794,6 +844,12 @@ export const InnerCircleRoom = ({ activeChat, roomId, initialToken, onClose, all
     socket.on('speaker-approved', onSpeakerApproved);
     socket.on('speaker-demoted', onSpeakerDemoted);
 
+    const onRoomEnded = (data) => {
+      if (!isCurrentRoomEvent(data)) return;
+      setRoomEndedByHost(true);
+    };
+    socket.on('room-ended', onRoomEnded);
+
     return () => {
       socket.off('user-joined', onUserJoined);
       socket.off('user-left', onUserLeft);
@@ -801,8 +857,31 @@ export const InnerCircleRoom = ({ activeChat, roomId, initialToken, onClose, all
       socket.off('speaker-queue-updated', onQueueUpdated);
       socket.off('speaker-approved', onSpeakerApproved);
       socket.off('speaker-demoted', onSpeakerDemoted);
+      socket.off('room-ended', onRoomEnded);
     };
   }, [socket, fetchState, isCurrentRoomEvent, user?._id]);
+
+  if (roomEndedByHost) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-gray-50/90 backdrop-blur-md h-full w-full rounded-2xl relative z-50">
+        <div className="bg-white p-8 rounded-3xl shadow-2xl border border-slate-100 max-w-sm w-full mx-4 text-center transform transition-all scale-100 animate-in fade-in zoom-in duration-300">
+          <div className="w-20 h-20 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-6 mx-auto">
+            <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" height="3em" width="3em" xmlns="http://www.w3.org/2000/svg"><path d="M192 256A112 112 0 1 0 80 144a111.94 111.94 0 0 0 112 112zm76.8 32h-8.3c-20.8 10-43.9 16-68.5 16s-47.6-6-68.5-16h-8.3C88.4 288 40 336.4 40 396.8V432c0 26.5 21.5 48 48 48h208c26.5 0 48-21.5 48-48v-35.2c0-60.4-48.4-108.8-108.8-108.8zM560 256a112 112 0 1 0-112-112 111.94 111.94 0 0 0 112 112zm-76.8 32h-8.3c-20.8 10-43.9 16-68.5 16s-47.6-6-68.5-16h-8.3c-60.4 0-108.8 48.4-108.8 108.8V432c0 26.5 21.5 48 48 48h208c26.5 0 48-21.5 48-48v-35.2c0-60.4-48.4-108.8-108.8-108.8z"></path></svg>
+          </div>
+          <h3 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">Room Ended</h3>
+          <p className="text-base text-slate-500 mb-8 leading-relaxed">
+            The host has permanently ended this Inner Circle. Thank you for participating!
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="w-full px-6 py-3.5 bg-gradient-to-r from-indigo-500 to-sky-500 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all cursor-pointer"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
