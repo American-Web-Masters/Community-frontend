@@ -58,3 +58,9 @@ export const getLiveEventsForUser = async () => {
   const response = await apiClient.get("/events/live");
   return response.data;
 };
+
+export const endInnerCircle = async (roomId) => {
+  const response = await apiClient.post(`${BASE_URL}/${roomId}/end`);
+  return response.data;
+};
+
