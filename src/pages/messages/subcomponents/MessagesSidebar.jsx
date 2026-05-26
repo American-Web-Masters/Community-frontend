@@ -82,7 +82,7 @@ const MessagesSidebar = ({
         </div>
       )}
 
-      <div className={`flex-col mt-4 mb-3 w-full sm:w-auto px-3 sm:px-0 ${!activeChat ? 'flex' : 'hidden'} ${isSidebarOpen ? 'sm:flex' : 'sm:hidden'} ${(isGroupMode || isInnerCircleMode) ? 'sm:h-[calc(100vh-125px)]' : ''} ${showDiscoverOnly ? 'h-[calc(100vh-190px)] sm:h-[calc(100vh-125px)]' : ''}`}>
+      <div className={`flex-col mt-4 mb-3 w-full px-3 sm:px-0 ${!activeChat ? 'flex' : 'hidden'} ${isSidebarOpen ? 'sm:flex' : 'sm:hidden'} ${(isGroupMode || isInnerCircleMode) ? 'sm:h-[calc(100vh-125px)]' : ''} ${showDiscoverOnly ? 'h-[calc(100vh-190px)] sm:h-[calc(100vh-125px)]' : ''} ${isInnerCircleMode ? 'sm:w-[240px]' : 'sm:w-auto'}`}>
         {/* Search Input */}
         <div className="flex items-center gap-2 mb-2">
           <div className="relative flex-1">
@@ -167,10 +167,10 @@ const MessagesSidebar = ({
         {/* Chats Container */}
         {!showDiscoverOnly && (
           <div
-            className={`w-full sm:w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm ${(isGroupMode || isInnerCircleMode) ? 'sm:flex-1 sm:min-h-0' : ''}`}
+            className={`w-full bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm ${isInnerCircleMode ? 'sm:w-full' : 'sm:w-80'} ${(isGroupMode || isInnerCircleMode) ? 'sm:flex-1 sm:min-h-0' : ''}`}
             style={(isGroupMode || isInnerCircleMode) ? undefined : { maxHeight: '48%' }}
           >
-            <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
+            <div className="flex-1 overflow-y-auto px-3 pt-3 thin-scrollbar">
               <h3 className="text-sm font-semibold text-gray-900 mb-3">
                 {isGroupMode ? 'Group Chats' : isInnerCircleMode ? 'Live Inner Circles' : 'Chats'}
               </h3>
@@ -356,8 +356,8 @@ const MessagesSidebar = ({
 
         {/* Discover Communities Container */}
         {!isGroupMode && !isInnerCircleMode && (
-          <div className={`w-full sm:w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm ${showDiscoverOnly ? 'flex-1 min-h-0 mt-0' : 'mt-3'}`} style={showDiscoverOnly ? undefined : { maxHeight: '48%' }}>
-            <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
+          <div className={`w-full bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm ${showDiscoverOnly ? 'flex-1 min-h-0 mt-0' : 'mt-3'}`} style={showDiscoverOnly ? undefined : { maxHeight: '48%' }}>
+            <div className="flex-1 overflow-y-auto pt-3 thin-scrollbar">
               <h3 className="text-sm font-semibold text-gray-900 mb-2">Discover</h3>
               {loadingCommunities ? (
                 <div className="text-center py-4 text-gray-500 text-xs">Loading...</div>
