@@ -228,21 +228,31 @@ const InnerCircleUI = ({
   );
 
   // Sync mic state
+  const hasInitializedMicRef = React.useRef(false);
   useEffect(() => {
     const syncMic = async () => {
       // Only attempt to sync mic if the room is fully connected
-      if (lkState.connectionState !== 'connected') return;
+      if (lkState.connectionState !== 'connected') {
+        hasInitializedMicRef.current = false;
+        return;
+      }
 
       if (canSpeak) {
-        if (!lkState.isMicEnabled) {
-          try {
-            await liveKitService.enableMicrophone();
-          } catch(err) {
-            console.error("Failed to enable mic:", err);
-            toast.error(err.message || "Failed to enable mic");
+        // Only auto-enable mic once when connecting or becoming a speaker
+        if (!hasInitializedMicRef.current) {
+          hasInitializedMicRef.current = true;
+          if (!lkState.isMicEnabled) {
+            try {
+              await liveKitService.enableMicrophone();
+            } catch(err) {
+              console.error("Failed to enable mic:", err);
+              toast.error(err.message || "Failed to enable mic");
+            }
           }
         }
       } else {
+        // Enforce listener mic is disabled and reset initialization flag
+        hasInitializedMicRef.current = false;
         if (lkState.isMicEnabled) {
           await liveKitService.disableMicrophone();
         }
@@ -334,67 +344,69 @@ const InnerCircleUI = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-[#eff3f9] via-white to-[#f0f4fd] p-4  rounded-2xl relative overflow-hidden shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
+    <div className="flex flex-col h-full bg-gradient-to-br from-[#eff3f9] via-white to-[#f0f4fd] p-4 sm:p-4 rounded-2xl relative overflow-hidden shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
       
       {/* Decorative background blobs */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-sky-400/10 rounded-full blur-3xl pointer-events-none translate-y-1/3 -translate-x-1/3"></div>
       
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 h-18 mb-3 pb-3 border-b border-gray-200/60 relative z-10">
-        <div>
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">
+      <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3 pb-2 sm:pb-3 border-b border-gray-200/60 relative z-10 flex-wrap">
+        {/* Left: Title + meta */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-base sm:text-xl font-extrabold text-slate-800 tracking-tight truncate max-w-full lg:max-w-none">
               {activeChat?.name}
             </h2>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-100/80 backdrop-blur-sm text-red-600 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm border border-red-200">
+            <div className="flex items-center gap-1 px-2 py-0.5 bg-red-100/80 text-red-600 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border border-red-200 shrink-0">
               <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
               Live
             </div>
-          </div>
-          
-          <div className="mt-1.5 flex flex-wrap items-center gap-2.5 text-[13px]">
-            <span className="font-medium text-slate-500 flex items-center gap-1.5 bg-white/60 px-2 py-0.5 rounded-md border border-slate-100">
-              <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M96 224c35.3 0 64-28.7 64-64s-28.7-64-64-64-64 28.7-64 64 28.7 64 64 64zm448 0c35.3 0 64-28.7 64-64s-28.7-64-64-64-64 28.7-64 64 28.7 64 64 64zm32 32h-64c-17.6 0-33.5 7.1-45.1 18.6 40.3 22.1 68.9 62 75.1 109.4h66c17.7 0 32-14.3 32-32v-32c0-35.3-28.7-64-64-64zm-256 0c61.9 0 112-50.1 112-112S381.9 32 320 32 208 82.1 208 144s50.1 112 112 112zm76.8 32h-8.3c-20.8 10-43.9 16-68.5 16s-47.6-6-68.5-16h-8.3C179.6 288 128 339.6 128 403.2V432c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48v-28.8c0-63.6-51.6-115.2-115.2-115.2zm-223.7-13.4C161.5 263.1 145.6 256 128 256H64c-35.3 0-64 28.7-64 64v32c0 17.7 14.3 32 32 32h66.1c6.2-47.4 34.8-87.3 75.1-109.4z"></path></svg>
-              {speakers.length + listeners.length}
-            </span>
-            <span className="text-slate-300">•</span>
-            <span className="text-slate-500">Host: <span className="font-semibold text-slate-700">{hostDisplayName}</span></span>
-            {isHost && (
-              <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-semibold border border-indigo-200">
-                You are host
-              </span>
-            )}
-            <span className={`ml-auto text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${lkState.connectionState === 'connected' ? 'bg-green-100 text-green-600 border border-green-200' : 'bg-slate-200 text-slate-600'}`}>
+            <span className={`text-[9px] sm:text-[10px] uppercase font-bold px-2 py-0.5 rounded-full shrink-0 ${lkState.connectionState === 'connected' ? 'bg-green-100 text-green-600 border border-green-200' : 'bg-slate-200 text-slate-600'}`}>
               {lkState.connectionState}
             </span>
           </div>
+          
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:gap-2.5 text-[11px] sm:text-[13px]">
+            <span className="font-medium text-slate-500 flex items-center gap-1 bg-white/60 px-2 py-0.5 rounded-md border border-slate-100 shrink-0">
+              <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" height="0.9em" width="0.9em" xmlns="http://www.w3.org/2000/svg"><path d="M96 224c35.3 0 64-28.7 64-64s-28.7-64-64-64-64 28.7-64 64 28.7 64 64 64zm448 0c35.3 0 64-28.7 64-64s-28.7-64-64-64-64 28.7-64 64 28.7 64 64 64zm32 32h-64c-17.6 0-33.5 7.1-45.1 18.6 40.3 22.1 68.9 62 75.1 109.4h66c17.7 0 32-14.3 32-32v-32c0-35.3-28.7-64-64-64zm-256 0c61.9 0 112-50.1 112-112S381.9 32 320 32 208 82.1 208 144s50.1 112 112 112zm76.8 32h-8.3c-20.8 10-43.9 16-68.5 16s-47.6-6-68.5-16h-8.3C179.6 288 128 339.6 128 403.2V432c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48v-28.8c0-63.6-51.6-115.2-115.2-115.2zm-223.7-13.4C161.5 263.1 145.6 256 128 256H64c-35.3 0-64 28.7-64 64v32c0 17.7 14.3 32 32 32h66.1c6.2-47.4 34.8-87.3 75.1-109.4z"></path></svg>
+              {speakers.length + listeners.length}
+            </span>
+            <span className="text-slate-400 hidden lg:inline">•</span>
+            <span className="text-slate-500 hidden lg:inline">Host: <span className="font-semibold text-slate-700">{hostDisplayName}</span></span>
+            {isHost && (
+              <span className="px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-semibold border border-indigo-200 hidden lg:inline shrink-0">
+                You are host
+              </span>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        {/* Right: Action buttons */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {isHost && (
             <button
               onClick={() => setShowConfirmEnd(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 hover:text-red-600 hover:border-red-200 shadow-sm transition-all cursor-pointer group text-sm"
+              className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 hover:text-red-600 hover:border-red-200 shadow-sm transition-all cursor-pointer group text-xs sm:text-sm"
             >
-              <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="1.1em" width="1.1em" xmlns="http://www.w3.org/2000/svg"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><line x1="9" x2="15" y1="9" y2="15"></line><line x1="15" x2="9" y1="9" y2="15"></line></svg>
-              End Room
+              <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><line x1="9" x2="15" y1="9" y2="15"></line><line x1="15" x2="9" y1="9" y2="15"></line></svg>
+              <span className="hidden xs:inline sm:inline">End</span>
             </button>
           )}
           <button
             onClick={handleLeaveRoom}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-50 hover:border-red-300 shadow-sm transition-all cursor-pointer group text-sm"
+            className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 bg-white border border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-50 hover:border-red-300 shadow-sm transition-all cursor-pointer group text-xs sm:text-sm"
           >
-            <svg className="transition-transform group-hover:-translate-x-0.5" stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1.1em" width="1.1em" xmlns="http://www.w3.org/2000/svg"><path d="M497 273L329 441c-15 15-41 4.5-41-17v-96H152c-13.3 0-24-10.7-24-24v-96c0-13.3 10.7-24 24-24h136V88c0-21.4 25.9-32 41-17l168 168c9.3 9.4 9.3 24.6 0 34zM192 436v-40c0-6.6-5.4-12-12-12H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h84c6.6 0 12-5.4 12-12V76c0-6.6-5.4-12-12-12H96c-53 0-96 43-96 96v256c0 53 43 96 96 96h84c6.6 0 12-5.4 12-12z"></path></svg>
+            <svg className="transition-transform group-hover:-translate-x-0.5" stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M497 273L329 441c-15 15-41 4.5-41-17v-96H152c-13.3 0-24-10.7-24-24v-96c0-13.3 10.7-24 24-24h136V88c0-21.4 25.9-32 41-17l168 168c9.3 9.4 9.3 24.6 0 34zM192 436v-40c0-6.6-5.4-12-12-12H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h84c6.6 0 12-5.4 12-12V76c0-6.6-5.4-12-12-12H96c-53 0-96 43-96 96v256c0 53 43 96 96 96h84c6.6 0 12-5.4 12-12z"></path></svg>
             Leave
           </button>
         </div>
       </div>
 
-      {/* Main Layout Area - using min-h-0 to allow scrolling */}
-      <div className="flex-1 flex flex-col md:flex-row gap-4 min-h-0 relative z-10">
+      {/* Main Layout Area - stacks vertically up to lg, side-by-side on lg+ */}
+      <div className="flex-1 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 min-h-0 relative z-10 overflow-y-auto lg:overflow-y-visible pr-1 lg:pr-0 pb-2 lg:pb-0">
         
         {/* Stage Column */}
-        <div className="flex-[3] flex flex-col min-h-0 bg-white/80 backdrop-blur-md rounded-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+        <div className="lg:flex-[3] flex-none flex flex-col min-h-[160px] lg:min-h-0 bg-white/80 backdrop-blur-md rounded-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
           
           {/* Host Banner */}
           <div className="p-4 bg-gradient-to-r from-indigo-50/50 to-transparent border-b border-slate-100">
@@ -474,7 +486,7 @@ const InnerCircleUI = ({
         </div>
 
         {/* Right Column: Listeners & Queue */}
-        <div className="flex-[2] flex flex-col gap-4 min-h-0">
+        <div className="lg:flex-[2] flex-none flex flex-col gap-2 sm:gap-3 min-h-[160px] lg:min-h-0">
           
           {/* Raised Hands Queue */}
           {canManageSpeakers && queue.length > 0 && (
@@ -564,39 +576,39 @@ const InnerCircleUI = ({
       </div>
 
       {/* Control Bar */}
-      <div className="mt-5 flex-shrink-0 flex flex-col sm:flex-row justify-center items-center gap-3 py-3.5 bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-white relative z-10">
-        <div className="flex gap-4">
+      <div className="mt-2 sm:mt-4 flex-shrink-0 flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-3 py-2.5 sm:py-3.5 bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-white relative z-10">
+        <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
             {canSpeak ? (
             <button
               onClick={toggleMute}
-              className={`flex items-center gap-2 px-8 py-3.5 rounded-full font-bold text-white transition-all duration-300 shadow-md hover:shadow-lg cursor-pointer transform hover:-translate-y-0.5 ${!lkState.isMicEnabled ? 'bg-gradient-to-r from-red-500 to-rose-600 shadow-red-500/20' : 'bg-gradient-to-r from-slate-700 to-slate-900 shadow-slate-900/20'}`}
+              className={`flex items-center gap-2 px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-full font-bold text-white transition-all duration-300 shadow-md hover:shadow-lg cursor-pointer transform hover:-translate-y-0.5 text-sm sm:text-base ${!lkState.isMicEnabled ? 'bg-gradient-to-r from-red-500 to-rose-600 shadow-red-500/20' : 'bg-gradient-to-r from-slate-700 to-slate-900 shadow-slate-900/20'}`}
             >
               {!lkState.isMicEnabled ? (
                 <>
-                  <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" height="1.3em" width="1.3em" xmlns="http://www.w3.org/2000/svg"><path d="M633.82 458.1l-157.8-121.38c22.88-29.77 35.98-67.22 35.98-112.72V192c0-17.67-14.32-32-31.98-32s-31.98 14.33-31.98 32v32c0 23.42-6.52 45.03-17.69 63.38L384.85 244.7c1.37-6.08 2.13-12.3 2.13-18.7V64c0-35.35-28.65-64-64-64s-64 28.65-64 64v107.03L38.18 10.63c-12.5-9.63-30.73-7.25-40.35 5.25-9.62 12.5-7.25 30.73 5.25 40.35l582.49 448.2c12.49 9.61 30.73 7.23 40.35-5.27 9.63-12.48 7.24-30.72-5.26-40.35M310.87 348.87l-44.57-34.28C261.2 316.59 256.63 318 251.98 318c-3.15 0-6.19-.52-9.15-1.25L173.34 263.3V192c0-17.67-14.33-32-31.98-32s-31.98 14.33-31.98 32v32c0 74.57 51.13 136.95 120.6 154.26V432H161.98c-17.67 0-31.98 14.33-31.98 32s14.32 32 31.98 32h206.5c1.86 0 3.65-.28 5.43-.53l-63.04-48.49V378.2c49.25-10.74 88.54-47.56 100-95.05L310.87 348.87z"></path></svg>
+                  <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" height="1.1em" width="1.1em" xmlns="http://www.w3.org/2000/svg"><path d="M633.82 458.1l-157.8-121.38c22.88-29.77 35.98-67.22 35.98-112.72V192c0-17.67-14.32-32-31.98-32s-31.98 14.33-31.98 32v32c0 23.42-6.52 45.03-17.69 63.38L384.85 244.7c1.37-6.08 2.13-12.3 2.13-18.7V64c0-35.35-28.65-64-64-64s-64 28.65-64 64v107.03L38.18 10.63c-12.5-9.63-30.73-7.25-40.35 5.25-9.62 12.5-7.25 30.73 5.25 40.35l582.49 448.2c12.49 9.61 30.73 7.23 40.35-5.27 9.63-12.48 7.24-30.72-5.26-40.35M310.87 348.87l-44.57-34.28C261.2 316.59 256.63 318 251.98 318c-3.15 0-6.19-.52-9.15-1.25L173.34 263.3V192c0-17.67-14.33-32-31.98-32s-31.98 14.33-31.98 32v32c0 74.57 51.13 136.95 120.6 154.26V432H161.98c-17.67 0-31.98 14.33-31.98 32s14.32 32 31.98 32h206.5c1.86 0 3.65-.28 5.43-.53l-63.04-48.49V378.2c49.25-10.74 88.54-47.56 100-95.05L310.87 348.87z"></path></svg>
                   Unmute
                 </>
               ) : (
                 <>
-                  <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 352 512" height="1.3em" width="1.3em" xmlns="http://www.w3.org/2000/svg"><path d="M176 352c53.02 0 96-42.98 96-96V96c0-53.02-42.98-96-96-96S80 42.98 80 96v160c0 53.02 42.98 96 96 96zm160-160h-16c-8.84 0-16 7.16-16 16v48c0 74.8-64.49 134.82-140.79 127.38C96.71 373.97 48 318.11 48 250.3V208c0-8.84-7.16-16-16-16H16c-8.84 0-16 7.16-16 16v40.16c0 89.64 63.97 169.55 152 181.69V464H96c-8.84 0-16 7.16-16 16v16c0 8.84 7.16 16 16 16h160c8.84 0 16-7.16 16-16v-16c0-8.84-7.16-16-16-16h-56v-33.77C285.71 418.47 352 344.9 352 256v-48c0-8.84-7.16-16-16-16z"></path></svg>
+                  <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 352 512" height="1.1em" width="1.1em" xmlns="http://www.w3.org/2000/svg"><path d="M176 352c53.02 0 96-42.98 96-96V96c0-53.02-42.98-96-96-96S80 42.98 80 96v160c0 53.02 42.98 96 96 96zm160-160h-16c-8.84 0-16 7.16-16 16v48c0 74.8-64.49 134.82-140.79 127.38C96.71 373.97 48 318.11 48 250.3V208c0-8.84-7.16-16-16-16H16c-8.84 0-16 7.16-16 16v40.16c0 89.64 63.97 169.55 152 181.69V464H96c-8.84 0-16 7.16-16 16v16c0 8.84 7.16 16 16 16h160c8.84 0 16-7.16 16-16v-16c0-8.84-7.16-16-16-16h-56v-33.77C285.71 418.47 352 344.9 352 256v-48c0-8.84-7.16-16-16-16z"></path></svg>
                   Mute
                 </>
               )}
             </button>
           ) : (
-            <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
               <button
                 onClick={handleRaiseHand}
                 disabled={hasRaisedHand}
-                className={`flex items-center gap-2 px-8 py-3.5 rounded-full font-bold transition-all duration-300 text-white shadow-md hover:-translate-y-0.5 ${hasRaisedHand ? 'bg-amber-300 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-amber-500 to-orange-500 shadow-amber-500/30 hover:shadow-lg cursor-pointer'}`}
+                className={`flex items-center gap-2 px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-full font-bold transition-all duration-300 text-white shadow-md hover:-translate-y-0.5 text-sm sm:text-base ${hasRaisedHand ? 'bg-amber-300 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-amber-500 to-orange-500 shadow-amber-500/30 hover:shadow-lg cursor-pointer'}`}
               >
-                <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1.3em" width="1.3em" xmlns="http://www.w3.org/2000/svg"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v208c0 8.8-7.2 16-16 16s-16-7.2-16-16V64c0-17.7-14.3-32-32-32s-32 14.3-32 32v208c0 8.8-7.2 16-16 16s-16-7.2-16-16v-96c0-17.7-14.3-32-32-32s-32 14.3-32 32v184c0 37.7 20.3 72.1 52.8 89.9l46.7 25.5C216.5 491.5 252 512 289.4 512H384c53 0 96-43 96-96V256c0-35.3-28.7-64-64-64h-32c-17.7 0-32 14.3-32 32v112c0 8.8-7.2 16-16 16s-16-7.2-16-16V32z"></path></svg>
+                <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1.1em" width="1.1em" xmlns="http://www.w3.org/2000/svg"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v208c0 8.8-7.2 16-16 16s-16-7.2-16-16V64c0-17.7-14.3-32-32-32s-32 14.3-32 32v208c0 8.8-7.2 16-16 16s-16-7.2-16-16v-96c0-17.7-14.3-32-32-32s-32 14.3-32 32v184c0 37.7 20.3 72.1 52.8 89.9l46.7 25.5C216.5 491.5 252 512 289.4 512H384c53 0 96-43 96-96V256c0-35.3-28.7-64-64-64h-32c-17.7 0-32 14.3-32 32v112c0 8.8-7.2 16-16 16s-16-7.2-16-16V32z"></path></svg>
                 {hasRaisedHand ? 'Request Sent' : 'Raise Hand'}
               </button>
               {hasRaisedHand && (
                 <button
                   onClick={handleWithdrawHand}
-                  className="flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all duration-200 text-white bg-slate-400 hover:bg-slate-500 cursor-pointer"
+                  className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold transition-all duration-200 text-white bg-slate-400 hover:bg-slate-500 cursor-pointer text-sm"
                 >
                   Withdraw
                 </button>
