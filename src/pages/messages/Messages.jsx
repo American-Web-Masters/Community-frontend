@@ -297,17 +297,17 @@ const Messages = () => {
 
           {/* Inner Circle Area */}
           {chatMode === 'inner-circle' && (
-            <div className={`flex-1 flex-col overflow-hidden ml-0 sm:ml-4 mr-0 sm:mr-4 my-0 sm:my-4 rounded-none sm:rounded-2xl bg-white shadow-sm flex ${!activeChat ? 'items-center justify-center' : ''}`}>
+            <div className={`flex-1 flex flex-col overflow-hidden mx-0 sm:mx-4 my-0 sm:my-4 rounded-none sm:rounded-2xl bg-white shadow-sm min-h-0 ${!activeChat ? 'items-center justify-center' : ''}`}>
               {!activeChat ? (
-                <div className="text-center p-8">
-                  <div className="w-24 h-24 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <div className="w-12 h-12 bg-blue-500 rounded-full animate-ping"></div>
+                <div className="text-center p-6 sm:p-8 flex flex-col items-center justify-center h-full">
+                  <div className="w-16 h-16 sm:w-24 sm:h-24 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                    <div className="w-8 h-8 sm:w-12 sm:h-12 bg-blue-500 rounded-full animate-ping"></div>
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">Inner Circle</h2>
-                  <p className="text-gray-500 mb-8 max-w-md mx-auto">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Inner Circle</h2>
+                  <p className="text-gray-500 mb-6 sm:mb-8 max-w-md mx-auto text-sm sm:text-base">
                     Select an active Inner Circle from the sidebar to join the live audio stream with your community.
                   </p>
-                  <p className="text-sm text-gray-400">Waiting for selection...</p>
+                  <p className="text-xs sm:text-sm text-gray-400">Waiting for selection...</p>
                 </div>
               ) : (
                 <InnerCircleRoom 
