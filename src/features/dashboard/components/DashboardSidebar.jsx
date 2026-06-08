@@ -19,13 +19,13 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
 
   const items = useMemo(
     () => [
-      { to: '/dashboard', label: 'Overview', icon: FaChartLine, end: true },
+      // { to: '/dashboard', label: 'Overview', icon: FaChartLine, end: true },
   { to: '/dashboard/faqs', label: "FAQs", icon: FaQuestionCircle },
         { to: '/dashboard/forum', label: 'Forum', icon: FaComments },
-      { to: '/dashboard/users', label: 'Users', icon: FaUsers },
-      { to: '/dashboard/events', label: 'Events', icon: FaRegCalendarAlt },
-      { to: '/dashboard/alerts', label: 'Alerts', icon: FaRegBell },
-      { to: '/dashboard/settings', label: 'Settings', icon: FaCog },
+      // { to: '/dashboard/users', label: 'Users', icon: FaUsers },
+      // { to: '/dashboard/events', label: 'Events', icon: FaRegCalendarAlt },
+      // { to: '/dashboard/alerts', label: 'Alerts', icon: FaRegBell },
+      // { to: '/dashboard/settings', label: 'Settings', icon: FaCog },
     ],
     [],
   );
@@ -48,7 +48,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
         {/* Desktop collapse/expand */}
         <button
           type="button"
-          className="hidden md:inline-flex items-center justify-center h-9 w-9 rounded-xl hover:bg-black/5 text-gray-700"
+          className="hidden md:inline-flex items-center justify-center h-9 w-9 rounded-xl hover:bg-black/5 text-gray-700 cursor-pointer"
           onClick={onToggle}
           aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
@@ -106,7 +106,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
       {/* Desktop sidebar */}
       <aside
         className={cx(
-          'hidden md:block sticky top-0 h-screen bg-white/80 backdrop-blur border-r border-black/5',
+          'hidden md:block sticky top-0 h-screen bg-white/35 backdrop-blur-sm border-r border-white/35',
           isCollapsed ? 'w-20' : 'w-72',
         )}
       >
@@ -114,7 +114,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
       </aside>
 
       {/* Mobile: keep a mini-rail visible so tabs are always reachable */}
-      <aside className="md:hidden sticky top-0 h-screen w-16 bg-white/80 backdrop-blur border-r border-black/5">
+      <aside className="md:hidden sticky top-0 h-screen w-16 bg-white/35 backdrop-blur-sm border-r border-white/35">
         <div className="h-full flex flex-col">
           <div className="h-16 px-2 flex items-center justify-center border-b border-black/5">
             <button

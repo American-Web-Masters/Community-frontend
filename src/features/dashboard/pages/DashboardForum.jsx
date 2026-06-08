@@ -78,7 +78,7 @@ const DashboardForumCard = ({
   const avatarUrl = toAvatar(forum.user);
 
   return (
-    <article className="w-full rounded-[10px] border border-[#d4e6fa] bg-white/95 overflow-hidden">
+    <article className="w-full rounded-[10px] border border-white/50 bg-white/60 backdrop-blur-sm overflow-hidden">
       <div className="flex items-start gap-3 px-4 py-4 border-l-[5px] border-l-[#0b2f90] rounded-[10px]">
         {avatarUrl ? (
           <img
@@ -138,7 +138,7 @@ const DashboardForumCard = ({
                 value={draftReply}
                 onChange={(e) => onDraftChange(e.target.value)}
                 placeholder="Write your reply..."
-                className="w-full min-h-[96px] px-3 py-2 rounded-[10px] border border-primary-100 bg-white text-[14px] text-primary-800 placeholder:text-primary-300 outline-none resize-none"
+                className="w-full min-h-[96px] px-3 py-2 rounded-[10px] border border-primary-100 bg-white/60 backdrop-blur-sm text-[14px] text-primary-800 placeholder:text-primary-300 outline-none resize-none"
                 disabled={isSubmitting}
               />
 
@@ -262,7 +262,7 @@ const DashboardForum = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl bg-white shadow-sm border border-black/5 p-5 md:p-6">
+      <div className="rounded-3xl bg-white/60 backdrop-blur-sm shadow-sm border border-white/50 p-5 md:p-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-xl md:text-2xl font-semibold text-gray-900">Forum</h1>
@@ -290,7 +290,7 @@ const DashboardForum = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search forum by title or question..."
-              className="w-full h-11 pl-6 pr-3 rounded-2xl border border-black/10 bg-white/80 backdrop-blur outline-none focus:ring-2 focus:ring-primary-200"
+              className="w-full h-11 pl-6 pr-3 rounded-2xl border border-white/50 bg-white/50 backdrop-blur-sm outline-none focus:ring-2 focus:ring-primary-200"
             />
           </div>
         </div>
@@ -298,15 +298,15 @@ const DashboardForum = () => {
 
       <section className="space-y-3">
         {loading ? (
-          <article className="rounded-md border border-[#d6e8fa] bg-white/95 px-4 py-5 text-[#12356c]">
+          <article className="rounded-md border border-white/50 bg-white/60 backdrop-blur-sm px-4 py-5 text-[#12356c]">
             Loading forums...
           </article>
         ) : error ? (
-          <article className="rounded-md border border-[#f6caca] bg-white/95 px-4 py-5 text-red-600">
+          <article className="rounded-md border border-red-200 bg-white/60 backdrop-blur-sm px-4 py-5 text-red-600">
             {error}
           </article>
         ) : filtered.length === 0 ? (
-          <article className="rounded-md border border-[#d6e8fa] bg-white/95 px-4 py-5 text-[#12356c]">
+          <article className="rounded-md border border-white/50 bg-white/60 backdrop-blur-sm px-4 py-5 text-[#12356c]">
             No forums found.
           </article>
         ) : (

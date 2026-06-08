@@ -236,7 +236,7 @@ const DashboardFaqs = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl bg-white shadow-sm border border-black/5 p-5 md:p-6">
+      <div className="rounded-3xl bg-white/60 backdrop-blur-sm shadow-sm border border-white/50 p-5 md:p-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-xl md:text-2xl font-semibold text-gray-900">FAQs</h1>
@@ -286,7 +286,7 @@ const DashboardFaqs = () => {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <section className="xl:col-span-2 rounded-2xl bg-white/90 backdrop-blur shadow-sm border border-black/5 overflow-hidden">
+        <section className="xl:col-span-2 rounded-2xl bg-white/60 backdrop-blur-sm shadow-sm border border-white/50 overflow-hidden">
           <div className="px-5 py-4 border-b border-black/5 flex items-center justify-between">
             <div className="text-sm font-semibold text-gray-900">All FAQs</div>
             <button
@@ -315,7 +315,7 @@ const DashboardFaqs = () => {
                 const isSelected = selectedId === faq.id && mode === "edit";
 
                 return (
-                  <li key={faq.id} className={isSelected ? "bg-primary-50/40" : "bg-white"}>
+                  <li key={faq.id} className={isSelected ? "bg-primary-50/40" : "bg-white/40"}>
                     <div className="p-5 flex items-start gap-4">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
@@ -368,7 +368,7 @@ const DashboardFaqs = () => {
             "rounded-2xl backdrop-blur shadow-sm border overflow-hidden transition-colors " +
             (highlightForm
               ? "bg-primary-50/70 border-primary-200 ring-2 ring-primary-200"
-              : "bg-white/90 border-black/5")
+              : "bg-white/60 border-white/50")
           }
         >
           <div className="px-5 py-4 border-b border-black/5">

@@ -23,7 +23,7 @@ const StatCard = ({ label, value, hint, tone = 'primary' }) => {
           };
 
   return (
-    <div className="rounded-2xl bg-white/90 backdrop-blur shadow-sm border border-black/5 p-5">
+    <div className="rounded-2xl bg-white/60 backdrop-blur-sm shadow-sm border border-white/50 p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-sm text-text-secondary">{label}</div>
@@ -61,14 +61,14 @@ const DashboardHome = () => {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <div className="xl:col-span-2 rounded-2xl bg-white/90 backdrop-blur shadow-sm border border-black/5 p-5">
+        <div className="xl:col-span-2 rounded-2xl bg-white/60 backdrop-blur-sm shadow-sm border border-white/50 p-5">
           <div className="text-sm font-semibold text-text-primary">Activity</div>
           <div className="mt-3 h-56 rounded-xl bg-primary-50/60 border border-primary-100/70 border-dashed flex items-center justify-center text-sm text-text-secondary">
             Chart placeholder
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white/90 backdrop-blur shadow-sm border border-black/5 p-5">
+        <div className="rounded-2xl bg-white/60 backdrop-blur-sm shadow-sm border border-white/50 p-5">
           <div className="text-sm font-semibold text-text-primary">Quick actions</div>
           <div className="mt-4 space-y-2">
             <button type="button" className="w-full text-left px-4 py-3 rounded-xl btn-blue-gradient hover:opacity-95 transition-opacity">
