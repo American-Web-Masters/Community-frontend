@@ -13,14 +13,12 @@ const LandingPage = () => {
 			{/* Overlay for soft color effect */}
 			<div className="absolute inset-0 bg-[#f7e6c4]/10 z-0" />
 
-			<div className=" absolute right-10 top-5 px-3 py-1 bg-yellow-500 rounded-full cursor-pointer">
-				<Link
-					to="/login"
-					className="text-white font-semibold transition-colors duration-200"
-				>
+			<Link
+				to="/login"
+				className="absolute right-10 top-5 z-20 inline-flex w-fit items-center justify-center px-3 py-1 bg-yellow-500 rounded-full text-white font-semibold cursor-pointer transition-colors duration-200"
+			>
 					Login here
-				</Link>
-			</div>
+			</Link>
 
 			{/* Main Content */}
 			<div className="relative z-10 flex flex-col items-center justify-center w-full h-full pt-24 pb-16 gap-y-12 md:gap-y-16 lg:gap-y-28 ">

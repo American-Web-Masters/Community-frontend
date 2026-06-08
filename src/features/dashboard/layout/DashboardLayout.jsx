@@ -13,7 +13,7 @@ const DashboardLayout = () => {
   const title = 'Dashboard';
 
   return (
-    <div className="min-h-screen bg-[#e6f3ff8a]">
+    <div className="min-h-screen light-background">
       <div className="flex">
         <DashboardSidebar
           isCollapsed={isCollapsed}
@@ -21,7 +21,7 @@ const DashboardLayout = () => {
         />
 
         <div className="flex-1 min-w-0">
-          <header className="sticky top-0 z-30 h-16 bg-white/75 backdrop-blur border-b border-black/5">
+          <header className="sticky top-0 z-30 h-16 bg-white/35 backdrop-blur-sm border-b border-white/35">
             <div className="h-full px-3 sm:px-4 md:px-6 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="hidden sm:block text-sm text-text-secondary">Admin</div>

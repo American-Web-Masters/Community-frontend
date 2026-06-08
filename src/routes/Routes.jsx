@@ -1,4 +1,4 @@
-import { Route, Routes as AppRoutes } from "react-router-dom";
+import { Navigate, Route, Routes as AppRoutes } from "react-router-dom";
 import SignUp from "../pages/signup/signup"
 import LandingPage from "../pages/landing_page/LandingPage"
 import Home from "../pages/home/Home"
@@ -259,7 +259,7 @@ const Routes = () =>{
                                 </ProtectedRoute>
                             }
                         >
-                            <Route index element={<DashboardHome />} />
+                            <Route index element={<Navigate to="faqs" replace />} />
                             <Route
                                 path="faqs"
                                 element={<DashboardFaqs />}
