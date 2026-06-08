@@ -23,6 +23,10 @@ import {
   deleteGroupMessageForEveryone,
 } from "../../../api/messages";
 import { fetchCommunities as apiFetchCommunities } from "../../../api";
+import {
+  getLiveEventsForUser,
+  joinInnerCircle,
+} from "../../../api/innerCircle";
 import { toIdString } from "../../../utils/MessageUtils";
 import toast from "react-hot-toast";
 
@@ -43,8 +47,15 @@ export const useMessagesController = () => {
   const [loading, setLoading] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [groupConversations, setGroupConversations] = useState([]);
-  const [loadingGroupConversations, setLoadingGroupConversations] = useState(false);
-  const [groupOnlineMemberCountMap, setGroupOnlineMemberCountMap] = useState({});
+  const [liveInnerCircles, setLiveInnerCircles] = useState([]);
+  const [innerCircleToken, setInnerCircleToken] = useState(null);
+  const [innerCircleRoomId, setInnerCircleRoomId] = useState(null);
+  const [joiningInnerCircleId, setJoiningInnerCircleId] = useState(null);
+  const [loadingGroupConversations, setLoadingGroupConversations] =
+    useState(false);
+  const [groupOnlineMemberCountMap, setGroupOnlineMemberCountMap] = useState(
+    {},
+  );
   const [onlineGroupMemberIds, setOnlineGroupMemberIds] = useState(new Set());
   const [discoverCommunities, setDiscoverCommunities] = useState([]);
   const [loadingCommunities, setLoadingCommunities] = useState(false);
@@ -84,7 +95,8 @@ export const useMessagesController = () => {
       _id: normalizedId,
       communityId: normalizedId,
       name: community.name || item?.name || "Community",
-      coverPhoto: community.coverPhoto || item?.coverPhoto || community.profilePicture,
+      coverPhoto:
+        community.coverPhoto || item?.coverPhoto || community.profilePicture,
       unreadCount: item?.unreadCount ?? community.unreadCount ?? 0,
       lastMessage: item?.lastMessage || community.lastMessage || null,
       members: community.members || item?.members || [],
@@ -98,9 +110,9 @@ export const useMessagesController = () => {
         if (response.data.status === "success") {
           const allUsers = response.data.data.users;
           const otherUsers = allUsers.filter(
-            (u) => u.allowDirectMessaging === true && u._id !== user?._id
+            (u) => u.allowDirectMessaging === true && u._id !== user?._id,
           );
-          
+
           setUsers(otherUsers);
         }
       } catch (error) {
@@ -114,7 +126,9 @@ export const useMessagesController = () => {
       try {
         const response = await getPinnedUsers();
         if (response.data.status === "success") {
-          const pinnedIds = new Set(response.data.data.pinnedUsers.map((u) => u._id));
+          const pinnedIds = new Set(
+            response.data.data.pinnedUsers.map((u) => u._id),
+          );
           setPinnedUserIds(pinnedIds);
         }
       } catch (error) {
@@ -127,16 +141,24 @@ export const useMessagesController = () => {
         setLoadingGroupConversations(true);
         setLoadingCommunities(true);
 
-        const [communitiesResult, conversationsResult] = await Promise.allSettled([
-          apiFetchCommunities(user),
-          getMyGroupConversations(),
-        ]);
+        const [communitiesResult, conversationsResult] =
+          await Promise.allSettled([
+            apiFetchCommunities(user),
+            getMyGroupConversations(),
+          ]);
 
         let joinedCommunities = [];
-        if (communitiesResult.status === "fulfilled" && communitiesResult.value?.success) {
+        if (
+          communitiesResult.status === "fulfilled" &&
+          communitiesResult.value?.success
+        ) {
           const allCommunities = communitiesResult.value.data || [];
-          const joined = allCommunities.filter((community) => community.isMember || community.isOwner);
-          const notJoined = allCommunities.filter((community) => !community.isMember && !community.isOwner);
+          const joined = allCommunities.filter(
+            (community) => community.isMember || community.isOwner,
+          );
+          const notJoined = allCommunities.filter(
+            (community) => !community.isMember && !community.isOwner,
+          );
 
           setDiscoverCommunities(notJoined);
           joinedCommunities = joined
@@ -152,12 +174,19 @@ export const useMessagesController = () => {
           conversationsResult.value?.data?.status === "success"
         ) {
           const rawConversations =
-            conversationsResult.value.data.data?.conversations || conversationsResult.value.data.data || [];
+            conversationsResult.value.data.data?.conversations ||
+            conversationsResult.value.data.data ||
+            [];
           const normalizedConversations = rawConversations
             .map(normalizeGroupConversation)
             .filter((item) => Boolean(item._id));
 
-          conversationMap = new Map(normalizedConversations.map((community) => [community._id, community]));
+          conversationMap = new Map(
+            normalizedConversations.map((community) => [
+              community._id,
+              community,
+            ]),
+          );
         }
 
         const mergedJoinedCommunities = joinedCommunities.map((community) => {
@@ -173,7 +202,8 @@ export const useMessagesController = () => {
           return {
             ...community,
             unreadCount: conversation.unreadCount ?? community.unreadCount ?? 0,
-            lastMessage: conversation.lastMessage || community.lastMessage || null,
+            lastMessage:
+              conversation.lastMessage || community.lastMessage || null,
           };
         });
 
@@ -183,13 +213,16 @@ export const useMessagesController = () => {
           const onlineEntries = await Promise.all(
             mergedJoinedCommunities.map(async (community) => {
               try {
-                const onlineResponse = await getCommunityOnlineMembers(community._id);
-                const onlineMembers = onlineResponse.data?.data?.onlineMembers || [];
+                const onlineResponse = await getCommunityOnlineMembers(
+                  community._id,
+                );
+                const onlineMembers =
+                  onlineResponse.data?.data?.onlineMembers || [];
                 return [community._id, onlineMembers.length];
               } catch {
                 return [community._id, 0];
               }
-            })
+            }),
           );
 
           setGroupOnlineMemberCountMap(Object.fromEntries(onlineEntries));
@@ -225,6 +258,73 @@ export const useMessagesController = () => {
       setActiveChat(null);
     }
   }, [chatMode, users, groupConversations]);
+
+  useEffect(() => {
+    const fetchInnerCircles = async () => {
+      try {
+        const liveEventsResult = await getLiveEventsForUser();
+        if (
+          liveEventsResult?.status === "success" ||
+          liveEventsResult?.data?.status === "success"
+        ) {
+          const resultData =
+            liveEventsResult.data?.data ||
+            liveEventsResult.data ||
+            liveEventsResult;
+          const rawEvents = resultData.events || [];
+          const currentLiveInnerCircles = rawEvents.map((eventData) => ({
+            _id: eventData.community?._id || eventData.communityId,
+            communityId: eventData.community?._id || eventData.communityId,
+            name: eventData.community?.name || "Community event",
+            coverPhoto: eventData.community?.coverPhoto,
+            event: eventData.event || eventData,
+            isLiveEvent: true,
+          }));
+          setLiveInnerCircles(currentLiveInnerCircles);
+        } else {
+          setLiveInnerCircles([]);
+        }
+      } catch (error) {
+        console.error("Error fetching inner circles:", error);
+        setLiveInnerCircles([]);
+      }
+    };
+
+    if (chatMode === "inner-circle") {
+      fetchInnerCircles();
+    }
+  }, [chatMode]);
+
+  const handleJoinInnerCircle = async (community) => {
+    const eventId = community?.event?._id;
+    if (!eventId) {
+      toast.error("Unable to join: missing event id.");
+      return;
+    }
+
+    setJoiningInnerCircleId(eventId);
+    try {
+      const joinRes = await joinInnerCircle(eventId);
+      if (joinRes?.status === "success" && joinRes.data?.token) {
+        setInnerCircleToken(joinRes.data.token);
+        setInnerCircleRoomId(joinRes.data.roomId || eventId);
+        setActiveChat(community);
+      } else {
+        toast.error("Failed to join inner circle.");
+      }
+    } catch (error) {
+      console.error("Error joining inner circle:", error);
+      toast.error("Failed to join inner circle.");
+    } finally {
+      setJoiningInnerCircleId(null);
+    }
+  };
+
+  const resetInnerCircleSession = () => {
+    setInnerCircleToken(null);
+    setInnerCircleRoomId(null);
+    setJoiningInnerCircleId(null);
+  };
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -300,8 +400,8 @@ export const useMessagesController = () => {
       prev.map((community) =>
         toIdString(community._id) === toIdString(activeCommunityId)
           ? { ...community, unreadCount: 0 }
-          : community
-      )
+          : community,
+      ),
     );
   }, [chatMode, activeCommunityId]);
 
@@ -326,11 +426,15 @@ export const useMessagesController = () => {
   }, [socket, isConnected, chatMode, groupConversations]);
 
   useEffect(() => {
-    if (!socket || !isConnected || chatMode !== "group" || !activeCommunityId) return;
+    if (!socket || !isConnected || chatMode !== "group" || !activeCommunityId)
+      return;
 
     socket.emit("group:join", { communityId: activeCommunityId });
     socket.emit("community:join", { communityId: activeCommunityId });
-    socket.emit("room:join", { roomType: "community", roomId: activeCommunityId });
+    socket.emit("room:join", {
+      roomType: "community",
+      roomId: activeCommunityId,
+    });
   }, [socket, isConnected, chatMode, activeCommunityId]);
 
   useEffect(() => {
@@ -394,7 +498,9 @@ export const useMessagesController = () => {
     const getGroupPayload = (raw) => raw?.message || raw;
     const getCommunityId = (raw) => {
       const payload = getGroupPayload(raw);
-      return toIdString(payload?.community?._id || payload?.community || payload?.communityId);
+      return toIdString(
+        payload?.community?._id || payload?.community || payload?.communityId,
+      );
     };
 
     const upsertGroupConversationFromMessage = (messageData) => {
@@ -432,8 +538,10 @@ export const useMessagesController = () => {
 
       const isForCurrentChat =
         chatMode === "direct" &&
-        ((messageData.sender._id === activeChat?._id && messageData.receiver._id === user?._id) ||
-          (messageData.sender._id === user?._id && messageData.receiver._id === activeChat?._id));
+        ((messageData.sender._id === activeChat?._id &&
+          messageData.receiver._id === user?._id) ||
+          (messageData.sender._id === user?._id &&
+            messageData.receiver._id === activeChat?._id));
 
       if (!isForCurrentChat) return;
 
@@ -465,14 +573,17 @@ export const useMessagesController = () => {
       upsertGroupConversationFromMessage(payload);
 
       const isForCurrentCommunity =
-        chatMode === "group" && toIdString(activeCommunityId) === toIdString(communityId);
+        chatMode === "group" &&
+        toIdString(activeCommunityId) === toIdString(communityId);
       if (!isForCurrentCommunity) return;
 
       const el = messageListRef.current;
       const wasAtBottom = !el || el.scrollTop < 80;
 
       setMessages((prev) => {
-        const exists = prev.some((msg) => toIdString(msg._id) === toIdString(payload._id));
+        const exists = prev.some(
+          (msg) => toIdString(msg._id) === toIdString(payload._id),
+        );
         if (exists) return prev;
         return [payload, ...prev];
       });
@@ -517,7 +628,9 @@ export const useMessagesController = () => {
     const handleMessageRead = ({ messageIds, readBy }) => {
       if (readBy !== user?._id) {
         setMessages((prev) =>
-          prev.map((msg) => (messageIds.includes(msg._id) ? { ...msg, isRead: true } : msg))
+          prev.map((msg) =>
+            messageIds.includes(msg._id) ? { ...msg, isRead: true } : msg,
+          ),
         );
       }
     };
@@ -532,13 +645,14 @@ export const useMessagesController = () => {
           if (msg._id === messageId) {
             const reactions = msg.reactions || [];
             const exists = reactions.some(
-              (r) => r.user._id === reaction.user._id && r.emoji === reaction.emoji
+              (r) =>
+                r.user._id === reaction.user._id && r.emoji === reaction.emoji,
             );
             if (exists) return msg;
             return { ...msg, reactions: [...reactions, reaction] };
           }
           return msg;
-        })
+        }),
       );
     };
 
@@ -547,48 +661,65 @@ export const useMessagesController = () => {
         prev.map((msg) => {
           if (msg._id === messageId) {
             const reactions = (msg.reactions || []).filter(
-              (r) => !(r.user._id === userId && r.emoji === emoji)
+              (r) => !(r.user._id === userId && r.emoji === emoji),
             );
             return { ...msg, reactions };
           }
           return msg;
-        })
+        }),
       );
     };
 
     const handleMessageDeletedForEveryone = ({ messageId }) => {
       setMessages((prev) =>
         prev.map((msg) =>
-          msg._id === messageId ? { ...msg, isDeletedForEveryone: true } : msg
-        )
+          msg._id === messageId ? { ...msg, isDeletedForEveryone: true } : msg,
+        ),
       );
     };
 
     const handleGroupMessageRead = ({ communityId, messageIds, readBy }) => {
-      if (chatMode !== "group" || toIdString(communityId) !== toIdString(activeCommunityId)) return;
+      if (
+        chatMode !== "group" ||
+        toIdString(communityId) !== toIdString(activeCommunityId)
+      )
+        return;
       if (readBy === user?._id) return;
       setMessages((prev) =>
         prev.map((msg) =>
           messageIds.some((id) => toIdString(id) === toIdString(msg._id))
             ? { ...msg, isRead: true }
-            : msg
-        )
+            : msg,
+        ),
       );
     };
 
     const handleGroupMessageDeleted = ({ communityId, messageId }) => {
-      if (chatMode !== "group" || toIdString(communityId) !== toIdString(activeCommunityId)) return;
-      setMessages((prev) => prev.filter((msg) => toIdString(msg._id) !== toIdString(messageId)));
+      if (
+        chatMode !== "group" ||
+        toIdString(communityId) !== toIdString(activeCommunityId)
+      )
+        return;
+      setMessages((prev) =>
+        prev.filter((msg) => toIdString(msg._id) !== toIdString(messageId)),
+      );
     };
 
-    const handleGroupMessageDeletedForEveryone = ({ communityId, messageId }) => {
-      if (chatMode !== "group" || toIdString(communityId) !== toIdString(activeCommunityId)) return;
+    const handleGroupMessageDeletedForEveryone = ({
+      communityId,
+      messageId,
+    }) => {
+      if (
+        chatMode !== "group" ||
+        toIdString(communityId) !== toIdString(activeCommunityId)
+      )
+        return;
       setMessages((prev) =>
         prev.map((msg) =>
           toIdString(msg._id) === toIdString(messageId)
             ? { ...msg, isDeletedForEveryone: true }
-            : msg
-        )
+            : msg,
+        ),
       );
     };
 
@@ -598,22 +729,29 @@ export const useMessagesController = () => {
         prev.map((msg) => {
           if (toIdString(msg._id) !== toIdString(messageId)) return msg;
           const reactions = msg.reactions || [];
-          const withoutCurrentUser = reactions.filter((r) => r.user._id !== reaction.user._id);
+          const withoutCurrentUser = reactions.filter(
+            (r) => r.user._id !== reaction.user._id,
+          );
           return { ...msg, reactions: [...withoutCurrentUser, reaction] };
-        })
+        }),
       );
     };
 
-    const handleGroupReactionRemoved = ({ communityId, messageId, userId: reactionUserId, emoji }) => {
+    const handleGroupReactionRemoved = ({
+      communityId,
+      messageId,
+      userId: reactionUserId,
+      emoji,
+    }) => {
       if (toIdString(communityId) !== toIdString(activeCommunityId)) return;
       setMessages((prev) =>
         prev.map((msg) => {
           if (toIdString(msg._id) !== toIdString(messageId)) return msg;
           const reactions = (msg.reactions || []).filter(
-            (r) => !(r.user._id === reactionUserId && r.emoji === emoji)
+            (r) => !(r.user._id === reactionUserId && r.emoji === emoji),
           );
           return { ...msg, reactions };
-        })
+        }),
       );
     };
 
@@ -653,7 +791,10 @@ export const useMessagesController = () => {
       socket.on("group:message:new", handleNewGroupMessage);
       socket.on("group:message:read", handleGroupMessageRead);
       socket.on("group:message:deleted", handleGroupMessageDeleted);
-      socket.on("group:message:deleted-for-everyone", handleGroupMessageDeletedForEveryone);
+      socket.on(
+        "group:message:deleted-for-everyone",
+        handleGroupMessageDeletedForEveryone,
+      );
       socket.on("group:reaction:added", handleGroupReactionAdded);
       socket.on("group:reaction:removed", handleGroupReactionRemoved);
       socket.on("group:typing:start", handleGroupTypingStart);
@@ -665,7 +806,10 @@ export const useMessagesController = () => {
         socket.off("group:message:new", handleNewGroupMessage);
         socket.off("group:message:read", handleGroupMessageRead);
         socket.off("group:message:deleted", handleGroupMessageDeleted);
-        socket.off("group:message:deleted-for-everyone", handleGroupMessageDeletedForEveryone);
+        socket.off(
+          "group:message:deleted-for-everyone",
+          handleGroupMessageDeletedForEveryone,
+        );
         socket.off("group:reaction:added", handleGroupReactionAdded);
         socket.off("group:reaction:removed", handleGroupReactionRemoved);
         socket.off("group:typing:start", handleGroupTypingStart);
@@ -692,7 +836,10 @@ export const useMessagesController = () => {
       socket.off("message:deleted", handleMessageDeleted);
       socket.off("message:reaction-added", handleReactionAdded);
       socket.off("message:reaction-removed", handleReactionRemoved);
-      socket.off("message:deleted-for-everyone", handleMessageDeletedForEveryone);
+      socket.off(
+        "message:deleted-for-everyone",
+        handleMessageDeletedForEveryone,
+      );
     };
   }, [socket, isConnected, activeChat, activeCommunityId, chatMode, user]);
 
@@ -769,7 +916,9 @@ export const useMessagesController = () => {
       console.error("Error sending message:", error);
       console.error("Error details:", error.response?.data);
 
-      const errorMessage = error.response?.data?.message || "Failed to send message. Please try again.";
+      const errorMessage =
+        error.response?.data?.message ||
+        "Failed to send message. Please try again.";
       alert(errorMessage);
     } finally {
       setSendingMessage(false);
@@ -785,8 +934,10 @@ export const useMessagesController = () => {
       if (response.data.status === "success") {
         setMessages((prev) =>
           prev.map((msg) =>
-            msg._id === messageId ? { ...msg, reactions: response.data.data.reactions } : msg
-          )
+            msg._id === messageId
+              ? { ...msg, reactions: response.data.data.reactions }
+              : msg,
+          ),
         );
       }
     } catch (error) {
@@ -805,8 +956,10 @@ export const useMessagesController = () => {
       if (response.data.status === "success") {
         setMessages((prev) =>
           prev.map((msg) =>
-            msg._id === messageId ? { ...msg, reactions: response.data.data.reactions } : msg
-          )
+            msg._id === messageId
+              ? { ...msg, reactions: response.data.data.reactions }
+              : msg,
+          ),
         );
       }
     } catch (error) {
@@ -818,7 +971,9 @@ export const useMessagesController = () => {
     const message = messages.find((msg) => msg._id === messageId);
     if (!message) return;
 
-    const existingReaction = message.reactions?.find((r) => r.user._id === user._id);
+    const existingReaction = message.reactions?.find(
+      (r) => r.user._id === user._id,
+    );
 
     if (existingReaction) {
       if (existingReaction.emoji === emoji) {
@@ -834,7 +989,10 @@ export const useMessagesController = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (reactionPickerRef.current && !reactionPickerRef.current.contains(event.target)) {
+      if (
+        reactionPickerRef.current &&
+        !reactionPickerRef.current.contains(event.target)
+      ) {
         setShowReactionPickerFor(null);
       }
     };
@@ -857,7 +1015,9 @@ export const useMessagesController = () => {
     const hoursDiff = (now - messageTime) / (1000 * 60 * 60);
 
     if (hoursDiff > 1) {
-      alert("Messages can only be deleted for everyone within 1 hour of sending");
+      alert(
+        "Messages can only be deleted for everyone within 1 hour of sending",
+      );
       return;
     }
 
@@ -872,13 +1032,16 @@ export const useMessagesController = () => {
       if (response.data.status === "success") {
         setMessages((prev) =>
           prev.map((msg) =>
-            msg._id === messageId ? { ...msg, isDeletedForEveryone: true } : msg
-          )
+            msg._id === messageId
+              ? { ...msg, isDeletedForEveryone: true }
+              : msg,
+          ),
         );
       }
     } catch (error) {
       console.error("Error deleting message:", error);
-      const errorMessage = error.response?.data?.message || "Failed to delete message";
+      const errorMessage =
+        error.response?.data?.message || "Failed to delete message";
       alert(errorMessage);
     } finally {
       setDeletingMessage(null);
@@ -920,7 +1083,9 @@ export const useMessagesController = () => {
         }
       } catch (error) {
         console.error("Error unpinning user:", error);
-        toast.error(error.response?.data?.message || "Failed to unpin conversation");
+        toast.error(
+          error.response?.data?.message || "Failed to unpin conversation",
+        );
       } finally {
         setPinningUserId(null);
       }
@@ -934,7 +1099,9 @@ export const useMessagesController = () => {
         }
       } catch (error) {
         console.error("Error pinning user:", error);
-        toast.error(error.response?.data?.message || "Failed to pin conversation");
+        toast.error(
+          error.response?.data?.message || "Failed to pin conversation",
+        );
       } finally {
         setPinningUserId(null);
       }
@@ -988,6 +1155,10 @@ export const useMessagesController = () => {
     loading,
     sendingMessage,
     groupConversations,
+    liveInnerCircles,
+    innerCircleToken,
+    innerCircleRoomId,
+    joiningInnerCircleId,
     loadingGroupConversations,
     groupOnlineMemberCountMap,
     onlineGroupMemberIds,
@@ -1022,6 +1193,8 @@ export const useMessagesController = () => {
     handleDeleteForEveryone,
     handleCopyMessage,
     handlePinUser,
+    handleJoinInnerCircle,
+    resetInnerCircleSession,
     sortUsers,
     formatTimestamp,
   };

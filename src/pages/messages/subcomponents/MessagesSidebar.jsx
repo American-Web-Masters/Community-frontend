@@ -25,14 +25,18 @@ const MessagesSidebar = ({
   handlePinUser,
   pinningUserId,
   groupConversations,
+  liveInnerCircles,
   loadingGroupConversations,
   groupOnlineMemberCountMap,
   loadingCommunities,
-  discoverCommunities
+  discoverCommunities,
+  onJoinInnerCircle,
+  joiningInnerCircleId
 }) => {
   const navigate = useNavigate();
   const isGroupMode = chatMode === 'group';
-  const showDiscoverOnly = !isGroupMode && activeTab === 'Communities';
+  const isInnerCircleMode = chatMode === 'inner-circle';
+  const showDiscoverOnly = !isGroupMode && !isInnerCircleMode && activeTab === 'Communities';
   const [isModeMenuOpen, setIsModeMenuOpen] = React.useState(false);
 
   const handleModeSwitch = (mode) => {
@@ -58,6 +62,12 @@ const MessagesSidebar = ({
     return true;
   });
 
+  const filteredInnerCircles = (liveInnerCircles || []).filter((community) => {
+    const q = debouncedSearch.toLowerCase();
+    const matchesSearch = !q || community.name?.toLowerCase().includes(q);
+    return matchesSearch;
+  });
+
   return (
     <>
       {/* Fixed back button - desktop only, shown when sidebar open */}
@@ -72,7 +82,7 @@ const MessagesSidebar = ({
         </div>
       )}
 
-      <div className={`flex-col mt-4 mb-3 w-full sm:w-auto px-3 sm:px-0 ${!activeChat ? 'flex' : 'hidden'} ${isSidebarOpen ? 'sm:flex' : 'sm:hidden'} ${isGroupMode ? 'sm:h-[calc(100vh-125px)]' : ''} ${showDiscoverOnly ? 'h-[calc(100vh-190px)] sm:h-[calc(100vh-125px)]' : ''}`}>
+      <div className={`flex-col mt-4 mb-3 w-full px-3 sm:px-0 ${!activeChat ? 'flex' : 'hidden'} ${isSidebarOpen ? 'sm:flex' : 'sm:hidden'} ${(isGroupMode || isInnerCircleMode) ? 'sm:h-[calc(100vh-125px)]' : ''} ${showDiscoverOnly ? 'h-[calc(100vh-190px)] sm:h-[calc(100vh-125px)]' : ''} ${isInnerCircleMode ? 'sm:w-[240px]' : 'sm:w-[320px]'}`}>
         {/* Search Input */}
         <div className="flex items-center gap-2 mb-2">
           <div className="relative flex-1">
@@ -106,23 +116,30 @@ const MessagesSidebar = ({
               <div className="absolute right-0 top-12 z-20 w-36 rounded-xl border border-gray-200 bg-white shadow-lg p-1.5">
                 <button
                   onClick={() => handleModeSwitch('direct')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                    !isGroupMode
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${!isGroupMode
                       ? 'bg-blue-50 text-[#03045E]'
                       : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   Direct Chats
                 </button>
                 <button
                   onClick={() => handleModeSwitch('group')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                    isGroupMode
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${isGroupMode
                       ? 'bg-blue-50 text-[#03045E]'
                       : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   Group Chats
+                </button>
+                <button
+                  onClick={() => handleModeSwitch('inner-circle')}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${isInnerCircleMode
+                      ? 'bg-blue-50 text-[#03045E]'
+                      : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  Inner Circle
                 </button>
               </div>
             )}
@@ -130,57 +147,60 @@ const MessagesSidebar = ({
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex space-x-2 mb-3 ">
-          {["All", "Unread", "Communities"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 ${
-                activeTab === tab
-                  ? "btn-blue-gradient text-white shadow-sm"
-                  : "bg-white/70 text-gray-700 hover:bg-white/90"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+        {!isInnerCircleMode && (
+          <div className="flex space-x-2 mb-3 ">
+            {["All", "Unread", "Communities"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 ${activeTab === tab
+                    ? "btn-blue-gradient text-white shadow-sm"
+                    : "bg-white/70 text-gray-700 hover:bg-white/90"
+                  }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Chats Container */}
         {!showDiscoverOnly && (
           <div
-            className={`w-full sm:w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm ${isGroupMode ? 'sm:flex-1 sm:min-h-0' : ''}`}
-            style={isGroupMode ? undefined : { maxHeight: '48%' }}
+            className={`w-full bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm ${isInnerCircleMode ? 'sm:w-full' : 'sm:w-full'} ${(isGroupMode || isInnerCircleMode) ? 'sm:flex-1 sm:min-h-0' : ''}`}
+            style={(isGroupMode || isInnerCircleMode) ? undefined : { maxHeight: '48%' }}
           >
-            <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
+            <div className="flex-1 overflow-y-auto px-3 pt-3 thin-scrollbar">
               <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                {isGroupMode ? 'Group Chats' : 'Chats'}
+                {isGroupMode ? 'Group Chats' : isInnerCircleMode ? 'Live Inner Circles' : 'Chats'}
               </h3>
-              {!isGroupMode && loading ? (
+              {!isGroupMode && !isInnerCircleMode && loading ? (
                 <div className="text-center py-4 text-gray-500">Loading...</div>
-              ) : !isGroupMode && filteredUsers.length === 0 ? (
+              ) : !isGroupMode && !isInnerCircleMode && filteredUsers.length === 0 ? (
                 <div className="text-center py-4 text-gray-500 text-xs">{debouncedSearch ? 'No users found' : 'No users available'}</div>
-              ) : isGroupMode && loadingGroupConversations ? (
+              ) : (isGroupMode || isInnerCircleMode) && loadingGroupConversations ? (
                 <div className="text-center py-4 text-gray-500 text-xs">Loading...</div>
               ) : isGroupMode && filteredGroupConversations.length === 0 ? (
                 <div className="text-center py-4 text-gray-500 text-xs">
                   {debouncedSearch ? 'No communities found' : 'No unread messages in group chats'}
                 </div>
+              ) : isInnerCircleMode && filteredInnerCircles.length === 0 ? (
+                <div className="text-center py-4 text-gray-500 text-xs">
+                  {debouncedSearch ? 'No live inner circles found' : 'No live inner circles right now'}
+                </div>
               ) : (
                 <div className="space-y-1">
-                  {!isGroupMode && sortUsers(filteredUsers).map((chat) => {
+                  {!isGroupMode && !isInnerCircleMode && sortUsers(filteredUsers).map((chat) => {
                     const isPinned = pinnedUserIds.has(chat._id);
                     return (
                       <div
                         key={chat._id}
                         onClick={() => setActiveChat(chat)}
-                        className={`flex items-start space-x-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 group relative ${
-                          activeChat?._id === chat._id
+                        className={`flex items-start space-x-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 group relative ${activeChat?._id === chat._id
                             ? "bg-white shadow-sm"
                             : "hover:bg-white/50"
-                        } ${
-                          isPinned ? "border-l-2 border-blue-500" : ""
-                        }`}
+                          } ${isPinned ? "border-l-2 border-blue-500" : ""
+                          }`}
                       >
                         <div className="relative">
                           <img
@@ -238,11 +258,10 @@ const MessagesSidebar = ({
                       <div
                         key={communityId}
                         onClick={() => setActiveChat(community)}
-                        className={`flex items-start space-x-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 group relative ${
-                          activeChat?._id === communityId
+                        className={`flex items-start space-x-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 group relative ${activeChat?._id === communityId
                             ? 'bg-white shadow-sm'
                             : 'hover:bg-white/50'
-                        }`}
+                          }`}
                       >
                         <div className="relative">
                           <img
@@ -274,6 +293,61 @@ const MessagesSidebar = ({
                       </div>
                     );
                   })}
+
+                  {isInnerCircleMode && filteredInnerCircles.map((community) => {
+                    const communityId = community._id || community.communityId;
+                    const eventName = community.event?.eventName || 'Live Event';
+                    const eventId = community.event?._id;
+                    const isJoining = joiningInnerCircleId === eventId;
+                    const isJoined = activeChat?.event?._id === eventId;
+
+                    return (
+                      <div
+                        key={`inner-circle-${eventId || communityId}`}
+                        className={`flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 group relative ${activeChat?.event?._id === eventId
+                            ? 'bg-white shadow-sm ring-1 ring-red-200'
+                            : 'hover:bg-white/50 ring-1 ring-transparent hover:ring-red-100'
+                          }`}
+                      >
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <div className="relative">
+                            <img
+                              src={community.coverPhoto || community.profilePicture || 'https://i.pravatar.cc/150?img=32'}
+                              alt={community.name}
+                              className="w-10 h-10 rounded-full flex-shrink-0 border-2 border-red-500"
+                            />
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-red-500 animate-pulse border-2 border-white"></div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center mb-0.5">
+                              <h4 className="text-sm font-semibold text-gray-900 truncate">
+                                {community.name}
+                              </h4>
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0 animate-pulse"></span>
+                              <p className="text-xs text-red-500 font-medium truncate leading-tight">
+                                {eventName}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isJoined) onJoinInnerCircle?.(community);
+                          }}
+                          disabled={isJoining || isJoined}
+                          className={`ml-2 px-3 py-1.5 text-white text-xs font-semibold rounded-full shadow-sm transition-colors cursor-pointer ${isJoined
+                              ? 'bg-green-500'
+                              : 'bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed'
+                            }`}
+                        >
+                          {isJoining ? 'Joining...' : isJoined ? 'Joined' : 'Join'}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -281,9 +355,9 @@ const MessagesSidebar = ({
         )}
 
         {/* Discover Communities Container */}
-        {!isGroupMode && (
-          <div className={`w-full sm:w-90 bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm ${showDiscoverOnly ? 'flex-1 min-h-0 mt-0' : 'mt-3'}`} style={showDiscoverOnly ? undefined : { maxHeight: '48%' }}>
-            <div className="flex-1 overflow-y-auto px-4 pt-3 thin-scrollbar">
+        {!isGroupMode && !isInnerCircleMode && (
+          <div className={`w-full bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm ${showDiscoverOnly ? 'flex-1 min-h-0 mt-0' : 'mt-3'}`} style={showDiscoverOnly ? undefined : { maxHeight: '48%' }}>
+            <div className="flex-1 overflow-y-auto px-3 pt-3 thin-scrollbar">
               <h3 className="text-sm font-semibold text-gray-900 mb-2">Discover</h3>
               {loadingCommunities ? (
                 <div className="text-center py-4 text-gray-500 text-xs">Loading...</div>
