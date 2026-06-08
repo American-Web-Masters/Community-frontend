@@ -35,6 +35,16 @@ class LiveKitService {
       this.notifyListeners();
     });
 
+    this.room.on(RoomEvent.Reconnecting, () => {
+      console.log("LIVEKIT RECONNECTING...");
+      this.notifyListeners();
+    });
+
+    this.room.on(RoomEvent.Reconnected, () => {
+      console.log("LIVEKIT RECONNECTED");
+      this.notifyListeners();
+    });
+
     this.room.on(RoomEvent.ParticipantConnected, (participant) => {
       console.log("PARTICIPANT CONNECTED:", participant.identity);
       this.notifyListeners();

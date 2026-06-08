@@ -362,7 +362,11 @@ const InnerCircleUI = ({
               <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
               Live
             </div>
-            <span className={`text-[9px] sm:text-[10px] uppercase font-bold px-2 py-0.5 rounded-full shrink-0 ${lkState.connectionState === 'connected' ? 'bg-green-100 text-green-600 border border-green-200' : 'bg-slate-200 text-slate-600'}`}>
+            <span className={`text-[9px] sm:text-[10px] uppercase font-bold px-2 py-0.5 rounded-full shrink-0 ${
+              lkState.connectionState === 'connected' ? 'bg-green-100 text-green-600 border border-green-200' : 
+              lkState.connectionState === 'reconnecting' ? 'bg-amber-100 text-amber-600 border border-amber-200 animate-pulse' : 
+              'bg-slate-200 text-slate-600'
+            }`}>
               {lkState.connectionState}
             </span>
           </div>
@@ -764,7 +768,12 @@ export const InnerCircleRoom = ({ activeChat, roomId, initialToken, onClose, all
   }, [resolvedRoomId, socket, onClose]);
 
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      liveKitService.disconnect();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
       liveKitService.disconnect();
     };
   }, []);
