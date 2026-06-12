@@ -9,20 +9,11 @@ import ReviewMilestone from './ReviewMilestone';
 import { signupUtils, MILESTONES } from '../../utils/signupUtils';
 
 function Signup() {
-  const [currentMilestone, setCurrentMilestone] = useState(MILESTONES.NAME);
-  const [completedMilestones, setCompletedMilestones] = useState([]);
-  const [signupData, setSignupData] = useState({});
+  // Load initial data synchronously to prevent race conditions
+  const [currentMilestone, setCurrentMilestone] = useState(() => signupUtils.getProgress().currentMilestone);
+  const [completedMilestones, setCompletedMilestones] = useState(() => signupUtils.getProgress().completedMilestones);
+  const [signupData, setSignupData] = useState(() => signupUtils.getSignupData());
   const [isTransitioning, setIsTransitioning] = useState(false);
-
-  // Load progress from localStorage
-  useEffect(() => {
-    const progress = signupUtils.getProgress();
-    const data = signupUtils.getSignupData();
-    
-    setCurrentMilestone(progress.currentMilestone);
-    setCompletedMilestones(progress.completedMilestones);
-    setSignupData(data);
-  }, []);
 
   // Save progress to localStorage
   const saveProgress = (milestone, completed) => {

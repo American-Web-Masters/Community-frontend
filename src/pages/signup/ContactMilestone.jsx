@@ -7,24 +7,17 @@ import { apiClient } from '../../api';
 import { signupUtils, MILESTONES } from '../../utils/signupUtils';
 
 const ContactMilestone = ({ onNext, onDataChange, onPrev }) => {
-  const [formData, setFormData] = useState({
-    phone: '',
-    email: '',
-    contactMethod: 'email' // 'phone' or 'email'
+  const [formData, setFormData] = useState(() => {
+    const savedData = signupUtils.getSignupData();
+    return {
+      phone: savedData.phone || '',
+      email: savedData.email || '',
+      contactMethod: savedData.contactMethod || 'email'
+    };
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const savedData = signupUtils.getSignupData();
-    setFormData({
-      phone: savedData.phone || '',
-      email: savedData.email || '',
-      contactMethod: savedData.contactMethod || 'email'
-    });
-  }, []);
 
   // Save to localStorage whenever data changes
   useEffect(() => {

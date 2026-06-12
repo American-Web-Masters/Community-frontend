@@ -9,23 +9,13 @@ const VerificationMilestone = ({ onNext, onDataChange, onPrev }) => {
   const [error, setError] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const [userId, setUserId] = useState('');
-  const [contactInfo, setContactInfo] = useState('');
+  const [userId, setUserId] = useState(() => signupUtils.getSignupData().userId || '');
+  const [contactInfo, setContactInfo] = useState(() => {
+    const savedData = signupUtils.getSignupData();
+    return savedData.contactMethod === 'phone' ? (savedData.phone || '') : (savedData.email || '');
+  });
   
   const inputRefs = useRef([]);
-
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const savedData = signupUtils.getSignupData();
-    setUserId(savedData.userId || '');
-    
-    // Display contact info based on method
-    if (savedData.contactMethod === 'phone') {
-      setContactInfo(savedData.phone || '');
-    } else {
-      setContactInfo(savedData.email || '');
-    }
-  }, []);
 
   // Handle countdown for resend OTP
   useEffect(() => {

@@ -5,8 +5,11 @@ import Input from '../../components/ui/Input';
 import { signupUtils, MILESTONES, calculatePasswordStrength } from '../../utils/signupUtils';
 
 const PasswordMilestone = ({ onNext, onDataChange, onPrev }) => {
-  const [formData, setFormData] = useState({
-    password: ''
+  const [formData, setFormData] = useState(() => {
+    const savedData = signupUtils.getSignupData();
+    return {
+      password: savedData.password || ''
+    };
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -16,14 +19,6 @@ const PasswordMilestone = ({ onNext, onDataChange, onPrev }) => {
     label: 'Weak',
     color: '#FF6B6B'
   });
-
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const savedData = signupUtils.getSignupData();
-    setFormData({
-      password: savedData.password || ''
-    });
-  }, []);
 
   // Save to localStorage whenever data changes
   useEffect(() => {

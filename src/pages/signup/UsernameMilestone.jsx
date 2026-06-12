@@ -5,22 +5,17 @@ import { apiClient } from '../../api';
 import { signupUtils, MILESTONES } from '../../utils/signupUtils';
 
 const UsernameMilestone = ({ onNext, onDataChange, onPrev }) => {
-  const [formData, setFormData] = useState({
-    username: ''
+  const [formData, setFormData] = useState(() => {
+    const savedData = signupUtils.getSignupData();
+    return {
+      username: savedData.username || ''
+    };
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState(null); // 'available', 'taken', 'invalid', null
   const [allUsers, setAllUsers] = useState([]);
-
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const savedData = signupUtils.getSignupData();
-    setFormData({
-      username: savedData.username || ''
-    });
-  }, []);
 
   // Fetch all users for real-time checking
   useEffect(() => {

@@ -4,21 +4,15 @@ import Input from '../../components/ui/Input';
 import { signupUtils, MILESTONES } from '../../utils/signupUtils';
 
 const NameMilestone = ({ onNext, onDataChange }) => {
-  const [formData, setFormData] = useState({
-    firstname: '',
-    lastname: ''
+  const [formData, setFormData] = useState(() => {
+    const savedData = signupUtils.getSignupData();
+    return {
+      firstname: savedData.firstname || '',
+      lastname: savedData.lastname || ''
+    };
   });
 
   const [errors, setErrors] = useState({});
-
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const savedData = signupUtils.getSignupData();
-    setFormData({
-      firstname: savedData.firstname || '',
-      lastname: savedData.lastname || ''
-    });
-  }, []);
 
   // Save to localStorage whenever data changes
   useEffect(() => {
