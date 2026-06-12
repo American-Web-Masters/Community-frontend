@@ -53,6 +53,11 @@ const Input = forwardRef(({
           `}
           {...props}
         />
+        {props.endContent && (
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+            {props.endContent}
+          </div>
+        )}
       </div>
       {error && (
         <p className="mt-2 text-sm text-red-600">{error}</p>

@@ -117,13 +117,13 @@ const Login = () => {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: 'url(/background.png)' }}
       ></div>
-      <div className="flex items-center justify-center py-10 lg:py-16 ">
-        <div className="flex items-center justify-center max-w-5xl w-full max-sm:w-11/12 ">
+      <div className="flex items-center justify-center pt-10 lg:pt-12 transform lg:scale-95 origin-top">
+        <div className="flex items-center justify-center max-w-5xl w-full max-sm:w-11/12">
           <div className="w-full max-w-lg transition-all duration-500 ease-in-out">
             <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 shadow-2xl min-h-[500px] flex items-center justify-center">
               <div className="w-full max-w-md">
                 {/* Header */}
-                <div className="text-center mb-6">
+                <div className="text-center mb-5">
                   <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-500 rounded-full ">
                     <FaUser className="w-8 h-8 text-white" />
                   </div>
@@ -142,27 +142,27 @@ const Login = () => {
                     icon={FaUser}
                     required
                   />
-                  <div className="relative">
-                    <Input
-                      className="!rounded-3xl pr-12"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Password"
-                      value={formData.password}
-                      onChange={e => handleInputChange('password', e.target.value)}
-                      error={errors.password}
-                      icon={FaLock}
-                      required
-                    />
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-500 focus:outline-none"
-                      onClick={() => setShowPassword(v => !v)}
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showPassword ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
-                    </button>
-                  </div>
+                  <Input
+                    className="!rounded-3xl pr-12"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={e => handleInputChange('password', e.target.value)}
+                    error={errors.password}
+                    icon={FaLock}
+                    required
+                    endContent={
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        className="text-gray-500 focus:outline-none cursor-pointer hover:text-gray-700 transition-colors duration-200 p-2"
+                        onClick={() => setShowPassword(v => !v)}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
+                      </button>
+                    }
+                  />
                   {/* Or Continue With (line breaks left and right so the line "disappears" where text is) */}
                   <div className="my-2">
                     <div className="flex items-center">
@@ -175,14 +175,14 @@ const Login = () => {
                   <div className="flex gap-4 justify-center mb-4">
                     <button
                       type="button"
-                      className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full hover:shadow-md transition-shadow duration-200"
+                      className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full cursor-pointer hover:shadow-md transition-shadow duration-200"
                       onClick={() => {}}
                     >
                       <FcGoogle className="w-6 h-6" />
                     </button>
                     <button
                       type="button"
-                      className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full hover:shadow-md transition-shadow duration-200"
+                      className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full cursor-pointer hover:shadow-md transition-shadow duration-200"
                       onClick={() => {}}
                     >
                       <FaApple className="w-6 h-6 text-black" />

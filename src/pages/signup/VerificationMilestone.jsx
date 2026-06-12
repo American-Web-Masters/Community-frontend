@@ -9,23 +9,13 @@ const VerificationMilestone = ({ onNext, onDataChange, onPrev }) => {
   const [error, setError] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const [userId, setUserId] = useState('');
-  const [contactInfo, setContactInfo] = useState('');
+  const [userId, setUserId] = useState(() => signupUtils.getSignupData().userId || '');
+  const [contactInfo, setContactInfo] = useState(() => {
+    const savedData = signupUtils.getSignupData();
+    return savedData.contactMethod === 'phone' ? (savedData.phone || '') : (savedData.email || '');
+  });
   
   const inputRefs = useRef([]);
-
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const savedData = signupUtils.getSignupData();
-    setUserId(savedData.userId || '');
-    
-    // Display contact info based on method
-    if (savedData.contactMethod === 'phone') {
-      setContactInfo(savedData.phone || '');
-    } else {
-      setContactInfo(savedData.email || '');
-    }
-  }, []);
 
   // Handle countdown for resend OTP
   useEffect(() => {
@@ -216,7 +206,7 @@ const VerificationMilestone = ({ onNext, onDataChange, onPrev }) => {
                   type="button"
                   onClick={handleResendOTP}
                   disabled={resendLoading}
-                  className="text-primary-500 hover:text-primary-600 font-medium transition-colors duration-200 flex items-center gap-1"
+                  className="text-primary-500 cursor-pointer hover:text-primary-600 font-medium transition-colors duration-200 flex items-center gap-1"
                 >
                   <FaRedo className={`w-3 h-3 ${resendLoading ? 'animate-spin' : ''}`} />
                   Resend
@@ -227,7 +217,7 @@ const VerificationMilestone = ({ onNext, onDataChange, onPrev }) => {
           <button
             type="button"
             onClick={handleChangeContactInfo}
-            className="text-gray-600 hover:text-gray-800 text-sm underline transition-colors duration-200"
+            className="text-gray-600 cursor-pointer hover:text-gray-800 text-sm underline transition-colors duration-200"
           >
             Change {contactInfo.includes('@') ? 'email address' : 'phone number'}
           </button>
@@ -238,7 +228,7 @@ const VerificationMilestone = ({ onNext, onDataChange, onPrev }) => {
           <button
             type="button"
             onClick={handleBack}
-            className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full hover:shadow-md transition-all duration-200"
+            className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full cursor-pointer hover:shadow-md transition- duration-200"
             disabled={loading}
           >
             <FaChevronLeft className="w-4 h-4 text-gray-600" />
@@ -250,7 +240,7 @@ const VerificationMilestone = ({ onNext, onDataChange, onPrev }) => {
             className={`
               flex-1 py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300
               ${isFormValid
-                ? 'bg-primary-500 hover:bg-primary-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                ? 'bg-primary-500 hover:bg-primary-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer'
                 : 'bg-gray-400 cursor-not-allowed opacity-60'
               }
             `}

@@ -10,27 +10,17 @@ const ReviewMilestone = ({ onNext, onDataChange, onPrev }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   
-  const [formData, setFormData] = useState({
-    firstname: '',
-    lastname: '',
-    fullname: '',
-    email: '',
-    username: ''
-  });
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
+  const [formData, setFormData] = useState(() => {
     const savedData = signupUtils.getSignupData();
-    
-    const loadedData = {
+    return {
       firstname: savedData.firstname || '',
       lastname: savedData.lastname || '',
       fullname: `${savedData.firstname || ''} ${savedData.lastname || ''}`.trim(),
       email: savedData.email || savedData.phone || '',
       username: savedData.username || ''
     };
-    setFormData(loadedData);
-  }, []);
+  });
+  const [loading, setLoading] = useState(false);
 
   const validateForm = () => {
     return formData.firstname.trim() && 
@@ -148,7 +138,7 @@ const ReviewMilestone = ({ onNext, onDataChange, onPrev }) => {
             className={`
               w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 relative
               ${isFormValid
-                ? 'bg-primary-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                ? 'bg-primary-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer'
                 : 'bg-gray-400 cursor-not-allowed opacity-60'
               }
             `}

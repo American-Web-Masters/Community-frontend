@@ -5,22 +5,17 @@ import { apiClient } from '../../api';
 import { signupUtils, MILESTONES } from '../../utils/signupUtils';
 
 const UsernameMilestone = ({ onNext, onDataChange, onPrev }) => {
-  const [formData, setFormData] = useState({
-    username: ''
+  const [formData, setFormData] = useState(() => {
+    const savedData = signupUtils.getSignupData();
+    return {
+      username: savedData.username || ''
+    };
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState(null); // 'available', 'taken', 'invalid', null
   const [allUsers, setAllUsers] = useState([]);
-
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const savedData = signupUtils.getSignupData();
-    setFormData({
-      username: savedData.username || ''
-    });
-  }, []);
 
   // Fetch all users for real-time checking
   useEffect(() => {
@@ -266,7 +261,7 @@ const UsernameMilestone = ({ onNext, onDataChange, onPrev }) => {
                   key={index}
                   type="button"
                   onClick={() => handleInputChange('username', suggestion)}
-                  className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-full transition-colors duration-200"
+                  className="px-3 py-1 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-full transition-colors duration-200"
                 >
                   {suggestion}
                 </button>
@@ -280,7 +275,7 @@ const UsernameMilestone = ({ onNext, onDataChange, onPrev }) => {
           <button
             type="button"
             onClick={handleBack}
-            className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full hover:shadow-md transition-all duration-200"
+            className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full cursor-pointer hover:shadow-md transition- duration-200"
             disabled={loading}
           >
             <FaChevronLeft className="w-4 h-4 text-gray-600" />
@@ -292,7 +287,7 @@ const UsernameMilestone = ({ onNext, onDataChange, onPrev }) => {
             className={`
               flex-1 py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300
               ${isFormValid
-                ? 'bg-primary-500 hover:bg-primary-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                ? 'bg-primary-500 hover:bg-primary-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer'
                 : 'bg-gray-400 cursor-not-allowed opacity-60'
               }
             `}

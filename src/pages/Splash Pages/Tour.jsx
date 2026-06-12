@@ -30,7 +30,7 @@ const Tour = () => {
       ></div>
       
       {/* Content */}
-      <div className="flex items-center justify-center py-28 lg:py-32">
+      <div className="flex items-center justify-center py-28 transform lg:scale-90 origin-top">
         <div className="flex items-center justify-center max-w-5xl w-full max-sm:w-11/12">
           <div className="w-full max-w-lg transition-all duration-500 ease-in-out h-[50vh]">
             {/* Glass morphism container */}
@@ -38,7 +38,7 @@ const Tour = () => {
               {/* Close button */}
               <button
                 onClick={handleClose}
-                className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors bg-white rounded-full w-7 h-7 flex justify-center items-center hover:scale-105  duration-200"
+                className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors bg-white rounded-full w-7 h-7 flex justify-center items-center hover:scale-105  duration-200 cursor-pointer"
               >
                 <FaTimes size={20} className='relative z-10 text-gray-600' />
               </button>
@@ -72,7 +72,7 @@ const Tour = () => {
                 <div className="space-y-4">
                   <button
                     onClick={handleTakeTour}
-                    className="w-full py-4 px-6 rounded-4xl font-semibold text-white bg-primary-500 hover:bg-primary-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                    className="w-full py-4 px-6 rounded-4xl font-semibold text-white bg-primary-500 hover:bg-primary-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
                   >
                     Take a Tour
                   </button>

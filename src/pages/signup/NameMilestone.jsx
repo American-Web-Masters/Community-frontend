@@ -4,21 +4,15 @@ import Input from '../../components/ui/Input';
 import { signupUtils, MILESTONES } from '../../utils/signupUtils';
 
 const NameMilestone = ({ onNext, onDataChange }) => {
-  const [formData, setFormData] = useState({
-    firstname: '',
-    lastname: ''
+  const [formData, setFormData] = useState(() => {
+    const savedData = signupUtils.getSignupData();
+    return {
+      firstname: savedData.firstname || '',
+      lastname: savedData.lastname || ''
+    };
   });
 
   const [errors, setErrors] = useState({});
-
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const savedData = signupUtils.getSignupData();
-    setFormData({
-      firstname: savedData.firstname || '',
-      lastname: savedData.lastname || ''
-    });
-  }, []);
 
   // Save to localStorage whenever data changes
   useEffect(() => {
@@ -112,7 +106,7 @@ const NameMilestone = ({ onNext, onDataChange }) => {
           className={`
             w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 mt-16
             ${isFormValid
-              ? 'shadow-lg bg-primary-500 hover:shadow-xl transform hover:-translate-y-0.5'
+              ? 'shadow-lg bg-primary-500 hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer'
               : 'bg-gray-400 cursor-not-allowed opacity-60 text-gray-700'
             }
           `}

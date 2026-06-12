@@ -7,24 +7,17 @@ import { apiClient } from '../../api';
 import { signupUtils, MILESTONES } from '../../utils/signupUtils';
 
 const ContactMilestone = ({ onNext, onDataChange, onPrev }) => {
-  const [formData, setFormData] = useState({
-    phone: '',
-    email: '',
-    contactMethod: 'email' // 'phone' or 'email'
+  const [formData, setFormData] = useState(() => {
+    const savedData = signupUtils.getSignupData();
+    return {
+      phone: savedData.phone || '',
+      email: savedData.email || '',
+      contactMethod: savedData.contactMethod || 'email'
+    };
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const savedData = signupUtils.getSignupData();
-    setFormData({
-      phone: savedData.phone || '',
-      email: savedData.email || '',
-      contactMethod: savedData.contactMethod || 'email'
-    });
-  }, []);
 
   // Save to localStorage whenever data changes
   useEffect(() => {
@@ -215,14 +208,14 @@ const ContactMilestone = ({ onNext, onDataChange, onPrev }) => {
         <div className="flex gap-4 justify-center mb-8">
           <button
             type="button"
-            className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full hover:shadow-md transition-shadow duration-200"
+            className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full cursor-pointer hover:shadow-md transition- duration-200"
             onClick={() => {/* TODO: Implement Google OAuth */}}
           >
             <FcGoogle className="w-6 h-6" />
           </button>
           <button
             type="button"
-            className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full hover:shadow-md transition-shadow duration-200"
+            className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full cursor-pointer hover:shadow-md transition- duration-200"
             onClick={() => {/* TODO: Implement Apple OAuth */}}
           >
             <FaApple className="w-6 h-6 text-black" />
@@ -241,7 +234,7 @@ const ContactMilestone = ({ onNext, onDataChange, onPrev }) => {
           <button
             type="button"
             onClick={handleBack}
-            className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full hover:shadow-md transition-all duration-200"
+            className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full cursor-pointer hover:shadow-md transition- duration-200"
             disabled={loading}
           >
             <FaChevronLeft className="w-4 h-4 text-gray-600" />
@@ -253,7 +246,7 @@ const ContactMilestone = ({ onNext, onDataChange, onPrev }) => {
             className={`
               flex-1 py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300
               ${isFormValid && !loading
-                ? 'bg-primary-500 hover:bg-primary-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                ? 'bg-primary-500 hover:bg-primary-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer'
                 : 'bg-gray-400 cursor-not-allowed opacity-60'
               }
             `}

@@ -5,8 +5,11 @@ import Input from '../../components/ui/Input';
 import { signupUtils, MILESTONES, calculatePasswordStrength } from '../../utils/signupUtils';
 
 const PasswordMilestone = ({ onNext, onDataChange, onPrev }) => {
-  const [formData, setFormData] = useState({
-    password: ''
+  const [formData, setFormData] = useState(() => {
+    const savedData = signupUtils.getSignupData();
+    return {
+      password: savedData.password || ''
+    };
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -16,14 +19,6 @@ const PasswordMilestone = ({ onNext, onDataChange, onPrev }) => {
     label: 'Weak',
     color: '#FF6B6B'
   });
-
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const savedData = signupUtils.getSignupData();
-    setFormData({
-      password: savedData.password || ''
-    });
-  }, []);
 
   // Save to localStorage whenever data changes
   useEffect(() => {
@@ -119,7 +114,7 @@ const PasswordMilestone = ({ onNext, onDataChange, onPrev }) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Password Input with Show/Hide Toggle and Question Mark */}
         <div className="flex items-center gap-3">
-          <div className="relative flex-1">
+          <div className="flex-1">
             <Input
               type={showPassword ? "text" : "password"}
               placeholder="Enter Password"
@@ -129,25 +124,26 @@ const PasswordMilestone = ({ onNext, onDataChange, onPrev }) => {
               icon={FaLock}
               required
               className="pr-12 !rounded-3xl"
+              endContent={
+                <button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <FaEyeSlash className="w-5 h-5" />
+                  ) : (
+                    <FaEye className="w-5 h-5" />
+                  )}
+                </button>
+              }
             />
-            {/* Show/Hide Password Button */}
-            <button
-              type="button"
-              onClick={togglePasswordVisibility}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-              tabIndex={-1}
-            >
-              {showPassword ? (
-                <FaEyeSlash className="w-5 h-5" />
-              ) : (
-                <FaEye className="w-5 h-5" />
-              )}
-            </button>
           </div>
           
           {/* Help Icon in White Circle */}
           <div className="relative group flex-shrink-0">
-            <div className="w-14 h-14 bg-white border-gray-300 border-4 rounded-full flex items-center justify-center cursor-help shadow-sm">
+            <div className="w-14 h-14 bg-white border-gray-300 border-4 rounded-full flex items-center justify-center cursor-pointer shadow-sm">
               <RiQuestionMark className="w-6 h-6 text-black rounded-full" />
             </div>
             <div className="absolute bottom-full right-0 mb-2 w-64 p-3 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
@@ -203,7 +199,7 @@ const PasswordMilestone = ({ onNext, onDataChange, onPrev }) => {
           <button
             type="button"
             onClick={handleBack}
-            className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full hover:shadow-md transition-all duration-200"
+            className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full cursor-pointer hover:shadow-md transition- duration-200"
             disabled={loading}
           >
             <FaChevronLeft className="w-4 h-4 text-gray-600" />
@@ -215,7 +211,7 @@ const PasswordMilestone = ({ onNext, onDataChange, onPrev }) => {
             className={`
               flex-1 py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 relative
               ${isFormValid
-                ? 'bg-primary-500 hover:bg-primary-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                ? 'bg-primary-500 hover:bg-primary-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer'
                 : 'bg-gray-400 cursor-not-allowed opacity-60'
               }
             `}

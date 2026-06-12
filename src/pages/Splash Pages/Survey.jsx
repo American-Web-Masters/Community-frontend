@@ -135,7 +135,7 @@ const Survey = () => {
                   <div key={option.id}>
                     {isOtherAndSelected ? (
                       // Show input field when "Other" is selected
-                      <div className="w-full p-4 rounded-xl border-2 border-primary-500 bg-primary-50/50 shadow-md
+                      <div className="w-full p-4 rounded-xl border-2 border-primary-500 bg-primary-50/50 shadow-md 
                         flex items-center gap-3 h-[58px]">
                         <IconComponent className="w-5 h-5 text-primary-600 flex-shrink-0" />
                         <input
@@ -152,7 +152,7 @@ const Survey = () => {
                       <button
                         onClick={() => handleOptionSelect(option.id)}
                         className={`
-                          w-full p-4 rounded-xl border-2 transition-all duration-200
+                          w-full p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer
                           flex items-center gap-3 text-left h-[58px]
                           ${isSelected 
                             ? 'border-primary-500 bg-primary-50/50 shadow-md' 
@@ -185,7 +185,7 @@ const Survey = () => {
               onClick={handleContinue}
               disabled={!selectedOption || loading || (selectedOption === 'other' && !otherText.trim())}
               className={`
-                w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300
+                w-full py-4 px-6 rounded-xl font-semibold cursor-pointer text-white transition-all duration-300
                 ${selectedOption && !loading && (selectedOption !== 'other' || otherText.trim())
                   ? 'bg-primary-500 hover:bg-primary-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
                   : 'bg-gray-400 cursor-not-allowed opacity-60'
