@@ -112,7 +112,7 @@ const NameMilestone = ({ onNext, onDataChange }) => {
           className={`
             w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 mt-16
             ${isFormValid
-              ? 'shadow-lg bg-primary-500 hover:shadow-xl transform hover:-translate-y-0.5'
+              ? 'shadow-lg bg-primary-500 hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer'
               : 'bg-gray-400 cursor-not-allowed opacity-60 text-gray-700'
             }
           `}
