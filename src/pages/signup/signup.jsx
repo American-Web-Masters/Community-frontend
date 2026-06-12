@@ -100,7 +100,7 @@ function Signup() {
       </div>
 
       {/* Content - Centered with equal height containers */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-8">
+      <div className="relative z-10 min-h-screen flex items-center justify-center  transform lg:scale-90 origin-center">
         <div className="flex items-center justify-center gap-6 max-w-5xl w-full">
           {/* Left Side - Milestone Progress */}
           <div className="hidden lg:block">
@@ -118,7 +118,7 @@ function Signup() {
             ${isTransitioning ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}
           `}>
             {/* Glass morphism container */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 shadow-2xl min-h-[500px] flex items-center justify-center">
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 shadow-2xl min-h-[565px] flex items-center justify-center">
               {renderCurrentMilestone()}
             </div>
           </div>
