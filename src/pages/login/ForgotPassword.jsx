@@ -67,14 +67,14 @@ const ForgotPassword = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className={`flex-1 py-3 rounded-xl font-semibold text-white transition-all duration-300 ${!loading ? 'bg-primary-500 hover:bg-primary-600' : 'bg-gray-400 cursor-not-allowed'}`}
+                      className={`flex-1 py-3 rounded-xl font-semibold text-white transition-all duration-300 cursor-pointer ${!loading ? 'bg-primary-500 hover:bg-primary-600' : 'bg-gray-400 cursor-not-allowed'}`}
                     >
                       {loading ? 'Sending...' : 'Send reset link'}
                     </button>
                   </div>
 
                   <div className="text-center mt-4">
-                    <button type="button" onClick={() => navigate('/login')} className="text-primary-500 hover:text-primary-600 font-semibold">Back to Login</button>
+                    <button type="button" onClick={() => navigate('/login')} className="text-primary-500 cursor-pointer hover:text-primary-600 font-semibold">Back to Login</button>
                   </div>
                 </form>
               </div>
