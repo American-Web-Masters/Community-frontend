@@ -30,6 +30,7 @@ import {
 } from "../../api/prayer";
 import { togglePrayerPin } from "../../api/communities";
 import { getUrgencyMeter, getTimelineUserName, getStatusPillStyle, getTimelineActivityText, getTimelineActivityIcon, formatTimelineTime } from "../../utils/prayerUtils";
+import toast from "react-hot-toast";
 
 const PrayerCard = ({
   prayer, // Full prayer object with bookmarks array
@@ -131,8 +132,10 @@ const PrayerCard = ({
     try {
       if (previousState) {
         await unmarkAsPrayed(prayerId, currentUser._id);
+        toast.success("Removed from prayed");
       } else {
         await markAsPrayed(prayerId, currentUser._id);
+        toast.success("Marked as prayed");
       }
     } catch (error) {
       console.error("Error toggling prayer state:", error);
@@ -186,9 +189,11 @@ const PrayerCard = ({
     setIsSubmittingBookmark(true);
     try {
       if (previousState) {
-        await bookmarkPrayer(prayerId, currentUser._id);
+        await unbookmarkPrayer(prayerId, currentUser._id);
+        toast.success("Bookmark removed");
       } else {
         await bookmarkPrayer(prayerId, currentUser._id);
+        toast.success("Prayer bookmarked");
       }
     } catch (error) {
       console.error("Error toggling bookmark state:", error);
@@ -247,7 +252,7 @@ const PrayerCard = ({
     const tempCommentId = `temp-${Date.now()}`;
     const newCommentObj = {
       _id: tempCommentId,
-      user: currentUser.username || "You",
+      user: currentUser.username || currentUser.name || "You",
       text: commentText,
       time: "Just now",
       reactions: {},
@@ -271,7 +276,7 @@ const PrayerCard = ({
         comment._id === tempCommentId 
           ? {
               ...comment,
-              _id: response.comment?._id || comment._id,
+              _id: response.data?.comment?._id || comment._id,
               isOptimistic: false
             }
           : comment
@@ -731,7 +736,7 @@ const PrayerCard = ({
           {commentsState.length > 2 && (
             <button 
               onClick={() => setShowCommentsModal(true)}
-              className="text-sm text-blue-600 hover:underline mb-3"
+              className="text-sm text-blue-600 hover:underline mb-3 cursor-pointer transition-all duration-200"
             >
               View {commentsState.length - 2} more comments
             </button>
@@ -751,7 +756,7 @@ const PrayerCard = ({
             <button 
               onClick={handleAddComment}
               disabled={!currentUser?._id || !newComment.trim() || isSubmittingComment}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-blue-600 text-white px-4 py-2 cursor-pointer rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmittingComment ? "..." : "Post"}
             </button>

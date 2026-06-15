@@ -118,8 +118,8 @@ export const bookmarkPrayer = async (prayerId, userId) => {
 
 export const unbookmarkPrayer = async (prayerId, userId) => {
   try {
-    const response = await apiClient.delete(`/prayers/${prayerId}/bookmark`, {
-      data: { userId }
+    const response = await apiClient.post(`/prayers/${prayerId}/bookmark`, {
+      userId
     });
     return response.data;
   } catch (error) {
