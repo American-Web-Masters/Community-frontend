@@ -8,6 +8,7 @@ import { FcGoogle } from 'react-icons/fc';
 import { FaApple } from 'react-icons/fa';
 import { apiClient } from '../../api';
 import { setUser, selectIsLoggedIn, selectUser } from '../../store/userSlice';
+import { useGoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -109,7 +110,49 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
-  };  const isFormValid = formData.username.trim() && formData.password.trim();
+  };
+
+  const handleGoogleSuccess = async (tokenResponse) => {
+    setLoading(true);
+    setErrors({});
+    try {
+      console.log('Attempting Google login');
+      const response = await apiClient.post('/users/google-login', {
+        access_token: tokenResponse.access_token
+      });
+      
+      if (response.data.status === 'success') {
+        const { user } = response.data.data;
+        dispatch(setUser(user));
+        
+        const pendingInvite = localStorage.getItem('pendingInvite');
+        if (pendingInvite) {
+          navigate(`/invite/${pendingInvite}`);
+        } else {
+          const target = user?.role === 'admin' ? '/dashboard' : '/';
+          navigate(target, { replace: true });
+        }
+      } else {
+        throw new Error(response.data?.message || 'Google Login failed');
+      }
+    } catch (err) {
+      console.error('Google login error:', err);
+      let errorMessage = 'Google Login failed. Please try again.';
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      setErrors({ submit: errorMessage });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: () => setErrors({ submit: 'Google Login was cancelled or failed.' })
+  });
+
+  const isFormValid = formData.username.trim() && formData.password.trim();
 
   return (
     <div className="min-h-screen relative ">
@@ -176,17 +219,17 @@ const Login = () => {
                     <button
                       type="button"
                       className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full cursor-pointer hover:shadow-md transition-shadow duration-200"
-                      onClick={() => {}}
+                      onClick={() => googleLogin()}
                     >
                       <FcGoogle className="w-6 h-6" />
                     </button>
-                    <button
+                    {/* <button
                       type="button"
                       className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full cursor-pointer hover:shadow-md transition-shadow duration-200"
                       onClick={() => {}}
                     >
                       <FaApple className="w-6 h-6 text-black" />
-                    </button>
+                    </button> */}
                   </div>
                   {/* Error Message */}
                   {errors.submit && (
@@ -219,7 +262,7 @@ const Login = () => {
                     </button>
                   </div>
                   
-                  <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center justify-between mt-2 max-sm:flex-col max-sm:gap-2">
                     <div className="text-sm">
                       <button type="button" onClick={() => navigate('/forgot-password')} className="text-gray-800 cursor-pointer hover:text-gray-900 hover:underline font-semibold">Forgot password?</button>
                     </div>
