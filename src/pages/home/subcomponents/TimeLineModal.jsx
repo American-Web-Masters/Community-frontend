@@ -46,7 +46,7 @@ const TimelineModal = ({
           </h3>
           <button
             onClick={() => setShowTimelineModal(false)}
-            className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            className="text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer"
           >
             <IoClose className="w-6 h-6" />
           </button>
