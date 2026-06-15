@@ -100,6 +100,10 @@ const MyPrayers = () => {
     fetchBookmarks(); 
   }, []);
 
+  const handleBookmarkRemoved = (prayerId) => {
+    setBookmarkedPrayers(prev => prev.filter(prayer => prayer._id !== prayerId && prayer.id !== prayerId));
+  };
+
   const handlePrayerCreated = (newPrayer) => {
     console.log('New prayer created:', newPrayer);
     // Refresh prayers list after creating new prayer
@@ -197,6 +201,7 @@ const MyPrayers = () => {
         bookmarkedPrayers={bookmarkedPrayers}
         loadingBookmarks={loadingBookmarks}
         onRefreshBookmarks={fetchBookmarks}
+        onRemoveBookmark={handleBookmarkRemoved}
         useInfiniteScroll={true}
         onPublishDraft={handlePublishDraft}
       />
