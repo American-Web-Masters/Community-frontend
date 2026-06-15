@@ -30,6 +30,7 @@ const PrayerPageLayout = ({
   bookmarkedPrayers = [],
   loadingBookmarks = false,
   onRefreshBookmarks,
+  onRemoveBookmark = null,
   customRenderer = null,
   onPublishDraft = null, // New callback for publishing draft prayers
   highlightedPrayerId = null
@@ -603,9 +604,6 @@ const PrayerPageLayout = ({
                             onToggleExpand={() => handleToggleExpand(prayer._id || prayer.id)}
                             onPray={() => console.log("Pray clicked", prayer._id || prayer.id)}
                             onBookmark={() => {
-                              if (onRefreshBookmarks && activeTab === "Bookmarks") {
-                                onRefreshBookmarks();
-                              }
                               console.log("Bookmark clicked", prayer._id || prayer.id);
                             }}
                             onComment={() => console.log("Comment clicked", prayer._id || prayer.id)}
@@ -621,10 +619,10 @@ const PrayerPageLayout = ({
                               console.log("Comments updated:", prayer._id || prayer.id, updatedComments);
                             }}
                             onBookmarkStateChange={(newState) => {
-                              if (onRefreshBookmarks && activeTab === "Bookmarks") {
-                                setTimeout(() => onRefreshBookmarks(), 1000);
-                              }
                               console.log("Bookmark state changed:", prayer._id || prayer.id, newState);
+                              if (!newState && activeTab === "Bookmarks" && onRemoveBookmark) {
+                                onRemoveBookmark(prayer._id || prayer.id);
+                              }
                             }}
                             showStatusPill={pageType === "my-prayers" && activeTab === "All"}
                             isDraft={prayer.isDraft === true}
@@ -697,9 +695,6 @@ const PrayerPageLayout = ({
                           onToggleExpand={() => handleToggleExpand(prayer._id || prayer.id)}
                           onPray={() => console.log("Pray clicked", prayer._id || prayer.id)}
                           onBookmark={() => {
-                            if (onRefreshBookmarks && activeTab === "Bookmarks") {
-                              onRefreshBookmarks();
-                            }
                             console.log("Bookmark clicked", prayer._id || prayer.id);
                           }}
                           onComment={() => console.log("Comment clicked", prayer._id || prayer.id)}
@@ -715,10 +710,10 @@ const PrayerPageLayout = ({
                             console.log("Comments updated:", prayer._id || prayer.id, updatedComments);
                           }}
                           onBookmarkStateChange={(newState) => {
-                            if (onRefreshBookmarks && activeTab === "Bookmarks") {
-                              setTimeout(() => onRefreshBookmarks(), 1000);
-                            }
                             console.log("Bookmark state changed:", prayer._id || prayer.id, newState);
+                            if (!newState && activeTab === "Bookmarks" && onRemoveBookmark) {
+                              onRemoveBookmark(prayer._id || prayer.id);
+                            }
                           }}
                           showStatusPill={pageType === "my-prayers" && activeTab === "All"}
                           isDraft={prayer.isDraft === true}
