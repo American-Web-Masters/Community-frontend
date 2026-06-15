@@ -35,7 +35,7 @@ const CommentsModal = ({
 
   const modalContent = (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal-portal p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal-portal p-4 "
       onClick={() => setShowCommentsModal(false)}
       style={{ zIndex: 9999 }}
     >
@@ -50,7 +50,7 @@ const CommentsModal = ({
           </h3>
           <button
             onClick={() => setShowCommentsModal(false)}
-            className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            className="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors duration-200"
           >
             <IoClose className="w-6 h-6" />
           </button>
@@ -155,7 +155,7 @@ const CommentsModal = ({
             <button 
               onClick={handleAddComment}
               disabled={!currentUser?._id || !newComment.trim() || isSubmittingComment}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-blue-600 text-white px-4 py-2 cursor-pointer rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmittingComment ? "..." : "Post"}
             </button>
