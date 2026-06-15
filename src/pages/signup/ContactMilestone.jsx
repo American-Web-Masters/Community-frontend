@@ -2,9 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { FaPhone, FaEnvelope, FaChevronLeft } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { FaApple } from 'react-icons/fa';
+import { useGoogleLogin } from '@react-oauth/google';
 import Input from '../../components/ui/Input';
 import { apiClient } from '../../api';
 import { signupUtils, MILESTONES } from '../../utils/signupUtils';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { setUser } from '../../store/userSlice';
 
 const ContactMilestone = ({ onNext, onDataChange, onPrev }) => {
   const [formData, setFormData] = useState(() => {
@@ -17,7 +21,50 @@ const ContactMilestone = ({ onNext, onDataChange, onPrev }) => {
   });
 
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleGoogleSuccess = async (tokenResponse) => {
+    setLoading(true);
+    setSubmitError(null);
+
+    try {
+      const response = await apiClient.post('/users/google-login', {
+        access_token: tokenResponse.access_token
+      });
+
+      if (response.data.status === 'success') {
+        const { user } = response.data.data;
+        dispatch(setUser(user));
+
+        const pendingInvite = localStorage.getItem('pendingInvite');
+        if (pendingInvite) {
+          navigate(`/invite/${pendingInvite}`);
+        } else {
+          const target = user?.role === 'admin' ? '/dashboard' : '/';
+          navigate(target, { replace: true });
+        }
+      } else {
+        throw new Error(response.data?.message || 'Google Signup failed');
+      }
+    } catch (err) {
+      console.error('Google signup error:', err);
+      let errorMessage = 'Google Signup failed. Please try again.';
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      setSubmitError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: () => setSubmitError('Google Signup was cancelled or failed.')
+  });
 
   // Save to localStorage whenever data changes
   useEffect(() => {
@@ -195,7 +242,7 @@ const ContactMilestone = ({ onNext, onDataChange, onPrev }) => {
 
 
         {/* Or Continue With */}
-        <div className="relative my-8">
+        <div className="relative my-5">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300"></div>
           </div>
@@ -209,18 +256,18 @@ const ContactMilestone = ({ onNext, onDataChange, onPrev }) => {
           <button
             type="button"
             className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full cursor-pointer hover:shadow-md transition- duration-200"
-            onClick={() => {/* TODO: Implement Google OAuth */}}
+            onClick={() => googleLogin()}
+            disabled={loading}
           >
             <FcGoogle className="w-6 h-6" />
           </button>
-          <button
-            type="button"
-            className="flex items-center justify-center w-12 h-12 bg-white border border-gray-300 rounded-full cursor-pointer hover:shadow-md transition- duration-200"
-            onClick={() => {/* TODO: Implement Apple OAuth */}}
-          >
-            <FaApple className="w-6 h-6 text-black" />
-          </button>
         </div>
+
+        {submitError && (
+          <div className="text-red-500 text-sm text-center mb-4">
+            {submitError}
+          </div>
+        )}
 
         {/* Error Message */}
         {errors.submit && (

@@ -81,9 +81,9 @@ function Signup() {
   };
 
   return (
-    <div className="max-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-x-hidden">
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: 'url(/background.png)',
         }}
@@ -91,8 +91,8 @@ function Signup() {
       </div>
 
       {/* Content - Centered with equal height containers */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center  transform lg:scale-90 origin-center">
-        <div className="flex items-center justify-center gap-6 max-w-5xl w-full">
+      <div className="relative z-10 flex flex-col min-h-screen justify-center py-8 px-4 transform lg:scale-90 origin-center">
+        <div className="flex items-center justify-center gap-6 max-w-5xl w-full mx-auto">
           {/* Left Side - Milestone Progress */}
           <div className="hidden lg:block">
             <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 shadow-2xl min-h-[500px] flex items-center">
@@ -109,7 +109,7 @@ function Signup() {
             ${isTransitioning ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}
           `}>
             {/* Glass morphism container */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 shadow-2xl min-h-[565px] flex items-center justify-center">
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 sm:p-8 shadow-2xl min-h-[565px] flex items-center justify-center">
               {renderCurrentMilestone()}
             </div>
           </div>
