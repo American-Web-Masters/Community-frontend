@@ -265,7 +265,7 @@ const Header = ({
         
         {/* Search Bar */}
         {isSearchActive && (
-          <div className="w-[98vw] mx-2 mt-1 bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 overflow-hidden">
+          <div className="w-[98vw] mx-2 mt-4 bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 overflow-hidden">
             <div className="p-4">
               <div className="relative">
                 <input
