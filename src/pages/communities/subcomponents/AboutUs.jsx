@@ -25,14 +25,14 @@ const AboutUs = ({
 
   if (isEditing) {
     return (
-      <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 mb-6">
+      <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 mb-3">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-blue-900">About Us</h3>
           <div className="flex items-center space-x-2">
             <button
               onClick={handleSave}
               disabled={loading}
-              className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 disabled:opacity-50"
+              className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 cursor-pointer disabled:opacity-50"
               title="Save changes"
             >
               <MdCheck size={18} />
@@ -40,7 +40,7 @@ const AboutUs = ({
             <button
               onClick={onCancel}
               disabled={loading}
-              className="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 disabled:opacity-50"
+              className="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 cursor-pointer disabled:opacity-50"
               title="Cancel editing"
             >
               <MdClose size={18} />
@@ -55,7 +55,7 @@ const AboutUs = ({
           placeholder="Enter community description..."
         />
         {community.createdAt && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="pt-4 border-t border-gray-200">
             <p className="text-sm text-[#03045E]">
               Community created on {new Date(community.createdAt).toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -70,13 +70,13 @@ const AboutUs = ({
   }
 
   return (
-    <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 mb-6">
+    <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 mb-3">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-blue-900">About Us</h3>
         {isModerator && (
           <button
             onClick={onEdit}
-            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors duration-200"
+            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors duration-200 cursor-pointer" 
             title="Edit About Us"
           >
             <FaEdit size={20} />
@@ -87,7 +87,7 @@ const AboutUs = ({
         {community.description || "This community is dedicated to bringing people together through shared values and meaningful connections."}
       </p>
       {community.createdAt && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
+        <div className=" pt-4 border-t border-gray-200">
           <p className="text-sm text-[#03045E]">
             Community created on {new Date(community.createdAt).toLocaleDateString('en-US', {
               year: 'numeric',

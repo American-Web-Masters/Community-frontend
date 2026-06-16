@@ -52,7 +52,7 @@ const Tags = ({
             <button
               onClick={handleSave}
               disabled={loading}
-              className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 disabled:opacity-50"
+              className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 disabled:opacity-50 cursor-pointer"
               title="Save changes"
             >
               <MdCheck size={18} />
@@ -60,7 +60,7 @@ const Tags = ({
             <button
               onClick={onCancel}
               disabled={loading}
-              className="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 disabled:opacity-50"
+              className="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 cursor-pointer disabled:opacity-50"
               title="Cancel editing"
             >
               <MdClose size={18} />
@@ -80,7 +80,7 @@ const Tags = ({
             />
             <button
               onClick={handleAddTag}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-1"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-1 cursor-pointer"
             >
               <MdAdd size={16} />
               <span>Add</span>
@@ -97,7 +97,7 @@ const Tags = ({
               <span>#{tag}</span>
               <button
                 onClick={() => handleRemoveTag(index)}
-                className="ml-2 text-red-500 hover:text-red-700"
+                className="ml-2 text-red-500 hover:text-red-700 cursor-pointer"
                 title="Remove tag"
               >
                 <MdDelete size={18} />
@@ -120,7 +120,7 @@ const Tags = ({
           {isModerator && (
             <button
               onClick={onEdit}
-              className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors duration-200"
+              className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors duration-200 cursor-pointer"
               title="Edit Tags"
             >
             <FaEdit size={20} />
@@ -139,7 +139,7 @@ const Tags = ({
         {isModerator && (
           <button
             onClick={onEdit}
-            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors duration-200"
+            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors duration-200 cursor-pointer"
             title="Edit Tags"
           >
             <FaEdit size={20} />

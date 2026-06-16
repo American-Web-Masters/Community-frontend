@@ -7,7 +7,7 @@ import PrayerCard from "../../../components/ui/PrayerCard";
 import FlaggedPosts from "./FlaggedPosts";
 
 const ModeratorQueue = ({ community, currentUser }) => {
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState("Pending Posts"); // Default changed from "All"
   const [selectedItems, setSelectedItems] = useState([]);
   const [pendingPosts, setPendingPosts] = useState([]);
   const [joinRequests, setJoinRequests] = useState([]);
@@ -64,7 +64,7 @@ const ModeratorQueue = ({ community, currentUser }) => {
             name: (request?.firstname && request?.lastname) 
               ? `${request.firstname} ${request.lastname}` 
               : "Unknown User",
-            avatar: community?.coverPhoto || "/api/placeholder/32/32",
+            avatar: request?.profilePicture || "",
             role: "Member"
           },
           requestType: "Join Request",
@@ -245,7 +245,8 @@ const ModeratorQueue = ({ community, currentUser }) => {
         {/* Tab Navigation */}
         <div className="px-4 py-3 border-b border-gray-200">
           <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-            {["All", "Flagged Posts", "Pending Posts", "Join Request"].map((tab) => (
+            {/* "All" tab commented out for now as per request */}
+            {[/* "All", */ "Flagged Posts", "Pending Posts", "Join Request"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -328,37 +329,43 @@ const ModeratorQueue = ({ community, currentUser }) => {
               <div key={item.id} className="px-4 py-3 border-b border-gray-100 last:border-b-0">
                 {item.type === "joinRequest" ? (
                   /* Join Request Item */
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedItems.includes(item.id)}
-                      onChange={() => handleItemSelect(item.id)}
-                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
-                    />
-                    <img 
-                      src={item.user.avatar} 
-                      alt={item.user.name}
-                      className="w-10 h-10 rounded-full flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 text-sm truncate">
-                        {item.user.name} • {item.requestType}
+                  <div className="flex items-center gap-3 py-1">
+                    {item.user.avatar && item.user.avatar !== "/api/placeholder/32/32" ? (
+                      <img 
+                        src={item.user.avatar} 
+                        alt={item.user.name}
+                        className="w-12 h-12 rounded-full flex-shrink-0 object-cover border border-gray-200"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(item.user.name) + '&background=random';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-white">
+                        <span className="text-white font-bold text-sm tracking-wide">
+                          {item.user.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || '?'}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0 ml-1">
+                      <p className="font-semibold text-gray-900 text-sm truncate">
+                        {item.user.name}
                       </p>
-                      <p className="text-xs text-gray-500">{item.user.role}</p>
-                      <p className="text-xs text-gray-700 mt-1">
-                        Requested at: {item.timestamp}
+                      <p className="text-xs text-gray-500 font-medium">{item.requestType} • {item.user.role}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {item.timestamp}
                       </p>
                     </div>
-                    <div className="flex gap-1 flex-shrink-0">
+                    <div className="flex gap-2 flex-shrink-0">
                       <button
                         onClick={() => handleApprove(item.id)}
-                        className="cursor-pointer bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
+                        className="cursor-pointer bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold transition-colors shadow-sm"
                       >
-                        Approve
+                        Accept
                       </button>
                       <button
                         onClick={() => handleReject(item.id)}
-                        className="bg-red-500 cursor-pointer hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
+                        className="bg-red-500 cursor-pointer hover:bg-red-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold transition-colors shadow-sm"
                       >
                         Reject
                       </button>

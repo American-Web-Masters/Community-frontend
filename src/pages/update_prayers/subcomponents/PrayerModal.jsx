@@ -13,7 +13,7 @@ const PrayerModal = ({ prayer, isOpen, onClose }) => {
           <h2 className="text-lg font-semibold text-gray-900">Prayer Details</h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
           >
             <IoClose size={20} className="text-gray-500" />
           </button>
