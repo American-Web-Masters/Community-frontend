@@ -184,7 +184,7 @@ const InviteValidation = () => {
               <button
                 onClick={handleJoinCommunity}
                 disabled={joining}
-                className="btn-blue-gradient text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-2"
+                className="btn-blue-gradient text-white px-6 py-3 rounded-lg font-medium cursor-pointer hover:opacity-90 transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-2"
               >
                 {joining ? (
                   <>
@@ -199,7 +199,7 @@ const InviteValidation = () => {
               <button
                 onClick={handleCloseModal}
                 disabled={joining}
-                className="text-gray-600 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-all duration-200 disabled:opacity-50"
+                className="text-gray-600 px-6 py-3 rounded-lg font-medium cursor-pointer hover:bg-gray-100 transition-all duration-200 disabled:opacity-50"
               >
                 Cancel
               </button>
