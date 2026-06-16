@@ -315,7 +315,7 @@ const CreatePrayerModal = ({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+            className="p-2 hover:bg-gray-100 rounded-full cursor-pointer transition-colors duration-200"
             disabled={loading}
           >
             <FaTimes className="w-5 h-5 text-gray-600" />
@@ -346,7 +346,7 @@ const CreatePrayerModal = ({
                   <button
                     type="button"
                     onClick={() => handleInputChange('urgency', 'low')}
-                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`px-3 py-2 rounded-xl text-sm font-medium cursor-pointer transition-all duration-200 ${
                       formData.urgency === 'low'
                         ? 'bg-green-100 text-green-700 border-2 border-green-300'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
@@ -357,7 +357,7 @@ const CreatePrayerModal = ({
                   <button
                     type="button"
                     onClick={() => handleInputChange('urgency', 'normal')}
-                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`px-3 py-2 rounded-xl text-sm font-medium cursor-pointer transition-all duration-200 ${
                       formData.urgency === 'normal'
                         ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
@@ -368,7 +368,7 @@ const CreatePrayerModal = ({
                   <button
                     type="button"
                     onClick={() => handleInputChange('urgency', 'high')}
-                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`px-3 py-2 rounded-xl text-sm font-medium cursor-pointer transition-all duration-200 ${
                       formData.urgency === 'high'
                         ? 'bg-red-100 text-red-700 border-2 border-red-300'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
@@ -388,7 +388,7 @@ const CreatePrayerModal = ({
                       key={emoji}
                       type="button"
                       onClick={() => handleInputChange('moodEmoji', emoji)}
-                      className={`w-12 h-12 text-2xl rounded-full transition-all duration-200 hover:scale-110 ${
+                      className={`w-12 h-12 text-2xl rounded-full transition-all duration-200 hover:scale-110 cursor-pointer ${
                         formData.moodEmoji === emoji
                           ? 'bg-blue-100 ring-2 ring-blue-600 scale-110'
                           : 'bg-gray-100 hover:bg-gray-200'
@@ -475,7 +475,7 @@ const CreatePrayerModal = ({
                           }));
                         }
                       }}
-                      className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 ${
+                      className={`px-3 py-1 rounded-full text-sm transition-colors cursor-pointer duration-200 ${
                         formData.tags.includes(tag)
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -495,7 +495,7 @@ const CreatePrayerModal = ({
                       <button
                         type="button"
                         onClick={() => handleRemoveTag(tag)}
-                        className="ml-1 hover:text-blue-200 transition-colors"
+                        className="ml-1 hover:text-blue-200 transition-colors cursor-pointer"
                       >
                         <FaTimes className="w-3 h-3" />
                       </button>
@@ -516,7 +516,7 @@ const CreatePrayerModal = ({
                     type="button"
                     onClick={handleAddTag}
                     disabled={!newTag.trim()}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Add
                   </button>
@@ -569,7 +569,7 @@ const CreatePrayerModal = ({
             {!communityMode && showScheduler && (
               <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
                 <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                  <FaCalendarAlt className="w-4 h-4" />
+                  <FaCalendarAlt className="w-4 h-4 "/>
                   Schedule Entry
                 </h3>
                 <input
@@ -577,7 +577,7 @@ const CreatePrayerModal = ({
                   value={scheduledDate}
                   onChange={(e) => setScheduledDate(e.target.value)}
                   min={getMinDate()}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border cursor-pointer border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required={showScheduler}
                 />
               </div>
@@ -597,7 +597,7 @@ const CreatePrayerModal = ({
                   type="button"
                   onClick={() => setShowScheduler(true)}
                   disabled={loading}
-                  className="w-full py-3 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <FaCalendarAlt className="w-4 h-4" />
                   Schedule Entry
@@ -609,7 +609,7 @@ const CreatePrayerModal = ({
                   type="button"
                   onClick={() => setShowScheduler(false)}
                   disabled={loading}
-                  className="w-full py-3 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200"
+                  className="w-full py-3 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
                 >
                   Remove Schedule
                 </button>
@@ -621,7 +621,7 @@ const CreatePrayerModal = ({
                     type="button"
                     onClick={handleSaveAsDraft}
                     disabled={loading || !formData.content.trim()}
-                    className="flex-1 py-3 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50"
+                    className="flex-1 py-3 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50 cursor-pointer"
                   >
                     {loading ? 'Saving...' : 'Save as Draft'}
                   </button>
@@ -629,7 +629,7 @@ const CreatePrayerModal = ({
                 <button
                   type="submit"
                   disabled={loading || !formData.content.trim() || (!communityMode && showScheduler && !scheduledDate)}
-                  className={`${editMode || communityMode ? 'w-full' : 'flex-1'} py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50`}
+                  className={`${editMode || communityMode ? 'w-full' : 'flex-1'} py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 cursor-pointer`}
                 >
                   {loading ? (editMode ? 'Publishing...' : 'Creating...') : (editMode ? 'Publish Prayer' : (communityMode ? 'Share Prayer' : (showScheduler ? 'Share Prayer Request' : 'Share Prayer Request')))}
                 </button>
