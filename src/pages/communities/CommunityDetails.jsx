@@ -650,7 +650,7 @@ const CommunityDetails = () => {
                 <button
                   onClick={handleSaveHeader}
                   disabled={headerLoading}
-                  className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 disabled:opacity-50 flex items-center space-x-1"
+                  className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors cursor-pointer duration-200 disabled:opacity-50 flex items-center space-x-1"
                   title="Save changes"
                 >
                   {headerLoading ? (
@@ -662,7 +662,7 @@ const CommunityDetails = () => {
                 <button
                   onClick={handleCancelHeaderEdit}
                   disabled={headerLoading}
-                  className="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 disabled:opacity-50"
+                  className="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors cursor-pointer duration-200 disabled:opacity-50"
                   title="Cancel editing"
                 >
                   <MdClose size={18} />
@@ -884,7 +884,7 @@ const CommunityDetails = () => {
       </div>
 
       {/* Tab Navigation */}
-      <div className="px-4 mb-6">
+      <div className="px-4 mb-2">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           {/* Tabs Bar - Scrollable on small screens, auto on desktop */}
           <div className="w-full lg:w-auto relative">

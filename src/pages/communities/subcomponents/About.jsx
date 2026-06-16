@@ -64,7 +64,7 @@ const About = ({ community, onCommunityUpdate }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       <AboutUs 
         community={community} 
         isModerator={isModerator}

@@ -202,7 +202,7 @@ const ProfileHeader = ({
                 <button
                   onClick={handleSave}
                   disabled={headerLoading || verseLookup.loading}
-                  className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 disabled:opacity-50 flex items-center space-x-1"
+                  className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 disabled:opacity-50 flex items-center space-x-1 cursor-pointer"
                   title="Save changes"
                 >
                   {headerLoading ? (
@@ -214,7 +214,7 @@ const ProfileHeader = ({
                 <button
                   onClick={handleCancelEdit}
                   disabled={headerLoading}
-                  className="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 disabled:opacity-50"
+                  className="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 disabled:opacity-50 cursor-pointer"
                   title="Cancel editing"
                 >
                   <MdClose size={18} />

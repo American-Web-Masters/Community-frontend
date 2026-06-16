@@ -48,14 +48,14 @@ const Rules = ({
 
   if (isEditing) {
     return (
-      <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 mb-6">
+      <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 mb-3">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-blue-900">Community Rules</h3>
           <div className="flex items-center space-x-2">
             <button
               onClick={handleSave}
               disabled={loading}
-              className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 disabled:opacity-50"
+              className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 disabled:opacity-50 cursor-pointer"
               title="Save changes"
             >
               <MdCheck size={18} />
@@ -63,7 +63,7 @@ const Rules = ({
             <button
               onClick={onCancel}
               disabled={loading}
-              className="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 disabled:opacity-50"
+              className="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 disabled:opacity-50 cursor-pointer"
               title="Cancel editing"
             >
               <MdClose size={18} />
@@ -87,7 +87,7 @@ const Rules = ({
               </div>
               <button
                 onClick={() => handleRemoveRule(index)}
-                className="p-1 pt-3 text-red-600 hover:bg-red-100 rounded-lg transition-colors duration-200 mt-1"
+                className="p-1 pt-3 text-red-600 hover:bg-red-100 rounded-lg transition-colors duration-200 mt-1 cursor-pointer"
                 title="Remove rule"
               >
                 <MdDelete size={28} />
@@ -97,7 +97,7 @@ const Rules = ({
         </div>
         <button
           onClick={handleAddRule}
-          className="mt-4 flex items-center space-x-2 px-4 py-2 text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors duration-200"
+          className="mt-4 flex items-center space-x-2 px-4 py-2 text-blue-600 border border-blue-300 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors duration-200"
         >
           <MdAdd size={16} />
           <span className="text-sm">Add Rule</span>
@@ -107,13 +107,13 @@ const Rules = ({
   }
 
   return (
-    <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 mb-6">
+    <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 mb-3">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-blue-900">Community Rules</h3>
         {isModerator && (
           <button
             onClick={onEdit}
-            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors duration-200"
+            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors duration-200 cursor-pointer"
             title="Edit Rules"
           >
             <FaEdit size={20} />

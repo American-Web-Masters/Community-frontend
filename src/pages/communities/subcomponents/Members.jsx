@@ -1,10 +1,12 @@
 import { PiDotsThreeOutlineFill } from "react-icons/pi";
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from 'react-hot-toast';
 import { kickMember, changeMemberRole } from '../../../api/communities';
 
 const Members = ({ community, currentUser, onCommunityUpdate }) => {
 
+  const navigate = useNavigate();
   const [openModal, setOpenModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
@@ -47,7 +49,7 @@ const Members = ({ community, currentUser, onCommunityUpdate }) => {
     setSelectedMember(member);
     const position = {
       x: rect.left - 120, // Position to the left of the dots
-      y: rect.top + window.scrollY
+      y: rect.top - 4 // Anchor above the dots using viewport coordinates for fixed positioning
     };
     setModalPosition(position);
     setOpenModal(true);
@@ -114,7 +116,7 @@ const Members = ({ community, currentUser, onCommunityUpdate }) => {
       } else {
         toast.error(response.error || 'Failed to change member role');
       }
-    } catch (error) {
+    } catch {
       toast.error('An error occurred while changing member role');
     } finally {
       setIsLoading(false);
@@ -142,16 +144,18 @@ const Members = ({ community, currentUser, onCommunityUpdate }) => {
       } else {
         toast.error(response.error || 'Failed to kick member');
       }
-    } catch (error) {
+    } catch {
       toast.error('An error occurred while kicking member');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle message (placeholder for future implementation)
+  // Handle message routing
   const handleMessage = () => {
-    toast.success('Message feature coming soon!');
+    if (selectedMember && selectedMember.user) {
+      navigate(`/messages?chat=direct&user=${encodeURIComponent(selectedMember.user._id)}`);
+    }
     setOpenModal(false);
     setSelectedMember(null);
   };
@@ -166,7 +170,7 @@ const Members = ({ community, currentUser, onCommunityUpdate }) => {
   }
 
   return (
-    <div className="-mt-4 mx-4">
+    <div className=" mx-4">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">
         Members ({members.length})
       </h3>
@@ -246,6 +250,7 @@ const Members = ({ community, currentUser, onCommunityUpdate }) => {
           style={{
             left: modalPosition.x,
             top: modalPosition.y,
+            transform: 'translateY(-100%)',
           }}
         >
           <button
@@ -254,7 +259,7 @@ const Members = ({ community, currentUser, onCommunityUpdate }) => {
               e.stopPropagation();
               setShowRoleModal(true);
             }}
-            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
           >
             Assign Role
           </button>
@@ -265,7 +270,7 @@ const Members = ({ community, currentUser, onCommunityUpdate }) => {
               setOpenModal(false);
               setShowKickConfirm(true);
             }}
-            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
           >
             Kick
           </button>
@@ -275,7 +280,7 @@ const Members = ({ community, currentUser, onCommunityUpdate }) => {
               e.stopPropagation();
               handleMessage();
             }}
-            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
           >
             Message
           </button>
@@ -290,6 +295,7 @@ const Members = ({ community, currentUser, onCommunityUpdate }) => {
           style={{
             left: modalPosition.x - 140,
             top: modalPosition.y,
+            transform: 'translateY(-100%)',
           }}
         >
           {console.log('Role modal is rendering with position:', { 
@@ -304,7 +310,7 @@ const Members = ({ community, currentUser, onCommunityUpdate }) => {
               handleRoleChange('moderator');
             }}
             disabled={selectedMember.role === 'moderator' || isLoading}
-            className={`w-full px-4 py-2 text-left text-sm transition-colors ${
+            className={`w-full px-4 py-2 text-left text-sm cursor-pointer transition-colors ${
               selectedMember.role === 'moderator' 
                 ? 'text-gray-400 cursor-not-allowed' 
                 : 'text-gray-700 hover:bg-gray-100'
