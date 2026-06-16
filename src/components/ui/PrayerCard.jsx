@@ -471,7 +471,7 @@ const PrayerCard = ({
           <div className="flex items-center space-x-2">
             {/* Show status pill only when showStatusPill is true */}
             {showStatusPill && status && (
-              <span className={`px-1 py-1 rounded-full hidden md:block text-xs relative -top-1 ${getStatusPillStyle(status)}`}>
+              <span className={`px-2.5 py-1 rounded-full hidden md:block text-xs relative -top-1 ${getStatusPillStyle(status)}`}>
                 {status}
               </span>
             )}
