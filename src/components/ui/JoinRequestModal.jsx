@@ -31,7 +31,7 @@ const JoinRequestModal = ({
             {/* Close button */}
             <button
               onClick={onClose}
-              className="w-full py-3 px-4 btn-blue-gradient text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200"
+              className="w-full py-3 px-4 btn-blue-gradient cursor-pointer text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200"
             >
               Got it
             </button>

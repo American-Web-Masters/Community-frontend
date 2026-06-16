@@ -146,7 +146,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+            className="p-2 hover:bg-gray-100 rounded-full  transition-colors duration-200 cursor-pointer"
             disabled={loading}
           >
             <FaTimes className="w-5 h-5 text-gray-600" />
@@ -196,7 +196,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   <button
                     type="button"
                     onClick={() => handleInputChange('privacyLevel', 'public')}
-                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`px-3 py-2 rounded-xl text-sm  cursor-pointer font-medium transition-all duration-200 ${
                       formData.privacyLevel === 'public'
                         ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
@@ -207,7 +207,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   <button
                     type="button"
                     onClick={() => handleInputChange('privacyLevel', 'private')}
-                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`px-3 py-2 rounded-xl text-sm font-medium cursor-pointer transition-all duration-200 ${
                       formData.privacyLevel === 'private'
                         ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
@@ -319,7 +319,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                           <button
                             type="button"
                             onClick={() => handleRemoveTag(tag)}
-                            className="ml-2 text-blue-600 hover:text-blue-800"
+                            className="ml-2 text-blue-600  cursor-pointer hover:text-blue-800"
                           >
                             ×
                           </button>
@@ -342,7 +342,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                       type="button"
                       onClick={handleAddTag}
                       disabled={!newTag.trim()}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 bg-gray-100  cursor-pointertext-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Add
                     </button>
@@ -365,14 +365,14 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 py-3 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50"
+              className="flex-1 py-3 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 cursor-pointer transition-colors duration-200 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !formData.name.trim() || !formData.description.trim()}
-              className="flex-1 py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
+              className="flex-1 py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 cursor-pointer transition-colors duration-200 disabled:opacity-50"
             >
               {loading ? 'Creating...' : 'Create Community'}
             </button>
