@@ -100,7 +100,7 @@ const StripeStatusBanner = ({ communityId, isOwner }) => {
   const statusInfo = getStatusInfo();
 
   return (
-    <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div className="mb-2.5 bg-amber-50 border border-amber-200 rounded-lg p-4 shadow-sm">
       <div className="flex items-start space-x-3">
         <div className="flex-shrink-0">
           {statusInfo.icon}
