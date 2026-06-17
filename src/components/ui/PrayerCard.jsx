@@ -81,6 +81,7 @@ const PrayerCard = ({
   isPrivate = false, // Flag to show if prayer is private
   onProfileEdit = null, // Profile-specific edit handler
   onProfileDelete = null, // Profile-specific delete handler
+  sharedByText = null, // Text to show if this prayer was shared
 }) => {
   const currentUser = useSelector(selectUser);
   const navigate = useNavigate();
@@ -151,24 +152,42 @@ const PrayerCard = ({
 
   // Handle sharing this prayer with optimistic update
   const handleShareClick = async () => {
-    if (!currentUser?._id || isSubmittingShare) return;
+    if (!currentUser?._id || isSubmittingShare || isSharedState) return;
 
     // Optimistic UI update
     const previousState = isSharedState;
-    const newState = !previousState;
-    setIsSharedState(newState);
-    if (onSharedStateChange) onSharedStateChange(newState);
+    setIsSharedState(true);
+    if (onSharedStateChange) onSharedStateChange(true);
     if (onShare) onShare();
 
     setIsSubmittingShare(true);
     try {
       await sharePrayer(prayerId, currentUser._id);
+      
+      const isAuthor = user?._id === currentUser._id;
+      if (isAuthor) {
+        toast.success("You boosted your own post to your profile! 🚀", {
+          style: {
+            borderRadius: '10px',
+            background: '#333',
+            color: '#fff',
+          },
+        });
+      } else {
+        toast.success("Prayer shared to your profile! ✨", {
+          style: {
+            borderRadius: '10px',
+            background: '#333',
+            color: '#fff',
+          },
+        });
+      }
     } catch (error) {
-      console.error("Error toggling share state:", error);
+      console.error("Error sharing prayer:", error);
       // Revert optimistic update on error
       setIsSharedState(previousState);
       if (onSharedStateChange) onSharedStateChange(previousState);
-      setError("Failed to update share status. Please try again.");
+      setError("Failed to share prayer. Please try again.");
       setTimeout(() => setError(null), 3000);
     } finally {
       setIsSubmittingShare(false);
@@ -393,6 +412,16 @@ const PrayerCard = ({
       />
       
       <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4  transition-all duration-500 ease-in-out relative">
+        {/* Shared Post Indicator */}
+        {sharedByText && (
+          <div className="inline-flex items-center space-x-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs px-3 py-1.5 rounded-full mb-3 font-semibold shadow-sm border border-indigo-100 transition-all duration-200 cursor-default group">
+            <div className="bg-white rounded-full p-1 shadow-sm group-hover:scale-110 transition-transform">
+              <IoShareOutline className="w-3.5 h-3.5 text-indigo-600" />
+            </div>
+            <span>{sharedByText}</span>
+          </div>
+        )}
+
         {/* Publish Draft Button - positioned absolutely */}
         {isDraft && onPublishDraft && (
           <button
@@ -436,19 +465,19 @@ const PrayerCard = ({
               
               {/* Community Pills - Show only in collapsed view */}
               {!isExpanded && (
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-1 overflow-hidden shrink min-w-0">
                   {communities[0] &&(
-                    <span className="bg-blue-400 text-white px-2 py-1 rounded-full text-xs">
-                    {communities[0]?.name?.length > 8 ? communities[0]?.name?.slice(0,7) + "..." : communities[0]?.name}
+                    <span className="bg-blue-400 text-white px-2 py-1 rounded-full text-xs truncate max-w-[150px]">
+                    {communities[0]?.name}
                   </span>
                   )}
                   {communities[1] && (
-                  <span className="bg-blue-400 text-white px-2 py-1 rounded-full text-xs">
-                    {communities[1]?.name?.length > 8 ? communities[1]?.name?.slice(0,7) + "..." : communities[1]?.name}
+                  <span className="bg-blue-400 text-white px-2 py-1 rounded-full text-xs truncate max-w-[150px]">
+                    {communities[1]?.name}
                   </span>
                   )}
                   {communities.length > 2 && (
-                    <span className="bg-gray-400 text-white px-2 py-1 rounded-full text-xs">
+                    <span className="bg-gray-400 text-white px-2 py-1 rounded-full text-xs shrink-0 whitespace-nowrap">
                       +{communities.length - 2}
                     </span>
                   )}
@@ -766,14 +795,14 @@ const PrayerCard = ({
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between pt-3 border-t border-blue-200/50">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
           <button
             onClick={handlePrayClick}
             disabled={!currentUser?._id || isSubmittingPrayer}
-            className={`flex cursor-pointer items-center space-x-1 transition-all duration-200 ${
+            className={`flex cursor-pointer items-center space-x-1 transition-all duration-200 px-2 py-1 rounded-full ${
               isPrayedState 
-                ? 'text-blue-600 bg-blue-50 px-2 py-1 rounded-full' 
-                : 'text-gray-600 hover:text-blue-500 px-2 py-1'
+                ? 'text-blue-600 bg-blue-50' 
+                : 'text-gray-600 hover:text-blue-500 hover:bg-gray-50'
             } disabled:opacity-50 disabled:cursor-not-allowed ${
               isSubmittingPrayer ? 'animate-pulse' : ''
             }`}
@@ -792,10 +821,10 @@ const PrayerCard = ({
           <button
             onClick={handleBookmarkClick}
             disabled={!currentUser?._id || isSubmittingBookmark}
-            className={`flex items-center cursor-pointer space-x-1 transition-all duration-200 ${
+            className={`flex items-center cursor-pointer space-x-1 transition-all duration-200 px-2 py-1 rounded-full ${
               isBookmarkedState 
-                ? 'text-blue-600 bg-blue-50 px-2 py-1 rounded-full' 
-                : 'text-gray-600 hover:text-blue-600'
+                ? 'text-blue-600 bg-blue-50' 
+                : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
             } disabled:opacity-50 disabled:cursor-not-allowed ${
               isSubmittingBookmark ? 'animate-pulse' : ''
             }`}
@@ -808,7 +837,7 @@ const PrayerCard = ({
 
           <button
             onClick={() => setShowComments(!showComments)}
-            className="flex items-center cursor-pointer space-x-1 text-gray-600 hover:text-blue-600 transition-colors duration-200"
+            className="flex items-center cursor-pointer space-x-1 transition-colors duration-200 px-2 py-1 rounded-full text-gray-600 hover:text-blue-600 hover:bg-gray-50"
           >
             <IoChatbubbleOutline className="w-5 h-5 cursor-pointer" />
             {commentsState.length > 0 && (
@@ -819,10 +848,10 @@ const PrayerCard = ({
           <button
             onClick={handleShareClick}
             disabled={!currentUser?._id || isSubmittingShare || isSharedState}
-            className={`flex items-center space-x-1 cursor-pointer transition-all duration-200 ${
+            className={`flex items-center space-x-1 cursor-pointer transition-all duration-200 px-2 py-1 rounded-full ${
               isSharedState 
-                ? 'cursor-not-allowed text-blue-600 bg-blue-50 px-2 py-1 rounded-full' 
-                : 'text-gray-600 hover:text-blue-600 px-2 py-1'
+                ? 'cursor-not-allowed text-blue-600 bg-blue-50' 
+                : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
             } disabled:opacity-50 disabled:cursor-not-allowed ${
               isSubmittingShare ? 'animate-pulse' : ''
             }`}

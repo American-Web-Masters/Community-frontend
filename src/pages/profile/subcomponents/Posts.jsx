@@ -251,7 +251,18 @@ const Posts = forwardRef((props, ref) => {
           <>
             {/* Simple grid layout for posts */}
             <div className="grid grid-cols-1 w-full max-md:px-3">
-              {prayers.map((prayer) => (
+              {prayers.map((prayer) => {
+                // Determine if this prayer is in the list because the profile user shared it
+                const profileUserId = props?.userProfile?.user?._id;
+                const isAuthor = prayer.user?._id === profileUserId || prayer.userProfile?._id === profileUserId;
+                const isSharedByProfileUser = prayer.shares?.some(s => s.user?._id === profileUserId || s.user === profileUserId || s === profileUserId);
+                
+                let sharedByText = null;
+                if (!isAuthor && isSharedByProfileUser) {
+                  sharedByText = `${props?.userProfile?.user?.firstname || 'User'} shared this`;
+                }
+
+                return (
                 <div
                   key={prayer._id}
                   className="mb-4"
@@ -261,6 +272,7 @@ const Posts = forwardRef((props, ref) => {
                 >
                   <PrayerCard
                     prayer={prayer}
+                    sharedByText={sharedByText}
                     prayerId={prayer._id}
                     user={{
                       name: prayer.anonymous ? 'Anonymous' : prayer.user?.firstname || prayer.userProfile?.firstname || 'Unknown User',
@@ -293,7 +305,8 @@ const Posts = forwardRef((props, ref) => {
                     isPrivate={prayer.isPrivate || false}
                   />
                 </div>
-              ))}
+              );
+              })}
             </div>
 
             {/* Loading indicator for infinite scroll */}

@@ -148,12 +148,10 @@ const Communities = () => {
       <div className="mt-2">
         <Header
           showNotification={true}
-          showFilter={true}
-          showSearch={true}
+          showFilter={false}
+          showSearch={false}
           onLogoutClick={handleLogout}
           onNotificationClick={() => console.log("Notification clicked")}
-          onFilterClick={() => console.log("Filter clicked")}
-          onSearchClick={() => console.log("Search clicked")}
         />
       </div>
 

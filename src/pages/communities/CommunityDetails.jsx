@@ -5,6 +5,8 @@ import { selectUser } from "../../store/userSlice";
 import { useStableMasonry } from "../../hooks/useStableMasonry";
 import PrayerCard from "../../components/ui/PrayerCard";
 import StripeStatusBanner from "../../components/ui/StripeStatusBanner";
+import Header from "../../components/ui/Header";
+import { useLogout } from "../../hooks/useLogout";
 import { IoPersonOutline, IoArrowBackOutline, IoFlagOutline } from "react-icons/io5";
 import { PiChatText , PiBellLight} from "react-icons/pi";
 import { FaRegHeart, FaEdit } from "react-icons/fa";
@@ -24,6 +26,11 @@ const CommunityDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const user = useSelector(selectUser);
+  const { logout } = useLogout();
+
+  const handleLogout = () => {
+    logout();
+  };
   const [community, setCommunity] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -628,6 +635,17 @@ const CommunityDetails = () => {
 
   return (
     <div className="min-h-screen light-background overflow-x-hidden">
+      {/* App Header */}
+      <div className="mt-2">
+        <Header
+          showNotification={true}
+          showFilter={false}
+          showSearch={false}
+          onLogoutClick={handleLogout}
+          onNotificationClick={() => console.log("Notification clicked")}
+        />
+      </div>
+
       {/* Header with back button */}
       <div className="ml-3 px-4 pt-4 pb-2">
         <button 
@@ -852,10 +870,7 @@ const CommunityDetails = () => {
                   <span><FaRegHeart className="w-4 h-4" /></span>
                   <span>Support</span>
                 </button>
-                <button className="cursor-pointer btn-blue-gradient px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2  justify-center">
-                  <span><PiBellLight className="w-4 h-4" /></span>
-                  <span>Notifications</span>
-                </button>
+
                 {isOwnerOrModerator && (
                                   <button 
                   onClick={handleInviteClick}
@@ -954,7 +969,7 @@ const CommunityDetails = () => {
             {activeTab === "Feed" && (
               <button 
                 onClick={handleCreatePost}
-                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg justify-center gap-x-1"
+                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg justify-center gap-x-1 cursor-pointer"
               >
                 <span className="inline">Create New Post</span>
                 <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
@@ -1013,7 +1028,7 @@ const CommunityDetails = () => {
             {activeTab === "Feed" && (
               <button 
                 onClick={handleCreatePost}
-                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg w-full sm:w-auto justify-center gap-x-1"
+                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg w-full sm:w-auto justify-center gap-x-1 cursor-pointer"
               >
                 <span className="inline">Create New Post</span>
                 <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
