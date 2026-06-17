@@ -210,9 +210,9 @@ useEffect(() => {
           {/* Back Button */}
           <button 
             onClick={() => navigate(`/communities/${id}`)}
-            className="flex items-center text-white hover:text-gray-900 mb-6 transition-colors bg-primary-500 py-2 px-2 rounded-full"
+            className="flex items-center text-white hover:scale-105  mb-6 duration-200 ease-in-out transition-all  bg-primary-500 py-2 px-2.5 rounded-full font-medium cursor-pointer"
           >
-            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Back to Community
