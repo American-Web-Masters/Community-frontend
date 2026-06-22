@@ -62,9 +62,11 @@ const CommunityDetails = () => {
     fetchCommunityDetails();
   }, [id]);
 
-  const fetchCommunityDetails = async () => {
+  const fetchCommunityDetails = async ({ silent = false } = {}) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       const response = await fetchCommunityById(id, user);
       
       if (response.success) {
@@ -79,7 +81,9 @@ const CommunityDetails = () => {
       console.error('Error fetching community details:', err);
       setError('Failed to load community details. Please try again.');
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -315,8 +319,10 @@ const CommunityDetails = () => {
 
   // Get feed prayers - memoized to prevent unnecessary re-renders
   const feedPrayers = useMemo(() => {
-    return community?.feed?.map(feedItem => ({
-      ...feedItem.prayer,
+    return community?.feed
+      ?.filter(feedItem => feedItem?.prayer?._id)
+      .map(feedItem => ({
+        ...feedItem.prayer,
       feedItemId: feedItem._id,
       addedBy: feedItem.addedBy,
       addedAt: feedItem.addedAt,
@@ -411,6 +417,22 @@ const CommunityDetails = () => {
         return feedItem;
       });
       
+      return {
+        ...prevCommunity,
+        feed: updatedFeed
+      };
+    });
+  };
+
+  const handlePrayerDeleted = (prayerId) => {
+    setCommunity(prevCommunity => {
+      if (!prevCommunity?.feed) return prevCommunity;
+
+      const updatedFeed = prevCommunity.feed.filter(feedItem => {
+        const feedPrayerId = feedItem?.prayer?._id || feedItem?.prayer?.id;
+        return feedPrayerId !== prayerId;
+      });
+
       return {
         ...prevCommunity,
         feed: updatedFeed
@@ -1255,7 +1277,13 @@ const CommunityDetails = () => {
 
         {activeTab === "Moderator Queue" && isOwnerOrModerator && (
           <div className="w-full">
-            <ModeratorQueue community={community} currentUser={user} />
+            <ModeratorQueue
+              community={community}
+              currentUser={user}
+              feedPrayers={feedPrayers}
+              onPrayerDeleted={handlePrayerDeleted}
+              onCommunityRefresh={() => fetchCommunityDetails({ silent: true })}
+            />
           </div>
         )}
       </div>

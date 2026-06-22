@@ -25,7 +25,7 @@ const FlagModal = ({
             <h3 className="text-lg font-semibold text-gray-800">Flag Prayer</h3>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 cursor-pointer text-2xl"
             >
               <span className="sr-only">Close</span>
               ×
@@ -40,7 +40,7 @@ const FlagModal = ({
               <select
                 value={flagReason}
                 onChange={(e) => setFlagReason(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
               >
                 <option value="">Select a reason</option>
                 <option value="inappropriate_content">Inappropriate content</option>
@@ -56,13 +56,13 @@ const FlagModal = ({
           <div className="flex space-x-3 mt-6">
             <button
               onClick={onClose}
-              className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+              className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
-              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
+              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 cursor-pointer"
             >
               Flag Prayer
             </button>

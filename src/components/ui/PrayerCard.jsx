@@ -10,8 +10,9 @@ import {
   PiBookBookmarkLight,
 } from "react-icons/pi";
 import { BsSend } from "react-icons/bs";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from 'react-router-dom';
+import { FiTrash2 } from 'react-icons/fi';
 import { useSelector } from "react-redux";
 import { selectUser } from "../../store/userSlice";
 import {CommentsModal, TimelineModal} from "../../pages/home/subcomponents";
@@ -82,6 +83,8 @@ const PrayerCard = ({
   onProfileEdit = null, // Profile-specific edit handler
   onProfileDelete = null, // Profile-specific delete handler
   sharedByText = null, // Text to show if this prayer was shared
+  isModeratorContext = false, // Flag to indicate if this is in moderator queue
+  onModeratorDelete = null, // Moderator specific delete handler
 }) => {
   const currentUser = useSelector(selectUser);
   const navigate = useNavigate();
@@ -105,6 +108,20 @@ const PrayerCard = ({
   const [isBookmarkedState, setIsBookmarkedState] = useState(() => 
     prayer ? isBookmarkedByUser(prayer, currentUser?._id) : false
   );
+  const [isModeratorMenuOpen, setIsModeratorMenuOpen] = useState(false);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const moderatorMenuRef = useRef(null);
+
+  // Close moderator menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (moderatorMenuRef.current && !moderatorMenuRef.current.contains(event.target)) {
+        setIsModeratorMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   
   // Extract timeline from prayer object and sort by date (recent first)
   const timelineData = (prayer?.timeline || []).sort((a, b) => {
@@ -113,9 +130,14 @@ const PrayerCard = ({
     return dateB - dateA; // Descending order (most recent first)
   });
   console.log(prayer);
+  const isContentExpanded = onToggleExpand ? isExpanded : internalExpanded;
   const handleToggleExpand = () => {
     console.log("PrayerCard toggle clicked for user:", user?.name);
-    onToggleExpand();
+    if (onToggleExpand) {
+      onToggleExpand();
+      return;
+    }
+    setInternalExpanded((prev) => !prev);
   };
 
   // Handle praying for this prayer with optimistic update
@@ -464,7 +486,7 @@ const PrayerCard = ({
               )}
               
               {/* Community Pills - Show only in collapsed view */}
-              {!isExpanded && (
+              {!isContentExpanded && (
                 <div className="flex items-center space-x-1 overflow-hidden shrink min-w-0">
                   {communities[0] &&(
                     <span className="bg-blue-400 text-white px-2 py-1 rounded-full text-xs truncate max-w-[150px]">
@@ -516,6 +538,33 @@ const PrayerCard = ({
               />
             )}
             
+            {/* Moderator-specific menu */}
+            {isModeratorContext && (
+              <div className="relative" ref={moderatorMenuRef}>
+                <button
+                  onClick={() => setIsModeratorMenuOpen(!isModeratorMenuOpen)}
+                  className="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 focus:outline-none cursor-pointer"
+                  title="Moderator options"
+                >
+                  <BsThreeDots className="w-5 h-5 text-gray-500" />
+                </button>
+                {isModeratorMenuOpen && (
+                  <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 min-w-[160px]">
+                    <button
+                      onClick={() => {
+                        setIsModeratorMenuOpen(false);
+                        if (onModeratorDelete) onModeratorDelete(prayer);
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors duration-200 flex items-center space-x-2 cursor-pointer"
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                      <span>Delete Post</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+            
             {(isCommunityPrayer && isOwnerOrModerator) ? (
               <button
                 onClick={handleTogglePin}
@@ -556,7 +605,7 @@ const PrayerCard = ({
 
       {/* Prayer Text */}
       <div className="mb-4 relative overflow-hidden smooth-height">
-        {isExpanded ? (
+        {isContentExpanded ? (
           <div className="expand-animation transform transition-all duration-500 ease-out">
             {/* Community Pills - Show all in expanded view */}
             <div className="flex flex-wrap gap-2 mb-3">

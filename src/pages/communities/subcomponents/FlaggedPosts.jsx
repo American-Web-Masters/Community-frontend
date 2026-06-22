@@ -3,7 +3,7 @@ import { fetchReportedPrayers, handleReportedPrayer } from '../../../api/communi
 import { getTimeAgo } from '../../../utils/prayerUtils';
 import toast from 'react-hot-toast';
 
-const FlaggedPosts = ({ community, currentUser }) => {
+const FlaggedPosts = ({ community, currentUser, onCommunityRefresh }) => {
   const [reportedPrayers, setReportedPrayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -53,6 +53,9 @@ const FlaggedPosts = ({ community, currentUser }) => {
         toast.success('Request has been accepted and prayer is removed');
         // Remove the item from the list after successful approval
         setReportedPrayers(prev => prev.filter(item => item._id !== itemId));
+        if (onCommunityRefresh) {
+          await onCommunityRefresh();
+        }
       } else {
         toast.error(response.error || 'Failed to approve request');
       }
@@ -106,7 +109,7 @@ const FlaggedPosts = ({ community, currentUser }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading flagged posts...</p>
@@ -117,7 +120,7 @@ const FlaggedPosts = ({ community, currentUser }) => {
 
   if (error) {
     return (
-      <div className="text-center py-12 text-red-600">
+      <div className="text-center py-8 text-red-600">
         <p>{error}</p>
       </div>
     );
@@ -125,7 +128,7 @@ const FlaggedPosts = ({ community, currentUser }) => {
 
   if (reportedPrayers.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500">
+      <div className="text-center py-8 text-gray-500">
         <p>No flagged posts</p>
       </div>
     );
