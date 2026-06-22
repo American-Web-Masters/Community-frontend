@@ -1004,7 +1004,7 @@ const CommunityDetails = () => {
             {(activeTab === "Event" && isOwnerOrModerator) && (
               <button 
                 onClick={handleCreateEvent}
-                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg justify-center"
+                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg justify-center cursor-pointer"
               >
                 <span className="inline">Create New Event</span>
                 <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
@@ -1063,7 +1063,7 @@ const CommunityDetails = () => {
             {activeTab === "Event" && (
               <button 
                 onClick={handleCreateEvent}
-                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg w-full sm:w-auto justify-center"
+                className="btn-blue-gradient text-white px-6 py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-lg w-full sm:w-auto justify-center cursor-pointer"
               >
                 <span className="inline">Create New Event</span>
                 <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
