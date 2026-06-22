@@ -71,21 +71,21 @@ function EventCard({
 
               {/* Action Icons */}
               <div className="flex items-start gap-1 ml-2">
-                <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                {/* <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
                   <FaBell className="w-4 h-4 text-gray-600" />
-                </button>
+                </button> */}
                 {isOwnerOrModerator && (
                   <>
                     <button
                       onClick={() => handleEditEvent(event)}
-                      className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                       title="Edit Event"
                     >
                       <FaEdit className="w-4 h-4 text-gray-600" />
                     </button>
                     <button
                       onClick={() => handleDeleteEvent(event)}
-                      className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                       title="Delete Event"
                     >
                       <FaTrash className="w-4 h-4 text-gray-600" />
