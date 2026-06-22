@@ -179,7 +179,17 @@ const CreateEventModal = ({
       }
     } catch (err) {
       console.error('Event operation error:', err);
-      setError(err.response?.data?.message || `Failed to ${editMode ? 'update' : 'create'} event. Please try again.`);
+      let msg = err.response?.data?.message || `Failed to ${editMode ? 'update' : 'create'} event. Please try again.`;
+      
+      // Handle expired/invalid Google Calendar token
+      const errString = JSON.stringify(err.response?.data || {});
+      if (msg.includes('invalid_grant') || errString.includes('invalid_grant')) {
+        msg = 'Your Google Calendar connection has expired. Please reconnect your calendar above.';
+        setIsCalendarConnected(false); // Reset connection state to show the connect button
+      }
+      
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -210,10 +220,10 @@ const CreateEventModal = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm cursor-pointer"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto cursor-default">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800">
@@ -221,7 +231,7 @@ const CreateEventModal = ({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 cursor-pointer"
             disabled={loading}
           >
             <FaTimes className="w-5 h-5 text-gray-600" />
@@ -248,7 +258,7 @@ const CreateEventModal = ({
               </div>
               <button 
                 type="button"
-                className={`py-2 px-4 btn-blue-gradient text-sm rounded-lg text-white transition-all ${
+                className={`py-2 px-4 btn-blue-gradient text-sm rounded-lg text-white transition-all cursor-pointer ${
                   connectingCalendar ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
                 }`}
                 onClick={handleConnectCalendar}
@@ -276,7 +286,7 @@ const CreateEventModal = ({
           <div className="space-y-6">
             {/* Event Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 cursor-pointer">
                 Event Name *
               </label>
               <input
@@ -284,7 +294,7 @@ const CreateEventModal = ({
                 placeholder="Enter event name..."
                 value={formData.eventName}
                 onChange={(e) => handleInputChange('eventName', e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 cursor-text"
                 required
               />
             </div>
@@ -293,7 +303,7 @@ const CreateEventModal = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Event Date */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2 cursor-pointer">
                   <FaCalendarAlt className="inline w-4 h-4 mr-2" />
                   Event Date *
                 </label>
@@ -302,14 +312,14 @@ const CreateEventModal = ({
                   value={formData.eventDate}
                   onChange={(e) => handleInputChange('eventDate', e.target.value)}
                   min={getMinDateForInput()}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 cursor-pointer"
                   required
                 />
               </div>
 
               {/* Event Time */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2 cursor-pointer">
                   <FaClock className="inline w-4 h-4 mr-2" />
                   Event Time * {userTimeZone && <span className="text-xs text-gray-500">({userTimeZone})</span>}
                 </label>
@@ -317,7 +327,7 @@ const CreateEventModal = ({
                   type="time"
                   value={formData.eventTime}
                   onChange={(e) => handleInputChange('eventTime', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 cursor-pointer"
                   required
                 />
               </div>
@@ -325,14 +335,14 @@ const CreateEventModal = ({
 
             {/* Event Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 cursor-pointer">
                 Event Description *
               </label>
               <textarea
                 placeholder="Describe your event..."
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
-                className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[120px]"
+                className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[120px] cursor-text"
                 rows={4}
                 required
               />
@@ -351,7 +361,7 @@ const CreateEventModal = ({
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="flex-1 py-3 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50"
+                className="flex-1 py-3 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50 cursor-pointer"
               >
                 Cancel
               </button>
@@ -361,7 +371,7 @@ const CreateEventModal = ({
                 className={`flex-1 py-3 px-6 rounded-xl font-medium transition-colors duration-200 ${
                   !isCalendarConnected 
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
                 } disabled:opacity-50`}
                 title={!isCalendarConnected ? 'Please connect Google Calendar first' : ''}
               >
