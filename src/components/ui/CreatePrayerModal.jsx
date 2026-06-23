@@ -6,12 +6,13 @@ import { fetchApprovedCommunitiesForUser } from '../../api/communities';
 import { FaTimes, FaCalendarAlt } from 'react-icons/fa';
 import { localInputToUTC } from '../../utils/prayerUtils';
 
-const CreatePrayerModal = ({ 
-  isOpen, 
-  onClose, 
-  onSuccess, 
-  editMode = false, 
-  initialData = null, 
+const CreatePrayerModal = ({
+  isOpen,
+  onClose,
+  onSuccess,
+  editMode = false,
+  profileEditMode = false, // Slim edit flow for the profile menu (no scheduler/draft/communities)
+  initialData = null,
   editPrayerId = null,
   communityMode = false,
   communityId = null,
@@ -227,14 +228,33 @@ const CreatePrayerModal = ({
     setError('');
 
     try {
-      if (editMode && editPrayerId) {
+      if (profileEditMode && editPrayerId) {
+        // Profile-edit: simple patch, no draft/community mutation.
+        // We deliberately omit `communities` so the server preserves the existing list.
+        const payload = {
+          content: formData.content.trim(),
+          urgency: formData.urgency,
+          anonymous: formData.anonymous,
+          moodEmoji: formData.moodEmoji,
+          tags: formData.tags
+        };
+        const response = await apiClient.put(`/prayers/${editPrayerId}`, payload);
+
+        if (response.data.success) {
+          console.log('Prayer edited (profile):', response.data.data);
+          if (onSuccess) onSuccess(response.data.data);
+          onClose();
+        } else {
+          throw new Error(response.data?.message || 'Failed to update post');
+        }
+      } else if (editMode && editPrayerId) {
         // Update existing prayer (publish draft)
         const payload = {
           ...createPayload(),
           isDraft: false // Publish the draft
         };
         const response = await apiClient.put(`/prayers/${editPrayerId}`, payload);
-        
+
         if (response.data.success) {
           console.log('Prayer published successfully:', response.data.data);
           resetForm();
@@ -267,7 +287,10 @@ const CreatePrayerModal = ({
       }
     } catch (err) {
       console.error('Prayer operation error:', err);
-      setError(err.response?.data?.message || `Failed to ${editMode ? 'publish' : 'create'} prayer. Please try again.`);
+      const fallback = profileEditMode
+        ? 'Failed to update post. Please try again.'
+        : `Failed to ${editMode ? 'publish' : 'create'} prayer. Please try again.`;
+      setError(err.response?.data?.message || fallback);
     } finally {
       setLoading(false);
     }
@@ -311,7 +334,11 @@ const CreatePrayerModal = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800">
-            {editMode ? 'Publish Prayer' : (communityMode ? `Share Prayer in ${community?.name || 'Community'}` : 'Prayer Request')}
+            {profileEditMode
+              ? 'Edit Post'
+              : editMode
+                ? 'Publish Prayer'
+                : (communityMode ? `Share Prayer in ${community?.name || 'Community'}` : 'Prayer Request')}
           </h2>
           <button
             onClick={onClose}
@@ -524,7 +551,7 @@ const CreatePrayerModal = ({
               </div>
 
               {/* Community Selection - Only for normal prayer requests */}
-              {!communityMode && !showScheduler && (
+              {!communityMode && !showScheduler && !profileEditMode && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-3">Communities (Optional)</h3>
                   {loadingCommunities ? (
@@ -566,7 +593,7 @@ const CreatePrayerModal = ({
           {/* Full-width sections */}
           <div className="mt-6 space-y-6">
             {/* Schedule Entry */}
-            {!communityMode && showScheduler && (
+            {!communityMode && !profileEditMode && showScheduler && (
               <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
                 <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                   <FaCalendarAlt className="w-4 h-4 "/>
@@ -592,7 +619,7 @@ const CreatePrayerModal = ({
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 pt-4">
-              {!communityMode && !showScheduler && (
+              {!communityMode && !profileEditMode && !showScheduler && (
                 <button
                   type="button"
                   onClick={() => setShowScheduler(true)}
@@ -604,7 +631,7 @@ const CreatePrayerModal = ({
                 </button>
               )}
 
-              {!communityMode && showScheduler && (
+              {!communityMode && !profileEditMode && showScheduler && (
                 <button
                   type="button"
                   onClick={() => setShowScheduler(false)}
@@ -616,7 +643,7 @@ const CreatePrayerModal = ({
               )}
 
               <div className="flex gap-3">
-                {!editMode && !communityMode && (
+                {!editMode && !communityMode && !profileEditMode && (
                   <button
                     type="button"
                     onClick={handleSaveAsDraft}
@@ -628,10 +655,16 @@ const CreatePrayerModal = ({
                 )}
                 <button
                   type="submit"
-                  disabled={loading || !formData.content.trim() || (!communityMode && showScheduler && !scheduledDate)}
-                  className={`${editMode || communityMode ? 'w-full' : 'flex-1'} py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 cursor-pointer`}
+                  disabled={loading || !formData.content.trim() || (!communityMode && !profileEditMode && showScheduler && !scheduledDate)}
+                  className={`${editMode || communityMode || profileEditMode ? 'w-full' : 'flex-1'} py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 cursor-pointer`}
                 >
-                  {loading ? (editMode ? 'Publishing...' : 'Creating...') : (editMode ? 'Publish Prayer' : (communityMode ? 'Share Prayer' : (showScheduler ? 'Share Prayer Request' : 'Share Prayer Request')))}
+                  {loading
+                    ? (profileEditMode ? 'Saving...' : (editMode ? 'Publishing...' : 'Creating...'))
+                    : (profileEditMode
+                        ? 'Save Changes'
+                        : (editMode
+                            ? 'Publish Prayer'
+                            : (communityMode ? 'Share Prayer' : 'Share Prayer Request')))}
                 </button>
               </div>
             </div>

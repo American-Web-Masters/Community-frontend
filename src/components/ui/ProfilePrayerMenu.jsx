@@ -4,32 +4,31 @@ import { TbPin, TbPinFilled } from 'react-icons/tb';
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
 import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 
-const ProfilePrayerMenu = ({ 
-  prayer, 
-  onTogglePin, 
+const ProfilePrayerMenu = ({
+  prayer,
+  onTogglePin,
   onToggleVisibility,
   onEdit,
   onDelete,
-  className = "" 
+  isPinned: isPinnedProp = false,
+  isPrivate: isPrivateProp = false,
+  isPinLoading = false,
+  isVisibilityLoading = false,
+  className = ""
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  // Keep local mirror of pin/visibility so the menu reflects current state immediately
-  const [isPinned, setIsPinned] = useState(prayer?.isUserPinned || prayer?.isPinned || false);
-  const [isPublic, setIsPublic] = useState(prayer?.isPrivate !== true); // isPrivate=true → private
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
 
-  // Sync local state when the prayer prop changes (e.g. after a refresh)
-  useEffect(() => {
-    setIsPinned(prayer?.isUserPinned || prayer?.isPinned || false);
-    setIsPublic(prayer?.isPrivate !== true);
-  }, [prayer?.isUserPinned, prayer?.isPinned, prayer?.isPrivate]);
+  // Single source of truth: parent drives the state via props.
+  const isPinned = !!isPinnedProp;
+  const isPublic = !isPrivateProp;
 
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        menuRef.current && !menuRef.current.contains(event.target) && 
+        menuRef.current && !menuRef.current.contains(event.target) &&
         buttonRef.current && !buttonRef.current.contains(event.target)
       ) {
         setIsOpen(false);
@@ -43,8 +42,8 @@ const ProfilePrayerMenu = ({
   }, [isOpen]);
 
   const handleTogglePin = () => {
+    if (isPinLoading) return;
     const newPinState = !isPinned;
-    setIsPinned(newPinState);   // optimistic local update
     setIsOpen(false);
     if (onTogglePin) {
       onTogglePin(prayer._id, newPinState);
@@ -52,10 +51,9 @@ const ProfilePrayerMenu = ({
   };
 
   const handleToggleVisibility = () => {
+    if (isVisibilityLoading) return;
     const newIsPublic = !isPublic;
-    setIsPublic(newIsPublic);   // optimistic local update
     setIsOpen(false);
-    // pass newVisibilityState = newIsPublic (true → make public, false → make private)
     if (onToggleVisibility) {
       onToggleVisibility(prayer._id, newIsPublic);
     }
@@ -85,23 +83,29 @@ const ProfilePrayerMenu = ({
 
       {/* Popup Menu */}
       {isOpen && (
-        <div 
+        <div
           ref={menuRef}
           className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 min-w-[160px]"
         >
           {/* Pin/Unpin Option */}
           <button
             onClick={handleTogglePin}
-            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2"
+            disabled={isPinLoading}
+            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isPinned ? (
+            {isPinLoading ? (
               <>
-                <TbPinFilled className="w-4 h-4 text-blue-600" />
+                <span className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin" />
+                <span>Updating...</span>
+              </>
+            ) : isPinned ? (
+              <>
+                <TbPinFilled className="w-4 h-4 text-blue-600 cursor-pointer" />
                 <span>Unpin Post</span>
               </>
             ) : (
               <>
-                <TbPin className="w-4 h-4" />
+                <TbPin className="w-4 h-4 cursor-pointer" />
                 <span>Pin Post</span>
               </>
             )}
@@ -110,16 +114,22 @@ const ProfilePrayerMenu = ({
           {/* Public/Private Option */}
           <button
             onClick={handleToggleVisibility}
-            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2"
+            disabled={isVisibilityLoading}
+            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isPublic ? (
+            {isVisibilityLoading ? (
               <>
-                <IoEyeOffOutline className="w-4 h-4" />
+                <span className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin" />
+                <span>Updating...</span>
+              </>
+            ) : isPublic ? (
+              <>
+                <IoEyeOffOutline className="w-4 h-4 cursor-pointer" />
                 <span>Make Private</span>
               </>
             ) : (
               <>
-                <IoEyeOutline className="w-4 h-4" />
+                <IoEyeOutline className="w-4 h-4 cursor-pointer" />
                 <span>Make Public</span>
               </>
             )}
@@ -131,18 +141,18 @@ const ProfilePrayerMenu = ({
           {/* Edit Option */}
           <button
             onClick={handleEdit}
-            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2"
+            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2 cursor-pointer"
           >
-            <FiEdit2 className="w-4 h-4 text-blue-500" />
+            <FiEdit2 className="w-4 h-4 text-blue-500 cursor-pointer" />
             <span>Edit Post</span>
           </button>
 
           {/* Delete Option */}
           <button
             onClick={handleDelete}
-            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors duration-200 flex items-center space-x-2"
+            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors duration-200 flex items-center space-x-2 cursor-pointer"
           >
-            <FiTrash2 className="w-4 h-4" />
+            <FiTrash2 className="w-4 h-4 cursor-pointer" />
             <span>Delete Post</span>
           </button>
         </div>

@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { useState, useCallback, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
+import toast from 'react-hot-toast';
 import { selectUser } from '../../../store/userSlice';
 import { apiClient } from '../../../api';
 import { togglePrayerPinStatus, togglePrayerVisibility, deletePrayer } from '../../../api/prayer';
@@ -28,6 +29,12 @@ const Posts = forwardRef((props, ref) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingPrayer, setDeletingPrayer] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Per-prayer loading state for pin / visibility / delete so the card can show a soft overlay
+  // and the rest of the list doesn't re-render.
+  const [pinLoadingIds, setPinLoadingIds] = useState(() => new Set());
+  const [visibilityLoadingIds, setVisibilityLoadingIds] = useState(() => new Set());
+  const [deletingId, setDeletingId] = useState(null);
 
   // Expose openCreateModal method to parent component
   useImperativeHandle(ref, () => ({
@@ -91,46 +98,100 @@ const Posts = forwardRef((props, ref) => {
     loading,
     error,
     fetchMoreItems,
-    refresh
+    refresh,
+    setItems
   } = useInfiniteScroll(fetchMyPrayers, {
     limit: 20,
     enabledCondition: !!userId
   });
 
-  // Profile-specific handlers
+  // Profile-specific handlers — in-place updates so the list never re-renders as a whole.
   const handleProfileTogglePin = async (prayerId, newPinState) => {
+    if (!prayerId) return;
+    setPinLoadingIds((prev) => {
+      const next = new Set(prev);
+      next.add(prayerId);
+      return next;
+    });
+
+    // Optimistic flip
+    setItems((prev) => prev.map((p) => (
+      p._id === prayerId
+        ? { ...p, isUserPinned: newPinState, isPinned: newPinState }
+        : p
+    )));
+
     try {
-      console.log(`${newPinState ? 'Pinning' : 'Unpinning'} prayer:`, prayerId);
       const response = await togglePrayerPinStatus(prayerId);
-      
-      if (response.success) {
-        console.log('Pin status updated successfully:', response.prayer);
-        // Refresh the prayers list to get updated data
-        refresh();
+      if (response?.success) {
+        // Merge any fields the server returned without losing the optimistic state.
+        setItems((prev) => prev.map((p) => (
+          p._id === prayerId
+            ? { ...p, ...(response.prayer || {}), isUserPinned: newPinState, isPinned: newPinState }
+            : p
+        )));
+        toast.success(newPinState ? 'Pinned to your profile' : 'Unpinned from your profile');
       } else {
-        throw new Error(response.message || 'Failed to update pin status');
+        throw new Error(response?.message || 'Failed to update pin status');
       }
     } catch (error) {
       console.error('Error toggling pin status:', error);
-      // You could add a toast notification here to show the error to the user
+      // Revert optimistic update
+      setItems((prev) => prev.map((p) => (
+        p._id === prayerId
+          ? { ...p, isUserPinned: !newPinState, isPinned: !newPinState }
+          : p
+      )));
+      toast.error(error?.response?.data?.message || error?.message || 'Failed to update pin status');
+    } finally {
+      setPinLoadingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(prayerId);
+        return next;
+      });
     }
   };
 
-  const handleProfileToggleVisibility = async (prayerId, newVisibilityState) => {
+  const handleProfileToggleVisibility = async (prayerId, newIsPublic) => {
+    if (!prayerId) return;
+    // newIsPublic === true means "make public", false means "make private".
+    const newIsPrivate = !newIsPublic;
+    setVisibilityLoadingIds((prev) => {
+      const next = new Set(prev);
+      next.add(prayerId);
+      return next;
+    });
+
+    // Optimistic flip
+    setItems((prev) => prev.map((p) => (
+      p._id === prayerId ? { ...p, isPrivate: newIsPrivate } : p
+    )));
+
     try {
-      console.log(`Making prayer ${newVisibilityState ? 'private' : 'public'}:`, prayerId);
       const response = await togglePrayerVisibility(prayerId);
-      
-      if (response.success) {
-        console.log('Visibility updated successfully:', response.prayer);
-        // Refresh the prayers list to get updated data
-        refresh();
+      if (response?.success) {
+        setItems((prev) => prev.map((p) => (
+          p._id === prayerId
+            ? { ...p, ...(response.prayer || {}), isPrivate: newIsPrivate }
+            : p
+        )));
+        toast.success(newIsPublic ? 'Post is now public' : 'Post is now private');
       } else {
-        throw new Error(response.message || 'Failed to update visibility');
+        throw new Error(response?.message || 'Failed to update visibility');
       }
     } catch (error) {
       console.error('Error toggling visibility:', error);
-      // You could add a toast notification here to show the error to the user
+      // Revert
+      setItems((prev) => prev.map((p) => (
+        p._id === prayerId ? { ...p, isPrivate: !newIsPrivate } : p
+      )));
+      toast.error(error?.response?.data?.message || error?.message || 'Failed to update visibility');
+    } finally {
+      setVisibilityLoadingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(prayerId);
+        return next;
+      });
     }
   };
 
@@ -146,8 +207,15 @@ const Posts = forwardRef((props, ref) => {
   };
 
   const handleEditSuccess = (updatedPrayer) => {
-    console.log('Prayer edited successfully:', updatedPrayer);
-    refresh();
+    if (updatedPrayer?._id) {
+      setItems((prev) => prev.map((p) => (
+        p._id === updatedPrayer._id ? { ...p, ...updatedPrayer } : p
+      )));
+    } else {
+      // Fallback: if the modal didn't return the updated prayer, refresh.
+      refresh();
+    }
+    toast.success('Post updated');
     handleEditModalClose();
   };
 
@@ -165,16 +233,20 @@ const Posts = forwardRef((props, ref) => {
   const handleConfirmDelete = async () => {
     if (!deletingPrayer?._id || isDeleting) return;
     setIsDeleting(true);
+    setDeletingId(deletingPrayer._id);
     try {
       await deletePrayer(deletingPrayer._id);
-      // Backend returns 204 No Content on success — no body to check
-      console.log('Prayer deleted successfully');
-      refresh();
+      // Remove the prayer from the list in place so the rest of the list doesn't re-render.
+      const removedId = deletingPrayer._id;
+      setItems((prev) => prev.filter((p) => p._id !== removedId));
+      toast.success('Post deleted');
       handleDeleteModalClose();
     } catch (error) {
       console.error('Error deleting prayer:', error);
+      toast.error(error?.response?.data?.message || error?.message || 'Failed to delete post');
     } finally {
       setIsDeleting(false);
+      setDeletingId(null);
     }
   };
 
@@ -303,6 +375,9 @@ const Posts = forwardRef((props, ref) => {
                     onProfileDelete={handleProfileDelete}
                     isPinned={prayer.isUserPinned || false}
                     isPrivate={prayer.isPrivate || false}
+                    isPinLoading={pinLoadingIds.has(prayer._id)}
+                    isVisibilityLoading={visibilityLoadingIds.has(prayer._id)}
+                    isDeleting={deletingId === prayer._id}
                   />
                 </div>
               );
@@ -355,12 +430,13 @@ const Posts = forwardRef((props, ref) => {
         editPrayerId={selectedDraftPrayer?._id}
       />
 
-      {/* Edit Prayer Modal */}
+      {/* Edit Prayer Modal (slim profile-edit flow: no scheduler, draft, or community picker) */}
       <CreatePrayerModal
         isOpen={isEditModalOpen}
         onClose={handleEditModalClose}
         onSuccess={handleEditSuccess}
         editMode={true}
+        profileEditMode={true}
         initialData={editingPrayer}
         editPrayerId={editingPrayer?._id}
       />
@@ -374,7 +450,7 @@ const Posts = forwardRef((props, ref) => {
                 <h3 className="text-lg font-semibold text-gray-800">Delete Post</h3>
                 <button
                   onClick={handleDeleteModalClose}
-                  className="text-gray-500 hover:text-gray-700 text-xl leading-none"
+                  className="text-gray-500 hover:text-gray-700 text-xl leading-none cursor-pointer"
                   disabled={isDeleting}
                 >
                   ×
@@ -403,14 +479,14 @@ const Posts = forwardRef((props, ref) => {
                 <button
                   onClick={handleDeleteModalClose}
                   disabled={isDeleting}
-                  className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50"
+                  className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={isDeleting}
-                  className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
                   <FaTrash className="w-4 h-4" />
                   {isDeleting ? 'Deleting…' : 'Delete Post'}
