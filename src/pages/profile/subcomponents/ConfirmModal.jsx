@@ -27,20 +27,20 @@ const ConfirmModal = ({
             <div className="flex-1">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-                <button onClick={onClose} className="text-gray-500 hover:text-gray-700">×</button>
+                <button onClick={onClose} className="text-gray-500 hover:text-gray-700 cursor-pointer">×</button>
               </div>
               {description && <p className="text-sm text-gray-600 mb-4">{description}</p>}
 
               <div className="flex space-x-3">
                 <button
                   onClick={onClose}
-                  className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                  className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
                 >
                   {cancelLabel}
                 </button>
                 <button
                   onClick={handleConfirm}
-                  className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
+                  className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 cursor-pointer"
                 >
                   {confirmLabel}
                 </button>
