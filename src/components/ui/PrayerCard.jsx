@@ -85,6 +85,10 @@ const PrayerCard = ({
   sharedByText = null, // Text to show if this prayer was shared
   isModeratorContext = false, // Flag to indicate if this is in moderator queue
   onModeratorDelete = null, // Moderator specific delete handler
+  // Profile-action loading states (driven by Posts.jsx)
+  isPinLoading = false,
+  isVisibilityLoading = false,
+  isDeleting = false,
 }) => {
   const currentUser = useSelector(selectUser);
   const navigate = useNavigate();
@@ -101,6 +105,9 @@ const PrayerCard = ({
   const [isSubmittingShare, setIsSubmittingShare] = useState(false);
   const [isSubmittingBookmark, setIsSubmittingBookmark] = useState(false);
   const [isSubmittingPin, setIsSubmittingPin] = useState(false);
+  // Track pin state locally so community pin toggles have an optimistic UI.
+  // For the profile flow, the parent (Posts.jsx) drives `isPinned` via in-place
+  // setItems updates, so we sync the local mirror whenever the prop changes.
   const [isPinnedState, setIsPinnedState] = useState(isPinned);
   const [error, setError] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
@@ -122,6 +129,12 @@ const PrayerCard = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Sync local pin state when the prop changes (profile flow drives `isPinned`
+  // from outside via in-place setItems updates).
+  useEffect(() => {
+    setIsPinnedState(isPinned);
+  }, [isPinned]);
   
   // Extract timeline from prayer object and sort by date (recent first)
   const timelineData = (prayer?.timeline || []).sort((a, b) => {
@@ -434,6 +447,22 @@ const PrayerCard = ({
       />
       
       <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4  transition-all duration-500 ease-in-out relative">
+        {/* Card-level loading overlay (profile pin/visibility/delete in flight) */}
+        {(isPinLoading || isVisibilityLoading || isDeleting) && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/60 backdrop-blur-[1px] rounded-2xl transition-opacity duration-200">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full shadow border border-gray-200 text-xs font-medium text-gray-700">
+              <span className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin" />
+              <span>
+                {isDeleting
+                  ? 'Deleting…'
+                  : isPinLoading
+                    ? 'Updating pin…'
+                    : 'Updating visibility…'}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Shared Post Indicator */}
         {sharedByText && (
           <div className="inline-flex items-center space-x-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs px-3 py-1.5 rounded-full mb-3 font-semibold shadow-sm border border-indigo-100 transition-all duration-200 cursor-default group">
@@ -535,6 +564,10 @@ const PrayerCard = ({
                 onToggleVisibility={onProfileToggleVisibility}
                 onEdit={onProfileEdit}
                 onDelete={onProfileDelete}
+                isPinned={isPinnedState}
+                isPrivate={isPrivate}
+                isPinLoading={isPinLoading}
+                isVisibilityLoading={isVisibilityLoading}
               />
             )}
             
