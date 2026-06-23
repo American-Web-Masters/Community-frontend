@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 /**
  * Custom hook for infinite scroll with pagination
@@ -10,7 +10,7 @@ import { useState, useEffect, useCallback } from 'react';
  */
 const useInfiniteScroll = (fetchFunction, options = {}) => {
   const { limit = 20, enabledCondition = true } = options;
-  
+
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -23,34 +23,34 @@ const useInfiniteScroll = (fetchFunction, options = {}) => {
 
     try {
       setError(null);
-      
+
       // For first page, show loading. For subsequent pages, don't show loading
       if (page === 1) {
         setLoading(true);
       }
 
       const response = await fetchFunction(page, limit);
-      
+
       if (response.success) {
         const newItems = response.data.prayers || response.data.items || [];
         const pagination = response.data.pagination || {};
-        
+
         if (page === 1) {
           // First page - replace items
           setItems(newItems);
         } else {
           // Subsequent pages - append items
-          setItems(prevItems => [...prevItems, ...newItems]);
+          setItems((prevItems) => [...prevItems, ...newItems]);
         }
-        
+
         setHasMore(pagination.hasNextPage || false);
         setPage(pagination.currentPage + 1 || page + 1);
       } else {
-        throw new Error('Failed to fetch items');
+        throw new Error("Failed to fetch items");
       }
     } catch (err) {
-      console.error('Error fetching items:', err);
-      setError(err.message || 'Failed to load items');
+      console.error("Error fetching items:", err);
+      setError(err.message || "Failed to load items");
       setHasMore(false);
     } finally {
       setLoading(false);
@@ -64,23 +64,23 @@ const useInfiniteScroll = (fetchFunction, options = {}) => {
     setItems([]);
     setError(null);
     setLoading(true);
-    
+
     try {
       const response = await fetchFunction(1, limit);
-      
+
       if (response.success) {
         const newItems = response.data.prayers || response.data.items || [];
         const pagination = response.data.pagination || {};
-        
+
         setItems(newItems);
         setHasMore(pagination.hasNextPage || false);
         setPage(2); // Next page will be 2
       } else {
-        throw new Error('Failed to fetch items');
+        throw new Error("Failed to fetch items");
       }
     } catch (err) {
-      console.error('Error refreshing items:', err);
-      setError(err.message || 'Failed to load items');
+      console.error("Error refreshing items:", err);
+      setError(err.message || "Failed to load items");
       setHasMore(false);
     } finally {
       setLoading(false);
@@ -101,7 +101,7 @@ const useInfiniteScroll = (fetchFunction, options = {}) => {
     error,
     fetchMoreItems,
     refresh,
-    setItems // For manual updates if needed
+    setItems, // For manual updates if needed
   };
 };
 
