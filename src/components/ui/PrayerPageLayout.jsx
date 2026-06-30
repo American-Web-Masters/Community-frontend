@@ -8,7 +8,7 @@ import Header from "./Header";
 import PrayerCard from "./PrayerCard";
 import CreatePrayerModal from "./CreatePrayerModal";
 import { selectUser } from "../../store/userSlice";
-import { isSharedByUser } from "../../api/prayer";
+import { isSharedByUser, fetchPrayerStats } from "../../api/prayer";
 import { useStableMasonry } from "../../hooks/useStableMasonry";
 
 const PrayerPageLayout = ({ 
@@ -57,12 +57,31 @@ const PrayerPageLayout = ({
     tags: [],
     anonymous: null
   });
+  const [prayerStats, setPrayerStats] = useState({ sharedPrayers: null, answeredPrayers: null });
 
   // Effect to fetch bookmarks when switching to bookmarks tab
   useEffect(() => {
     if (activeTab === "Bookmarks" && onRefreshBookmarks) {
       onRefreshBookmarks();
     }
+  }, []);
+
+  // Effect to fetch prayer stats
+  useEffect(() => {
+    const loadPrayerStats = async () => {
+      try {
+        const res = await fetchPrayerStats();
+        if (res.success && res.data) {
+          setPrayerStats({
+            sharedPrayers: res.data.sharedPrayers || 0,
+            answeredPrayers: res.data.answeredPrayers || 0
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load prayer stats:", err);
+      }
+    };
+    loadPrayerStats();
   }, []);
 
   const handleToggleExpand = (cardId) => {
@@ -316,7 +335,7 @@ const PrayerPageLayout = ({
                   </defs>
                 </svg>
                 <span className="font-semibold text-xs md:text-sm text-gray-900">
-                  100 Shared Prayers
+                  {prayerStats.sharedPrayers !== null ? prayerStats.sharedPrayers : "..."} Shared Prayers
                 </span>
               </div>
               <div className="flex items-center space-x-2">
@@ -367,7 +386,7 @@ const PrayerPageLayout = ({
                   </defs>
                 </svg>
                 <span className="font-semibold text-xs md:text-sm text-gray-900">
-                  120 Prayers Answered
+                  {prayerStats.answeredPrayers !== null ? prayerStats.answeredPrayers : "..."} Prayers Answered
                 </span>
               </div>
             </div>
@@ -480,7 +499,7 @@ const PrayerPageLayout = ({
               <p className="text-red-600 mb-4">{error}</p>
               <button 
                 onClick={onRefresh}
-                className="btn-blue-gradient text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+                className="btn-blue-gradient text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
               >
                 Retry
               </button>
@@ -504,7 +523,7 @@ const PrayerPageLayout = ({
               ) : prayers.length === 0 && (
                 <button 
                   onClick={handleCreatePrayerClick}
-                  className="btn-blue-gradient text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+                  className="btn-blue-gradient text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
                 >
                   Create First Prayer
                 </button>
