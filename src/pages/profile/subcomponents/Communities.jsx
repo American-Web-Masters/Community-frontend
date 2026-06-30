@@ -94,11 +94,11 @@ const Communities = forwardRef(({ userProfile }, ref) => {
 
         {/* Tablet/Desktop: dropdown (current design) */}
         <div className="hidden sm:flex justify-end">
-          <div className="relative">
+          <div className="relative p-1">
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="appearance-none bg-white border border-gray-200 text-gray-700 py-2 pl-4 pr-7 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+              className="appearance-none bg-white border border-gray-200 text-gray-700 py-2 pl-4 pr-7 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 focus:border-transparent font-medium cursor-pointer transition-all duration-200"
             >
               <option value="All">All</option>
               <option value="My Communities">My Communities</option>
@@ -228,7 +228,7 @@ const Communities = forwardRef(({ userProfile }, ref) => {
               {/* View Button */}
               <button
                 onClick={() => navigate(`/communities/${community._id}`)}
-                className="w-full py-2 bg-white text-gray-500 rounded-full font-semibold border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-colors shadow-sm"
+                className="w-full py-2 bg-white text-gray-500 rounded-full font-semibold border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-colors shadow-sm cursor-pointer"
               >
                 View
               </button>
