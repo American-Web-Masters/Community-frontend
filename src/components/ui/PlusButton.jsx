@@ -54,19 +54,22 @@ const PlusButton = ({ isOpen, onClose }) => {
       className="fixed inset-0 z-50 flex items-center justify-center p-4 light-background backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
-      <div className="bg-[#EBF5FF] rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="relative bg-[#EBF5FF] rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Close (Cross) Button */}
+        <button
+          onClick={onClose}
+          aria-label="Close modal"
+          className="absolute top-4 right-4 z-10 p-2 rounded-full cursor-pointer text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-all duration-200"
+        >
+          <FaTimes className="w-5 h-5" />
+        </button>
+
         {/* Header */}
         <div className="flex items-center justify-center p-6">
           <div>
             <h2 className="text-lg text-center md:text-3xl font-bold text-gray-800">{getTabTitle(activeTab)}</h2>
             <p className="text-sm mt-2 text-center md:text-lg text-gray-500">{getTabSubtitle(activeTab)}</p>
           </div>
-          {/* <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
-          >
-            <FaTimes className="w-5 h-5 text-gray-600" />
-          </button> */}
         </div>
 
         {/* Tab Navigation */}
