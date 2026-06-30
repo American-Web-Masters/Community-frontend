@@ -70,7 +70,7 @@ const MessagesSidebar = ({
 
   return (
     <>
-      {/* Fixed back button - desktop only, shown when sidebar open */}
+      {/* Fixed back button - desktop only, shown when sidebar open
       {isSidebarOpen && (
         <div className="hidden sm:block fixed top-4.5 left-3">
           <button
@@ -80,7 +80,7 @@ const MessagesSidebar = ({
             <IoChevronBack className="w-5 h-5 text-white" />
           </button>
         </div>
-      )}
+      )} */}
 
       <div className={`flex-col mt-4 mb-3 w-full px-3 sm:px-0 ${!activeChat ? 'flex' : 'hidden'} ${isSidebarOpen ? 'sm:flex' : 'sm:hidden'} ${(isGroupMode || isInnerCircleMode) ? 'sm:h-[calc(100vh-125px)]' : ''} ${showDiscoverOnly ? 'h-[calc(100vh-190px)] sm:h-[calc(100vh-125px)]' : ''} ${isInnerCircleMode ? 'sm:w-[240px]' : 'sm:w-[320px]'}`}>
         {/* Search Input */}
