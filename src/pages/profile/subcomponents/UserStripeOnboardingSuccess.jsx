@@ -81,7 +81,7 @@ const UserStripeOnboardingSuccess = () => {
 
           <button
             onClick={handleContinue}
-            className="w-full btn-blue-gradient py-3 rounded-lg font-medium text-white"
+            className="w-full btn-blue-gradient py-3 rounded-lg font-medium text-white cursor-pointer"
           >
             Continue to Profile
           </button>
