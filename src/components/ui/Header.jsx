@@ -172,17 +172,27 @@ const Header = ({
               <h3 className="text-base font-bold text-gray-900 tracking-tight">Notifications</h3>
               <p className="text-xs font-medium text-blue-600/80 mt-0.5">{unreadCount} unread message{unreadCount !== 1 ? 's' : ''}</p>
             </div>
-            <button
-              onClick={handleMarkAllAsRead}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all duration-200 ${
-                unreadCount === 0 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                  : 'bg-blue-50 text-blue-600 hover:bg-blue-100 active:scale-95 cursor-pointer'
-              }`}
-              disabled={unreadCount === 0}
-            >
-              Mark all read
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleMarkAllAsRead}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all duration-200 ${
+                  unreadCount === 0
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-50 text-blue-600 hover:bg-blue-100 active:scale-95 cursor-pointer'
+                }`}
+                disabled={unreadCount === 0}
+              >
+                Mark all read
+              </button>
+              {/* Close (Cross) Button */}
+              <button
+                onClick={() => setShowNotificationsPanel(false)}
+                aria-label="Close notifications"
+                className="p-2 rounded-full cursor-pointer text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-all duration-200"
+              >
+                <IoClose className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           <div className="overflow-y-auto flex-1 max-h-[55vh]">
