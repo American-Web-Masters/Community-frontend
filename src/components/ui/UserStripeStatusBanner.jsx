@@ -131,7 +131,7 @@ const UserStripeStatusBanner = ({ isOwner }) => {
                 loading ||
                 (stripeStatus?.detailsSubmitted && !stripeStatus?.chargesEnabled)
               }
-              className="inline-flex items-center px-3 py-2 border border-amber-300 shadow-sm text-sm leading-4 font-medium rounded-md text-amber-800 bg-amber-100 hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50"
+              className="inline-flex items-center px-3 py-2 border border-amber-300 shadow-sm text-sm leading-4 font-medium rounded-md text-amber-800 bg-amber-100 hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 cursor-pointer"
             >
               {loading ? (
                 'Setting up...'

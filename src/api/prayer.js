@@ -233,3 +233,16 @@ export const deletePrayer = async (prayerId) => {
     throw error;
   }
 };
+
+/**
+ * Fetch prayer statistics (shared prayers, answered prayers)
+ */
+export const fetchPrayerStats = async () => {
+  try {
+    const response = await apiClient.get('/prayers/stats/overview');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching prayer stats:', error);
+    throw error;
+  }
+};
