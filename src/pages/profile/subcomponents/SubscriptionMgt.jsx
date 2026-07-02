@@ -489,7 +489,7 @@ const SubscriptionMgt = () => {
 
   // ── Main render ──────────────────────────────────────────────────────────
   return (
-    <div className="p-6">
+    <div className="pt-0 p-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div className="mb-4 sm:mb-0">
@@ -500,21 +500,21 @@ const SubscriptionMgt = () => {
             Track what you give and what you receive
           </p>
         </div>
-        {activeTab === "my" && (
+        {/* {activeTab === "my" && (
           <button
             onClick={() => navigate("/communities")}
             className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
           >
             Browse Communities
           </button>
-        )}
+        )} */}
       </div>
 
       {/* Tab Bar */}
       <div className="flex space-x-1 bg-gray-100 rounded-xl p-1 mb-8">
         <button
           onClick={() => setActiveTab("my")}
-          className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+          className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${
             activeTab === "my"
               ? "bg-white text-blue-600 shadow-sm"
               : "text-gray-600 hover:text-gray-800"
@@ -545,7 +545,7 @@ const SubscriptionMgt = () => {
 
         <button
           onClick={() => setActiveTab("received")}
-          className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+          className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${
             activeTab === "received"
               ? "bg-white text-blue-600 shadow-sm"
               : "text-gray-600 hover:text-gray-800"
