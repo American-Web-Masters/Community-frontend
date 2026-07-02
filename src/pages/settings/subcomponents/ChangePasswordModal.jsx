@@ -105,7 +105,7 @@ const ChangePasswordModal = ({ isOpen, onClose, onSubmit, loading = false }) => 
 									type="button"
 									onClick={() => setShowCurrentPassword((v) => !v)}
 									disabled={loading}
-									className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-gray-700 disabled:opacity-60"
+									className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-gray-700 disabled:opacity-60 cursor-pointer"
 									aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
 								>
 									{showCurrentPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
@@ -131,7 +131,7 @@ const ChangePasswordModal = ({ isOpen, onClose, onSubmit, loading = false }) => 
 									type="button"
 									onClick={() => setShowNewPassword((v) => !v)}
 									disabled={loading}
-									className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-gray-700 disabled:opacity-60"
+									className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-gray-700 disabled:opacity-60 cursor-pointer"
 									aria-label={showNewPassword ? "Hide new password" : "Show new password"}
 								>
 									{showNewPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
@@ -157,7 +157,7 @@ const ChangePasswordModal = ({ isOpen, onClose, onSubmit, loading = false }) => 
 									type="button"
 									onClick={() => setShowConfirmPassword((v) => !v)}
 									disabled={loading}
-									className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-gray-700 disabled:opacity-60"
+									className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-gray-700 disabled:opacity-60 cursor-pointer"
 									aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
 								>
 									{showConfirmPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
