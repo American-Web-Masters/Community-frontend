@@ -5,7 +5,7 @@ import { FaCheck, FaUser, FaEnvelope, FaUserTag } from 'react-icons/fa';
 import { apiClient } from '../../api';
 import { signupUtils, MILESTONES } from '../../utils/signupUtils';
 import { setUser } from '../../store/userSlice';
-
+import toast from 'react-hot-toast';
 const ReviewMilestone = ({ onNext, onDataChange, onPrev }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ const ReviewMilestone = ({ onNext, onDataChange, onPrev }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
-      alert('Please complete all previous steps before joining the community.');
+      toast.error('Please complete all previous steps before joining the community.');
       return;
     }
 
@@ -77,7 +77,7 @@ const ReviewMilestone = ({ onNext, onDataChange, onPrev }) => {
       }
     } catch (error) {
       console.error('Registration error:', error);
-      alert(error.message || 'Something went wrong. Please try again.');
+      toast.error(error.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }

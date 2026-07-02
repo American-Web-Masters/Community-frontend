@@ -278,7 +278,7 @@ const UserSupport = () => {
                         <button
                           key={amount.value}
                           onClick={() => handleAmountSelect(amount.value)}
-                          className={`p-5 rounded-2xl border text-center transition-all hover:shadow-md ${
+                          className={`p-5 rounded-2xl border text-center transition-all hover:shadow-md cursor-pointer ${
                             selectedAmount === amount.value
                               ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                               : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
@@ -323,7 +323,7 @@ const UserSupport = () => {
                       {/* One-time Payment */}
                       <button
                         onClick={() => setPaymentType('one-time')}
-                        className={`w-full flex items-center justify-between p-4 lg:p-5 bg-white rounded-lg border transition-all ${
+                        className={`w-full flex items-center justify-between p-4 lg:p-5 bg-white rounded-lg border transition-all cursor-pointer ${
                           paymentType === 'one-time'
                             ? 'border-blue-500 bg-blue-50'
                             : 'border-gray-200 hover:border-gray-300'
@@ -348,7 +348,7 @@ const UserSupport = () => {
                       {/* Recurring Payment */}
                       <button
                         onClick={() => setPaymentType('recurring')}
-                        className={`w-full flex items-center justify-between p-4 lg:p-5 bg-white rounded-lg border transition-all ${
+                        className={`w-full flex items-center justify-between p-4 lg:p-5 bg-white rounded-lg border transition-all cursor-pointer ${
                           paymentType === 'recurring'
                             ? 'border-blue-500 bg-blue-50'
                             : 'border-gray-200 hover:border-gray-300'
@@ -392,7 +392,7 @@ const UserSupport = () => {
                   <button
                     onClick={handleSendSupport}
                     disabled={!selectedAmount || selectedAmount < 50}
-                    className={`w-full py-5 lg:py-6 rounded-lg font-semibold text-white text-lg lg:text-xl transition-all shadow-lg hover:shadow-xl ${
+                    className={`w-full py-5 lg:py-6 rounded-lg font-semibold text-white text-lg lg:text-xl transition-all shadow-lg hover:shadow-xl cursor-pointer ${
                       selectedAmount && selectedAmount >= 50
                         ? 'btn-blue-gradient hover:opacity-90'
                         : 'bg-blue-700/50 cursor-not-allowed'

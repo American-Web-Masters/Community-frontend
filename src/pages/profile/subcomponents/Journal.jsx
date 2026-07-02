@@ -173,6 +173,26 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
 
   const displayedJournals = filteredJournals;
 
+  useEffect(() => {
+    const nextHeights = {};
+
+    for (const journal of displayedJournals) {
+      const journalId = journal?.id ?? journal?._id;
+      const el = journalId ? descriptionRefs.current[journalId] : null;
+      if (journalId && el) {
+        nextHeights[journalId] = el.scrollHeight;
+      }
+    }
+
+    setMaxHeightById((prev) => {
+      const prevKeys = Object.keys(prev);
+      const nextKeys = Object.keys(nextHeights);
+      const sameLength = prevKeys.length === nextKeys.length;
+      const sameValues = sameLength && nextKeys.every((key) => prev[key] === nextHeights[key]);
+      return sameValues ? prev : nextHeights;
+    });
+  }, [displayedJournals]);
+
   const authorName = useMemo(() => {
     const first = userProfile?.user?.firstname || userProfile?.firstname || '';
     const last = userProfile?.user?.lastname || userProfile?.lastname || '';
@@ -421,7 +441,7 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
                     </div>
 
                     {/* Description */}
-                    <div className="mt-5 bg-[#eeeeeed7] rounded-xl p-4 text-sm text-gray-700 leading-6">
+                    <div className="mt-5 bg-[#eeeeeed7] rounded-xl p-4 text-sm text-gray-700 leading-6 w-full">
                       <div
                         className={`journal-story ${isExpanded ? 'is-expanded' : 'is-collapsed'}`}
                         style={{ maxHeight: isExpanded ? `${maxHeight}px` : '4.5rem' }}
@@ -432,6 +452,7 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
                             if (!journalId) return;
                             if (el) descriptionRefs.current[journalId] = el;
                           }}
+                          className="w-full whitespace-pre-wrap break-words"
                         >
                           {j?.description}
                         </p>
@@ -439,17 +460,10 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
                       <button
                         type="button"
                         onClick={() => {
-                          // Measure full text height once, so we can animate max-height smoothly.
-                          if (journalId) {
-                            const el = descriptionRefs.current[journalId];
-                            const measured = el?.scrollHeight;
-                            if (measured) {
-                              setMaxHeightById((prev) => (prev[journalId] === measured ? prev : { ...prev, [journalId]: measured }));
-                            }
-                          }
-                          setExpandedById((prev) => ({ ...prev, [journalId]: !Boolean(prev[journalId]) }));
+                          setExpandedById((prev) => ({ ...prev, [journalId]: !prev[journalId] }));
                         }}
-                        className="mt-2 text-blue-700 font-semibold hover:underline"
+                        className="mt-2 inline-flex items-center gap-1 text-blue-700 font-semibold hover:underline cursor-pointer"
+                        style={{ cursor: 'pointer' }}
                       >
                         {isExpanded ? 'Show less' : 'Read full story →'}
                       </button>

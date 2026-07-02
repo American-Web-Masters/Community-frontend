@@ -474,7 +474,7 @@ const Testimony = forwardRef(({ userProfile }, ref) => {
                           <button
                             type="button"
                             onClick={() => setSelectedId(null)}
-                            className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                            className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer"
                           >
                             Close
                           </button>
