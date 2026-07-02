@@ -33,15 +33,19 @@ const NameMilestone = ({ onNext, onDataChange }) => {
       });
       
       if (response.data.status === 'success') {
-        const { user } = response.data.data;
+        const { user, isNewUser } = response.data.data;
         dispatch(setUser(user));
         
         const pendingInvite = localStorage.getItem('pendingInvite');
         if (pendingInvite) {
           navigate(`/invite/${pendingInvite}`);
         } else {
-          const target = user?.role === 'admin' ? '/dashboard' : '/';
-          navigate(target, { replace: true });
+          if (isNewUser) {
+            navigate(user?.role === 'admin' ? '/dashboard' : '/survey', { replace: true });
+          } else {
+            const target = user?.role === 'admin' ? '/dashboard' : '/';
+            navigate(target, { replace: true });
+          }
         }
       } else {
         throw new Error(response.data?.message || 'Google Signup failed');
