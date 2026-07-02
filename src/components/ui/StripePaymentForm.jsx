@@ -116,7 +116,7 @@ const CheckoutForm = ({ amount, communityId, recipientUserId, personalMessage, o
         {/* Back Button */}
         <button 
           onClick={onCancel}
-          className="flex items-center text-gray-600 hover:text-gray-800 mb-8 transition-colors"
+          className="flex items-center text-gray-600 hover:text-gray-800 mb-8 transition-colors cursor-pointer"
         >
           <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -195,7 +195,7 @@ const CheckoutForm = ({ amount, communityId, recipientUserId, personalMessage, o
                   <button
                     type="button"
                     onClick={onCancel}
-                    className="flex-1 py-4 px-6 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all"
+                    className="flex-1 py-4 px-6 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all cursor-pointer"
                     disabled={isLoading}
                   >
                     Cancel
@@ -203,7 +203,7 @@ const CheckoutForm = ({ amount, communityId, recipientUserId, personalMessage, o
                   <button
                     type="submit"
                     disabled={!stripe || !elements || isLoading}
-                    className={`flex-1 py-4 px-6 rounded-lg font-semibold text-white transition-all text-lg shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                    className={`flex-1 py-4 px-6 rounded-lg font-semibold text-white transition-all text-lg shadow-lg hover:shadow-xl transform hover:scale-105 cursor-pointer ${
                       isLoading
                         ? 'bg-gray-400 cursor-not-allowed'
                         : 'btn-blue-gradient hover:opacity-90'

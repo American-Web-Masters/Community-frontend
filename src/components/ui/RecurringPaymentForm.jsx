@@ -128,7 +128,7 @@ const RecurringPaymentForm = ({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2 text-gray-600 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+            className="flex-1 px-4 py-2 text-gray-600 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors cursor-pointer"
             disabled={isLoading}
           >
             Cancel
@@ -136,7 +136,7 @@ const RecurringPaymentForm = ({
           <button
             type="submit"
             disabled={isLoading}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             {isLoading ? 'Redirecting...' : 'Continue to Checkout'}
           </button>
