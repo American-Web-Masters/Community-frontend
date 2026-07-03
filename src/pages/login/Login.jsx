@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import Input from '../../components/ui/Input';
@@ -15,6 +15,7 @@ const Login = () => {
   const navigate = useNavigate();
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const user = useSelector(selectUser);
+  const justLoggedIn = useRef(false);
   
   const [formData, setFormData] = useState({
     username: '',
@@ -24,12 +25,12 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already logged in
+  // Redirect if already logged in (from previous session)
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && !justLoggedIn.current) {
       console.log('User is already logged in, redirecting to home');
-    const target = user?.role === 'admin' ? '/dashboard' : '/';
-    navigate(target, { replace: true });
+      const target = user?.role === 'admin' ? '/dashboard' : '/';
+      navigate(target, { replace: true });
     }
   }, [isLoggedIn, navigate, user?.role]);
 
@@ -66,16 +67,15 @@ const Login = () => {
       const response = await apiClient.post('/users/login', payload);
       
       if (response.data.status === 'success') {
-        const { user } = response.data.data;
+        const { user, isNewUser } = response.data.data;
         
         console.log('Login successful!');
         console.log('User data received:', user);
         console.log('User ID:', user._id);
         
-        // Save user data to Redux store and localStorage
+        justLoggedIn.current = true;
+        user.isNewUser = isNewUser;
         dispatch(setUser(user));
-        
-        console.log('User data saved to Redux and localStorage');
         
         // Check for pending invite
         const pendingInvite = localStorage.getItem('pendingInvite');
@@ -86,9 +86,13 @@ const Login = () => {
           // Navigate back to invite page
           navigate(`/invite/${pendingInvite}`);
         } else {
-          const target = user?.role === 'admin' ? '/dashboard' : '/';
-          console.log('No pending invite found, navigating to:', target);
-          navigate(target);
+          if (isNewUser) {
+            navigate(user?.role === 'admin' ? '/dashboard' : '/survey', { replace: true });
+          } else {
+            const target = user?.role === 'admin' ? '/dashboard' : '/';
+            console.log('No pending invite found, navigating to:', target);
+            navigate(target);
+          }
         }
         
       } else {
@@ -123,6 +127,11 @@ const Login = () => {
       
       if (response.data.status === 'success') {
         const { user, isNewUser } = response.data.data;
+        
+        console.log('Google login successful! isNewUser:', isNewUser);
+        
+        justLoggedIn.current = true;
+        user.isNewUser = isNewUser;
         dispatch(setUser(user));
         
         const pendingInvite = localStorage.getItem('pendingInvite');
