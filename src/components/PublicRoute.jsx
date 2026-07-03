@@ -15,10 +15,10 @@ const PublicRoute = ({ children }) => {
   }
 
   if (isLoggedIn) {
-    if (location.pathname === '/signup') {
+    if (user?.isNewUser || location.pathname === '/signup') {
       return <Navigate to="/survey" replace />;
     }
-  return <Navigate to={user?.role === 'admin' ? '/dashboard' : '/'} replace />;
+    return <Navigate to={user?.role === 'admin' ? '/dashboard' : '/'} replace />;
   }
 
   return children;
