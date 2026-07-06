@@ -65,7 +65,7 @@ const Tour = () => {
 
                 {/* Description */}
                 <p className="text-gray-600 mb-5">
-                  Want a quick tour of Aol?
+                  Want a quick tour of Ao1?
                 </p>
 
                 {/* Take a Tour button */}
@@ -80,9 +80,9 @@ const Tour = () => {
                   {/* Skip link */}
                   <p
                     // onClick={handleSkip}
-                    className="text-gray-200 text-sm transition-colors duration-200"
+                    className="text-gray-800 transition-colors duration-200 font-semibold"
                   >
-                    Or press x to Skip
+                    Or Click X To Skip
                   </p>
                 </div>
               </div>
