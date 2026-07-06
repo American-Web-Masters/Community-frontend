@@ -12,12 +12,14 @@ const UserStripeOnboardingSuccess = () => {
   const [accountStatus, setAccountStatus] = useState(null);
 
   useEffect(() => {
-    checkAccountStatus();
-  }, []);
+    if (user?.username) {
+      checkAccountStatus();
+    }
+  }, [user]);
 
   const checkAccountStatus = async () => {
     try {
-      const response = await getUserStripeAccountStatus();
+      const response = await getUserStripeAccountStatus(user.username);
       setAccountStatus(response.data);
 
       if (response.data?.connected) {

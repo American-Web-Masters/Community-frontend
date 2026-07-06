@@ -60,9 +60,10 @@ const ReviewMilestone = ({ onNext, onDataChange, onPrev }) => {
 
       if (response.data && response.data.status === 'success') {
         const userData = response.data.data.user;
+        const token = response.data.data.token;
         
         // Save user data to Redux store (cookies are automatically handled)
-        dispatch(setUser(userData));
+        dispatch(setUser({ user: userData, token }));
         
         // Clear registration data from localStorage
         signupUtils.resetSignup();

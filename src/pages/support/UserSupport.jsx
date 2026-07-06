@@ -144,7 +144,7 @@ const UserSupport = () => {
           <div className="max-w-4xl mx-auto py-6">
             <button
               onClick={() => navigate(`/profile/${username}`)}
-              className="flex items-center text-gray-800 hover:text-gray-900 mb-6 transition-colors cursor-pointer"
+              className="flex items-center text-white hover:scale-105  mb-6 duration-200 ease-in-out transition-all  bg-primary-500 py-2 px-2.5 rounded-full font-medium cursor-pointer"
             >
               <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -171,7 +171,7 @@ const UserSupport = () => {
           <div className="max-w-4xl mx-auto py-6">
             <button
               onClick={() => navigate(`/profile/${username}`)}
-              className="flex items-center text-gray-800 hover:text-gray-900 mb-6 transition-colors cursor-pointer"
+              className="flex items-center text-white hover:scale-105  mb-6 duration-200 ease-in-out transition-all  bg-primary-500 py-2 px-2.5 rounded-full font-medium cursor-pointer"
             >
               <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -194,7 +194,7 @@ const UserSupport = () => {
               </p>
               <button
                 onClick={() => navigate(`/profile/${username}`)}
-                className="btn-blue-gradient px-6 py-3 rounded-lg font-medium cursor-pointer"
+                className="flex items-center text-white hover:scale-105  mb-6 duration-200 ease-in-out transition-all  bg-primary-500 py-2 px-2.5 rounded-full font-medium cursor-pointer"
               >
                 Back to Profile
               </button>
@@ -214,7 +214,7 @@ const UserSupport = () => {
           {/* Back Button */}
           <button
             onClick={() => navigate(`/profile/${username}`)}
-            className="flex items-center text-white hover:text-gray-900 mb-6 transition-colors bg-primary-500 py-2 px-2 rounded-full"
+            className="flex items-center text-white hover:scale-105  mb-6 duration-200 ease-in-out transition-all  bg-primary-500 py-2 px-2.5 rounded-full font-medium cursor-pointer"
           >
             <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
