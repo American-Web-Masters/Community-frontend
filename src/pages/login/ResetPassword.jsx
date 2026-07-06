@@ -35,11 +35,11 @@ const ResetPassword = () => {
       const res = await resetPassword(token, { password });
       if (res.data?.status === 'success') {
         // Backend sets JWT cookie and returns user data
-        const { user } = res.data.data || {};
+        const { user, token } = res.data.data || {};
         
         if (user) {
           // Save user data to Redux store for automatic login
-          dispatch(setUser(user));
+          dispatch(setUser({ user, token }));
           console.log('Password reset successful, user logged in automatically');
         }
         

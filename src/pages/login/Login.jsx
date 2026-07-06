@@ -67,7 +67,7 @@ const Login = () => {
       const response = await apiClient.post('/users/login', payload);
       
       if (response.data.status === 'success') {
-        const { user, isNewUser } = response.data.data;
+        const { user, isNewUser, token } = response.data.data;
         
         console.log('Login successful!');
         console.log('User data received:', user);
@@ -75,7 +75,7 @@ const Login = () => {
         
         justLoggedIn.current = true;
         user.isNewUser = isNewUser;
-        dispatch(setUser(user));
+        dispatch(setUser({ user, token }));
         
         // Check for pending invite
         const pendingInvite = localStorage.getItem('pendingInvite');
@@ -126,13 +126,13 @@ const Login = () => {
       });
       
       if (response.data.status === 'success') {
-        const { user, isNewUser } = response.data.data;
+        const { user, isNewUser, token } = response.data.data;
         
         console.log('Google login successful! isNewUser:', isNewUser);
         
         justLoggedIn.current = true;
         user.isNewUser = isNewUser;
-        dispatch(setUser(user));
+        dispatch(setUser({ user, token }));
         
         const pendingInvite = localStorage.getItem('pendingInvite');
         if (pendingInvite) {

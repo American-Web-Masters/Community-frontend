@@ -33,9 +33,9 @@ const NameMilestone = ({ onNext, onDataChange }) => {
       });
       
       if (response.data.status === 'success') {
-        const { user, isNewUser } = response.data.data;
+        const { user, isNewUser, token } = response.data.data;
         user.isNewUser = isNewUser;
-        dispatch(setUser(user));
+        dispatch(setUser({ user, token }));
         
         const pendingInvite = localStorage.getItem('pendingInvite');
         if (pendingInvite) {

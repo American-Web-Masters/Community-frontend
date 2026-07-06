@@ -36,8 +36,8 @@ const ContactMilestone = ({ onNext, onDataChange, onPrev }) => {
       });
 
       if (response.data.status === 'success') {
-        const { user, isNewUser } = response.data.data;
-        dispatch(setUser(user));
+        const { user, isNewUser, token } = response.data.data;
+        dispatch(setUser({ user, token }));
 
         const pendingInvite = localStorage.getItem('pendingInvite');
         if (pendingInvite) {
