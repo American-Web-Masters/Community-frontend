@@ -189,6 +189,12 @@ body {
   border-radius: 10px;
 }
 
+.plus-button-modal input,
+.plus-button-modal textarea,
+.plus-button-modal select {
+  cursor: text;
+}
+
 
 /* Custom animations */
 @keyframes slideInRight {
