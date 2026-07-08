@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { FaTimes } from 'react-icons/fa';
 import PrayerRequestTab from './tabs/PrayerRequestTab';
 import CommunityTab from './tabs/CommunityTab';
@@ -24,7 +25,29 @@ const PlusButton = ({ isOpen, onClose }) => {
 
   const handleSuccess = (data) => {
     console.log('Operation successful:', data);
-    // You can add global success handling here if needed
+
+    if (activeTab === 'prayer-request') {
+      toast.success('Prayer request posted successfully!');
+
+      window.dispatchEvent(
+        new CustomEvent('prayer:created', {
+          detail: {
+            tab: activeTab,
+            prayer: data
+          }
+        })
+      );
+    } else if (activeTab === 'community') {
+      toast.success(data?.message || 'Community created successfully!');
+
+      window.dispatchEvent(
+        new CustomEvent('community:created', {
+          detail: {
+            community: data
+          }
+        })
+      );
+    }
   };
 
   const renderTabContent = () => {
@@ -51,7 +74,7 @@ const PlusButton = ({ isOpen, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 light-background backdrop-blur-sm"
+      className="plus-button-modal fixed inset-0 z-50 flex items-center justify-center p-4 light-background backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
       <div className="relative bg-[#EBF5FF] rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">

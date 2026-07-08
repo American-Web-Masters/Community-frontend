@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FaUpload } from 'react-icons/fa';
+import { apiClient } from '../../../api';
 
 const CommunityTab = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -16,14 +17,7 @@ const CommunityTab = ({ onClose, onSuccess }) => {
   
   const [communityPhoto, setCommunityPhoto] = useState(null);
 
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    setError('');
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+  const submitCommunity = async () => {
     if (!formData.name.trim() || !formData.description.trim()) {
       setError('Community name and description are required');
       return;
@@ -33,47 +27,67 @@ const CommunityTab = ({ onClose, onSuccess }) => {
     setError('');
 
     try {
-      // TODO: Implement community creation API
-      console.log('Community Data:', formData);
-      console.log('Community Photo:', communityPhoto);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (onSuccess) onSuccess({ message: 'Community created successfully' });
-      onClose();
+      const submitData = new FormData();
+      submitData.append('name', formData.name.trim());
+      submitData.append('description', formData.description.trim());
+      submitData.append('privacyLevel', formData.privacy);
+      submitData.append('welcomeMessage', formData.welcomeMessage.trim());
+      submitData.append('affiliatedOrganization', formData.affiliatedOrganization.trim());
+      submitData.append('communityRules', formData.rules.trim());
+      submitData.append('wallAssociation', '');
+      submitData.append('tags', '');
+
+      if (communityPhoto) {
+        submitData.append('coverPhoto', communityPhoto);
+      }
+
+      const response = await apiClient.post('/communities/create', submitData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data?.success) {
+        const createdCommunity = response.data.data;
+        if (onSuccess) onSuccess(createdCommunity);
+        resetForm();
+        onClose();
+      } else {
+        throw new Error(response.data?.message || 'Failed to create community');
+      }
     } catch (err) {
       console.error('Community creation error:', err);
-      setError('Failed to create community. Please try again.');
+      setError(err.response?.data?.message || 'Failed to create community. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSaveAsDraft = async () => {
-    if (!formData.name.trim()) {
-      setError('Community name is required');
-      return;
-    }
-
-    setLoading(true);
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
     setError('');
+  };
 
-    try {
-      // TODO: Implement save as draft API
-      console.log('Saving community draft:', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      if (onSuccess) onSuccess({ message: 'Community draft saved' });
-      onClose();
-    } catch (err) {
-      console.error('Draft save error:', err);
-      setError('Failed to save draft. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await submitCommunity();
+  };
+
+  const handleSaveAsDraft = async () => {
+    await submitCommunity();
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      privacy: 'public',
+      welcomeMessage: '',
+      affiliatedOrganization: '',
+      rules: ''
+    });
+    setCommunityPhoto(null);
+    setError('');
   };
 
   return (

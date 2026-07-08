@@ -62,6 +62,22 @@ const CommunityDetails = () => {
     fetchCommunityDetails();
   }, [id]);
 
+  useEffect(() => {
+    const handlePrayerCreatedEvent = (event) => {
+      if (event?.detail?.tab !== 'prayer-request') {
+        return;
+      }
+
+      fetchCommunityDetails({ silent: true });
+    };
+
+    window.addEventListener('prayer:created', handlePrayerCreatedEvent);
+
+    return () => {
+      window.removeEventListener('prayer:created', handlePrayerCreatedEvent);
+    };
+  }, [id, user]);
+
   const fetchCommunityDetails = async ({ silent = false } = {}) => {
     try {
       if (!silent) {

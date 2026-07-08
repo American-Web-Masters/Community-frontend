@@ -26,8 +26,6 @@ const PrayerPageLayout = ({
   onCreatePrayer,
   getPrayerStatus = null,
   getFilteredPrayers = null,
-  user = null,
-  bookmarkedPrayers = [],
   loadingBookmarks = false,
   onRefreshBookmarks,
   onRemoveBookmark = null,
@@ -59,12 +57,35 @@ const PrayerPageLayout = ({
   });
   const [prayerStats, setPrayerStats] = useState({ sharedPrayers: null, answeredPrayers: null });
 
+  useEffect(() => {
+    const handlePrayerCreatedEvent = (event) => {
+      if (event?.detail?.tab !== 'prayer-request') {
+        return;
+      }
+
+      if (onCreatePrayer) {
+        onCreatePrayer(event.detail.prayer);
+        return;
+      }
+
+      if (onRefresh) {
+        onRefresh();
+      }
+    };
+
+    window.addEventListener('prayer:created', handlePrayerCreatedEvent);
+
+    return () => {
+      window.removeEventListener('prayer:created', handlePrayerCreatedEvent);
+    };
+  }, [onCreatePrayer, onRefresh]);
+
   // Effect to fetch bookmarks when switching to bookmarks tab
   useEffect(() => {
     if (activeTab === "Bookmarks" && onRefreshBookmarks) {
       onRefreshBookmarks();
     }
-  }, []);
+  }, [activeTab, onRefreshBookmarks]);
 
   // Effect to fetch prayer stats
   useEffect(() => {

@@ -123,6 +123,22 @@ const Communities = () => {
     fetchCommunities().finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    const handleCommunityCreated = (event) => {
+      if (!event?.detail?.community) {
+        return;
+      }
+
+      fetchCommunities();
+    };
+
+    window.addEventListener('community:created', handleCommunityCreated);
+
+    return () => {
+      window.removeEventListener('community:created', handleCommunityCreated);
+    };
+  }, [user]);
+
   const handleCommunityCreated = (newCommunity) => {
     toast.success('🎉 Community created successfully!');
     fetchCommunities();
