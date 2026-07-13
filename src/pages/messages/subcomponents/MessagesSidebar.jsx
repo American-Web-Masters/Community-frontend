@@ -167,10 +167,9 @@ const MessagesSidebar = ({
         {/* Chats Container */}
         {!showDiscoverOnly && (
           <div
-            className={`w-full bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm ${isInnerCircleMode ? 'sm:w-full' : 'sm:w-full'} ${(isGroupMode || isInnerCircleMode) ? 'sm:flex-1 sm:min-h-0' : ''}`}
-            style={(isGroupMode || isInnerCircleMode) ? undefined : { maxHeight: '48%' }}
+            className={`w-full bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm ${isInnerCircleMode ? 'sm:w-full' : 'sm:w-full'} sm:flex-1 sm:min-h-0`}
           >
-            <div className="flex-1 overflow-y-auto px-3 pt-3 thin-scrollbar">
+            <div className="flex-1 max-h-[42vh] overflow-y-auto px-2 pt-2 thin-scrollbar sm:max-h-none sm:px-3 sm:pt-3">
               <h3 className="text-sm font-semibold text-gray-900 mb-3">
                 {isGroupMode ? 'Group Chats' : isInnerCircleMode ? 'Live Inner Circles' : 'Chats'}
               </h3>
@@ -203,11 +202,19 @@ const MessagesSidebar = ({
                           }`}
                       >
                         <div className="relative">
-                          <img
-                            src={chat.profilePicture || "https://i.pravatar.cc/150?img=12"}
-                            alt={`${chat.firstname} ${chat.lastname}`}
-                            className="w-10 h-10 rounded-full flex-shrink-0"
-                          />
+                          {chat.profilePicture ? (
+                            <img
+                              src={chat.profilePicture}
+                              alt={`${chat.firstname} ${chat.lastname}`}
+                              className="w-10 h-10 rounded-full flex-shrink-0 object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                              <span className="text-white font-semibold text-lg">
+                                {chat.firstname ? chat.firstname[0].toUpperCase() : (chat.username ? chat.username[0].toUpperCase() : '?')}
+                              </span>
+                            </div>
+                          )}
                           {onlineUsers.has(chat._id) && (
                             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                           )}
@@ -264,11 +271,19 @@ const MessagesSidebar = ({
                           }`}
                       >
                         <div className="relative">
-                          <img
-                            src={community.coverPhoto || community.profilePicture || 'https://i.pravatar.cc/150?img=32'}
-                            alt={community.name}
-                            className="w-10 h-10 rounded-full flex-shrink-0"
-                          />
+                          {(community.coverPhoto || community.profilePicture) ? (
+                            <img
+                              src={community.coverPhoto || community.profilePicture}
+                              alt={community.name}
+                              className="w-10 h-10 rounded-full flex-shrink-0 object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                              <span className="text-white font-semibold text-lg">
+                                {community.name ? community.name[0].toUpperCase() : '?'}
+                              </span>
+                            </div>
+                          )}
                           {onlineCount > 0 && (
                             <div className="absolute -bottom-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-green-500 border-2 border-white text-[9px] text-white flex items-center justify-center">
                               {onlineCount > 9 ? '9+' : onlineCount}
@@ -356,8 +371,8 @@ const MessagesSidebar = ({
 
         {/* Discover Communities Container */}
         {!isGroupMode && !isInnerCircleMode && (
-          <div className={`w-full bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm ${showDiscoverOnly ? 'flex-1 min-h-0 mt-0' : 'mt-3'}`} style={showDiscoverOnly ? undefined : { maxHeight: '48%' }}>
-            <div className="flex-1 overflow-y-auto px-3 pt-3 thin-scrollbar">
+          <div className={`w-full bg-white/50 backdrop-blur-sm flex flex-col overflow-hidden rounded-2xl sm:rounded-tr-2xl sm:rounded-br-2xl shadow-sm ${showDiscoverOnly ? 'flex-1 min-h-0 mt-0' : 'mt-3 sm:max-h-[48%]'}`}>
+            <div className="flex-1 max-h-[42vh] overflow-y-auto px-2 pt-2 thin-scrollbar sm:max-h-none sm:px-3 sm:pt-3">
               <h3 className="text-sm font-semibold text-gray-900 mb-2">Discover</h3>
               {loadingCommunities ? (
                 <div className="text-center py-4 text-gray-500 text-xs">Loading...</div>

@@ -486,6 +486,28 @@ const ProfileHeader = ({
                 isOwnProfile ? "max-lg:flex-col-reverse" : ""
               }`}
             >
+              {/* Chat Button (Only for other profiles) */}
+              {!isOwnProfile && (
+                <div className="mr-2">
+                  <div className="flex justify-center align-center">
+                    <button
+                      onClick={() =>
+                        navigate(`/messages?chat=direct&user=${userProfile?.user?._id || userProfile?.user}`, {
+                          state: { newUser: { ...userProfile?.user, profilePicture: userProfile?.profilePicture } }
+                        })
+                      }
+                      disabled={showSkeleton}
+                      className={`btn-blue-gradient cursor-pointer text-white text-sm font-medium rounded-full transition-transform flex items-center space-x-2 py-1.5 px-4 hover:scale-105 ${
+                        showSkeleton ? "opacity-60 cursor-not-allowed hover:scale-100" : ""
+                      }`}
+                    >
+                      <span>💬</span>
+                      <span>Chat</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Support Button */}
               <div>
                 <div className="flex justify-center align-center">

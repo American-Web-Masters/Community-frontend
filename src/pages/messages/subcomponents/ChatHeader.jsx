@@ -20,8 +20,8 @@ const ChatHeader = ({
 
   const isGroup = chatMode === 'group';
   const avatar = isGroup
-    ? (activeChat.coverPhoto || activeChat.profilePicture || 'https://i.pravatar.cc/150?img=32')
-    : (activeChat.profilePicture || 'https://i.pravatar.cc/150?img=12');
+    ? (activeChat.coverPhoto || activeChat.profilePicture)
+    : (activeChat.profilePicture);
   const title = isGroup
     ? activeChat.name
     : `${activeChat.firstname} ${activeChat.lastname}`;
@@ -42,11 +42,19 @@ const ChatHeader = ({
             <IoChevronBack className="w-4 h-4 text-white" />
           </button>
           <div className="relative">
-            <img
-              src={avatar}
-              alt={title}
-              className="w-11 h-11 rounded-full"
-            />
+            {avatar ? (
+              <img
+                src={avatar}
+                alt={title}
+                className="w-11 h-11 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <span className="text-white font-semibold text-lg">
+                  {isGroup ? title[0].toUpperCase() : (activeChat.firstname ? activeChat.firstname[0].toUpperCase() : (activeChat.username ? activeChat.username[0].toUpperCase() : '?'))}
+                </span>
+              </div>
+            )}
             {isUserOnline && (
               <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
             )}

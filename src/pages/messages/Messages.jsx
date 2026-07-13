@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import BottomNavBar from "../../components/ui/BottomNavBar";
 import { IoMenu } from "react-icons/io5";
 import { IoPeopleOutline } from "react-icons/io5";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { scrollbarStyles } from "../../utils/MessageUtils";
 import { useMessagesController } from "./hooks/useMessagesController";
 
@@ -15,6 +15,7 @@ import InnerCircleRoom from './subcomponents/InnerCircleRoom';
 
 const Messages = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const {
     user,
     isLoggedIn,
@@ -27,6 +28,7 @@ const Messages = () => {
     isSidebarOpen,
     setIsSidebarOpen,
     users,
+    setUsers,
     messages,
     messageInput,
     loading,
@@ -95,8 +97,21 @@ const Messages = () => {
     const targetCommunityId = searchParams.get('community');
     const autoJoin = searchParams.get('join') === 'true';
 
-    if (chat === 'direct' && targetUserId && users.length > 0) {
-      const targetUser = users.find((item) => item._id === targetUserId);
+    if (chat === 'direct' && targetUserId && !loading) {
+      let targetUser = users.find((item) => item._id === targetUserId);
+      
+      // If user not in existing conversations, check if passed via navigation state
+      if (!targetUser && location.state?.newUser) {
+        targetUser = location.state.newUser;
+        // Prepend to users array so it shows in the sidebar
+        setUsers(prev => {
+          if (!prev.find(u => u._id === targetUser._id)) {
+            return [targetUser, ...prev];
+          }
+          return prev;
+        });
+      }
+
       if (targetUser) {
         setChatMode('direct');
         setActiveChat(targetUser);
