@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { selectUser, selectIsLoggedIn } from "../../../store/userSlice";
 import { useSocket } from "../../../hooks/useSocket";
 import {
-  getAllUsers,
+  getConversations,
   getConversationWithUser,
   sendMessage,
   markConversationAsRead,
@@ -106,14 +106,18 @@ export const useMessagesController = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await getAllUsers();
+        const response = await getConversations();
         if (response.data.status === "success") {
-          const allUsers = response.data.data.users;
-          const otherUsers = allUsers.filter(
-            (u) => u.allowDirectMessaging === true && u._id !== user?._id,
-          );
+          const conversations = response.data.data.conversations || [];
+          const mappedUsers = conversations.map(c => ({
+            ...c.user,
+            profilePicture: c.user.profilePicture,
+            lastMessage: c.lastMessage,
+            unreadCount: c.unreadCount,
+            isPinned: c.isPinned
+          }));
 
-          setUsers(otherUsers);
+          setUsers(mappedUsers);
         }
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -1150,6 +1154,7 @@ export const useMessagesController = () => {
     isSidebarOpen,
     setIsSidebarOpen,
     users,
+    setUsers,
     messages,
     messageInput,
     loading,

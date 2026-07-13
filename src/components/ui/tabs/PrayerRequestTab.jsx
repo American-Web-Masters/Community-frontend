@@ -20,7 +20,7 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
     content: '',
     urgency: 'normal',
     anonymous: false,
-    moodEmoji: '😊',
+    moodEmoji: '',
     tags: []
   });
   
@@ -88,8 +88,8 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
       content: formData.content.trim(),
       urgency: formData.urgency,
       anonymous: formData.anonymous,
-      moodEmoji: formData.moodEmoji,
-      tags: formData.tags
+      tags: formData.tags,
+      ...(formData.moodEmoji ? { moodEmoji: formData.moodEmoji } : {})
     };
   };
 
@@ -173,7 +173,7 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
       content: '',
       urgency: 'normal',
       anonymous: false,
-      moodEmoji: '😊',
+      moodEmoji: '',
       tags: []
     });
     setNewTag('');
@@ -247,7 +247,7 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
 
           {/* Mood Selection */}
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-3">How are you feeling today?</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">How are you feeling today? (optional) </h3>
             <div className="flex gap-3 justify-center">
               {moodOptions.map((emoji) => (
                 <button
@@ -486,14 +486,14 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
               type="button"
               onClick={handleSaveAsDraft}
               disabled={loading || !formData.content.trim()}
-              className="flex-1 py-3 px-6 bg-white text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50"
+              className="flex-1 py-3 px-6 bg-white text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50 cursor-pointer"
             >
               {loading ? 'Saving...' : 'Save as Draft'}
             </button>
             <button
               type="submit"
               disabled={loading || !formData.content.trim() || (showScheduler && !scheduledDate)}
-              className="flex-1 py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
+              className="flex-1 py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 cursor-pointer"
             >
               {loading ? 'Creating...' : 'Share Prayer Request'}
             </button>

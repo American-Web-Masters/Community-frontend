@@ -46,11 +46,19 @@ const MessageItem = ({
       }`}
     >
       {!isOutgoing && (
-        <img
-          src={sender.profilePicture || "https://i.pravatar.cc/150?img=12"}
-          alt={`${sender.firstname || 'User'} ${sender.lastname || ''}`.trim()}
-          className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
-        />
+        sender.profilePicture ? (
+          <img
+            src={sender.profilePicture}
+            alt={`${sender.firstname || 'User'} ${sender.lastname || ''}`.trim()}
+            className="w-8 h-8 rounded-full flex-shrink-0 mt-1 object-cover"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full flex-shrink-0 mt-1 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+            <span className="text-white font-semibold text-sm">
+              {sender.firstname ? sender.firstname[0].toUpperCase() : (sender.username ? sender.username[0].toUpperCase() : '?')}
+            </span>
+          </div>
+        )
       )}
       
       {/* Action Buttons Row - centered with message, shows on hover */}
