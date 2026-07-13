@@ -252,7 +252,7 @@ const CommunityTab = ({ onClose, onSuccess }) => {
         <button
           type="submit"
           disabled={loading || !formData.name.trim() || !formData.description.trim()}
-          className="flex-1 py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
+          className="flex-1 py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 cursor-pointer"
         >
           {loading ? 'Creating...' : 'Create Community'}
         </button>

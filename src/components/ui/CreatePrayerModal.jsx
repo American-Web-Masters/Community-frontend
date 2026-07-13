@@ -31,7 +31,7 @@ const CreatePrayerModal = ({
     content: '',
     urgency: 'normal',
     anonymous: false,
-    moodEmoji: '😊',
+    moodEmoji: '',
     tags: []
   });
   
@@ -70,7 +70,7 @@ const CreatePrayerModal = ({
         content: initialData.content || '',
         urgency: initialData.urgency || 'normal',
         anonymous: initialData.anonymous || false,
-        moodEmoji: initialData.moodEmoji || '😊',
+        moodEmoji: initialData.moodEmoji || '',
         tags: initialData.tags || []
       });
     } else if (!editMode && isOpen) {
@@ -79,7 +79,7 @@ const CreatePrayerModal = ({
         content: '',
         urgency: 'normal',
         anonymous: false,
-        moodEmoji: '😊',
+        moodEmoji: '',
         tags: []
       });
     }
@@ -124,8 +124,8 @@ const CreatePrayerModal = ({
         content: formData.content.trim(),
         urgency: formData.urgency,
         anonymous: formData.anonymous,
-        moodEmoji: formData.moodEmoji,
-        tags: formData.tags
+        tags: formData.tags,
+        ...(formData.moodEmoji ? { moodEmoji: formData.moodEmoji } : {})
       };
     }
     
@@ -137,8 +137,8 @@ const CreatePrayerModal = ({
       content: formData.content.trim(),
       urgency: formData.urgency,
       anonymous: formData.anonymous,
-      moodEmoji: formData.moodEmoji,
-      tags: formData.tags
+      tags: formData.tags,
+      ...(formData.moodEmoji ? { moodEmoji: formData.moodEmoji } : {})
     };
   };
 
@@ -235,8 +235,8 @@ const CreatePrayerModal = ({
           content: formData.content.trim(),
           urgency: formData.urgency,
           anonymous: formData.anonymous,
-          moodEmoji: formData.moodEmoji,
-          tags: formData.tags
+          tags: formData.tags,
+          ...(formData.moodEmoji ? { moodEmoji: formData.moodEmoji } : {})
         };
         const response = await apiClient.put(`/prayers/${editPrayerId}`, payload);
 
@@ -301,7 +301,7 @@ const CreatePrayerModal = ({
       content: '',
       urgency: 'normal',
       anonymous: false,
-      moodEmoji: '😊',
+      moodEmoji: '',
       tags: []
     });
     setNewTag('');
@@ -408,7 +408,7 @@ const CreatePrayerModal = ({
 
               {/* Mood Selection */}
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-3">How are you feeling today?</h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">How are you feeling today? (optional) </h3>
                 <div className="flex gap-3 justify-center">
                   {moodOptions.map((emoji) => (
                     <button

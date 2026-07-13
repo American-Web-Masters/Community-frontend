@@ -42,7 +42,7 @@ const PrayerCard = ({
   prayerText,
   status,
   communities = ["Church Group", "Prayer Group", "Youth Group"],
-  mood = "😊",
+  mood = "",
   comments = [
     { 
       user: "Michael Chen", 
@@ -658,10 +658,12 @@ const PrayerCard = ({
             
             {/* Mood and Urgency Meter in expanded view */}
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600 font-medium">Mood:</span>
-                <span className="text-lg">{mood}</span>
-              </div>
+            
+                <div className={`Flex items-center space-x-2 ${mood ? 'visible' : 'invisible'}`}>
+                  <span className="text-sm text-gray-600 font-medium">Mood:</span>
+                  <span className="text-lg">{mood}</span>
+                </div>
+              
               
               <div className="flex items-center space-x-3">
                 <span className="text-sm text-gray-600 font-medium">{urgency}</span>
