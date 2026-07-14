@@ -17,6 +17,7 @@ import { useSelector } from "react-redux";
 import { selectUser } from "../../store/userSlice";
 import {CommentsModal, TimelineModal} from "../../pages/home/subcomponents";
 import ProfilePrayerMenu from "./ProfilePrayerMenu";
+import ShareModal from "./ShareModal";
 import {
   markAsPrayed, 
   unmarkAsPrayed, 
@@ -112,6 +113,7 @@ const PrayerCard = ({
   const [error, setError] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [showTimelineModal, setShowTimelineModal] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isBookmarkedState, setIsBookmarkedState] = useState(() => 
     prayer ? isBookmarkedByUser(prayer, currentUser?._id) : false
   );
@@ -185,8 +187,8 @@ const PrayerCard = ({
     }
   };
 
-  // Handle sharing this prayer with optimistic update
-  const handleShareClick = async () => {
+  // Handle sharing this prayer with optimistic update (Share to Profile)
+  const handleShareToProfile = async () => {
     if (!currentUser?._id || isSubmittingShare || isSharedState) return;
 
     // Optimistic UI update
@@ -227,6 +229,10 @@ const PrayerCard = ({
     } finally {
       setIsSubmittingShare(false);
     }
+  };
+
+  const handleShareClick = () => {
+    setIsShareModalOpen(true);
   };
 
   // Handle bookmark toggle with optimistic update
@@ -424,6 +430,9 @@ const PrayerCard = ({
       navigate(`/profile/${prayer.user.username}`);
     }
   };
+  
+  const prayerUrl = `${window.location.origin}/prayer/${prayerId}`;
+  
   return (
     <>
       {/* Comments Modal */}
@@ -444,6 +453,15 @@ const PrayerCard = ({
         showTimelineModal={showTimelineModal}
         setShowTimelineModal={setShowTimelineModal}
         timelineData={timelineData}
+      />
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        prayerUrl={prayerUrl}
+        onShareToProfile={handleShareToProfile}
+        isShared={isSharedState}
       />
       
       <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm border border-blue-200/50 p-4  transition-all duration-500 ease-in-out relative">
@@ -931,10 +949,10 @@ const PrayerCard = ({
 
           <button
             onClick={handleShareClick}
-            disabled={!currentUser?._id || isSubmittingShare || isSharedState}
+            disabled={!currentUser?._id || isSubmittingShare}
             className={`flex items-center space-x-1 cursor-pointer transition-all duration-200 px-2 py-1 rounded-full ${
               isSharedState 
-                ? 'cursor-not-allowed text-blue-600 bg-blue-50' 
+                ? 'text-blue-600 bg-blue-50' 
                 : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
             } disabled:opacity-50 disabled:cursor-not-allowed ${
               isSubmittingShare ? 'animate-pulse' : ''
@@ -943,11 +961,6 @@ const PrayerCard = ({
             <BsSend className={`w-5 h-5 cursor-pointer ${
               isSubmittingShare ? 'animate-pulse' : ''
             }`} />
-            {shareCount > 0 && (
-              <span className="text-xs font-medium transition-all duration-200 ease-in-out">
-                {shareCount}
-              </span>
-            )}
           </button>
         </div>
       </div>
