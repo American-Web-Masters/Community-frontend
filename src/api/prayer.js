@@ -246,3 +246,16 @@ export const fetchPrayerStats = async () => {
     throw error;
   }
 };
+
+/**
+ * Fetch detailed info for a single prayer
+ */
+export const fetchPrayerDetails = async (prayerId) => {
+  try {
+    const response = await apiClient.get(`/prayers/${prayerId}/details`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching prayer details:', error);
+    throw error;
+  }
+};

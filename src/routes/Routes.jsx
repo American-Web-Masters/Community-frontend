@@ -18,6 +18,7 @@ import MyPrayers from "../pages/my_prayers/MyPrayers";
 import UpdatePrayers from "../pages/update_prayers/UpdatePrayers";
 import AnsweredPrayers from "../pages/answered_prayer/AnsweredPrayers";
 import InviteValidation from "../pages/invite/InviteValidation";
+import PrayerDetails from "../pages/prayer_details/PrayerDetails";
 import CommunitySupport from "../pages/support/CommunitySupport";
 import UserSupport from "../pages/support/UserSupport";
 import PaymentSuccess from "../pages/support/PaymentSuccess";
@@ -232,6 +233,14 @@ const Routes = () =>{
             element={
                 <ProtectedRoute>
                     <AnsweredPrayers/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/prayer/:id"
+            element={
+                <ProtectedRoute>
+                    <PrayerDetails/>
                 </ProtectedRoute>
             }
             />
