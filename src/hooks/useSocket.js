@@ -17,14 +17,17 @@ export const useSocket = () => {
 
     console.log('Initializing socket connection to:', SOCKET_URL);
 
-    // Initialize socket connection with cookie-based authentication
+    // Initialize socket connection with cookie-based authentication and localStorage token
     socketRef.current = io(SOCKET_URL, {
       withCredentials: true,
       autoConnect: true,
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
+      auth: (cb) => {
+        cb({ token: localStorage.getItem('token') });
+      }
     });
 
     const socket = socketRef.current;
