@@ -113,8 +113,8 @@ const Messages = () => {
       }
 
       if (targetUser) {
-        setChatMode('direct');
-        setActiveChat(targetUser);
+        if (chatMode !== 'direct') setChatMode('direct');
+        if (activeChat?._id !== targetUser._id) setActiveChat(targetUser);
       }
       return;
     }
@@ -124,8 +124,10 @@ const Messages = () => {
         (item) => item._id === targetCommunityId || item.communityId === targetCommunityId
       );
       if (targetCommunity) {
-        setChatMode('group');
-        setActiveChat(targetCommunity);
+        if (chatMode !== 'group') setChatMode('group');
+        if (activeChat?._id !== targetCommunity._id && activeChat?.communityId !== targetCommunity.communityId) {
+          setActiveChat(targetCommunity);
+        }
       }
       return;
     }
@@ -149,7 +151,9 @@ const Messages = () => {
               return p;
             }, { replace: true });
           } else if (!autoJoin) {
-            setActiveChat(targetCommunity);
+            if (activeChat?._id !== targetCommunity._id && activeChat?.communityId !== targetCommunity.communityId) {
+              setActiveChat(targetCommunity);
+            }
           }
         }
       }
@@ -164,6 +168,9 @@ const Messages = () => {
     innerCircleRoomId,
     joiningInnerCircleId,
     setSearchParams,
+    chatMode,
+    activeChat?._id,
+    loading
   ]);
 
   if (!isLoggedIn || !user) {

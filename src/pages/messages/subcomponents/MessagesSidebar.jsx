@@ -49,7 +49,12 @@ const MessagesSidebar = ({
 
   const filteredUsers = users.filter(u => {
     const q = debouncedSearch.toLowerCase();
-    return !q || `${u.firstname} ${u.lastname}`.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
+    const matchesSearch = !q || `${u.firstname} ${u.lastname}`.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
+    if (!matchesSearch) return false;
+    if (activeTab === 'Unread') {
+      return (u.unreadCount || 0) > 0;
+    }
+    return true;
   });
 
   const filteredGroupConversations = groupConversations.filter((community) => {
@@ -153,7 +158,7 @@ const MessagesSidebar = ({
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 ${activeTab === tab
+                className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer ${activeTab === tab
                     ? "btn-blue-gradient text-white shadow-sm"
                     : "bg-white/70 text-gray-700 hover:bg-white/90"
                   }`}
@@ -233,9 +238,16 @@ const MessagesSidebar = ({
                               @{chat.username}
                             </span>
                           </div>
-                          <p className="text-xs text-gray-500 truncate leading-tight">
-                            {chat.email}
-                          </p>
+                          <div className="flex items-center justify-between mt-1 gap-2">
+                            <p className="text-xs text-gray-500 truncate leading-tight">
+                              {chat.email}
+                            </p>
+                            {(chat.unreadCount || 0) > 0 && (
+                              <span className="inline-flex min-w-5 h-5 px-1.5 rounded-full bg-blue-600 text-white text-[10px] items-center justify-center">
+                                {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         {/* Pin Button - shows on hover */}
                         <button

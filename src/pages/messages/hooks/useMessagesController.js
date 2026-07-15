@@ -356,8 +356,20 @@ export const useMessagesController = () => {
           setHasMoreMessages(fetched.length === MESSAGES_LIMIT);
           if (chatMode === "group") {
             await markCommunityGroupAsRead(activeChat._id);
+            setGroupConversations((prev) =>
+              prev.map((c) =>
+                c._id === activeChat._id || c.communityId === activeChat._id
+                  ? { ...c, unreadCount: 0 }
+                  : c
+              )
+            );
           } else {
             await markConversationAsRead(activeChat._id);
+            setUsers((prev) =>
+              prev.map((u) =>
+                u._id === activeChat._id ? { ...u, unreadCount: 0 } : u
+              )
+            );
           }
         }
       } catch (error) {
@@ -546,6 +558,41 @@ export const useMessagesController = () => {
           messageData.receiver._id === user?._id) ||
           (messageData.sender._id === user?._id &&
             messageData.receiver._id === activeChat?._id));
+
+      // Update the users list to reflect the new lastMessage and unread count
+      setUsers((prev) => {
+        const otherUserId =
+          messageData.sender._id === user?._id
+            ? messageData.receiver._id
+            : messageData.sender._id;
+
+        const otherUserObj =
+          messageData.sender._id === user?._id
+            ? messageData.receiver
+            : messageData.sender;
+
+        const existingIndex = prev.findIndex((u) => u._id === otherUserId);
+        const unreadIncrement = (!isForCurrentChat && messageData.sender._id !== user?._id) ? 1 : 0;
+
+        if (existingIndex >= 0) {
+          const existing = prev[existingIndex];
+          const updated = {
+            ...existing,
+            lastMessage: messageData,
+            unreadCount: (existing.unreadCount || 0) + unreadIncrement,
+          };
+          return [updated, ...prev.filter((_, idx) => idx !== existingIndex)];
+        }
+
+        // If not in the list, add them (new conversation)
+        const newUser = {
+          ...otherUserObj,
+          profilePicture: otherUserObj.profilePicture,
+          lastMessage: messageData,
+          unreadCount: unreadIncrement,
+        };
+        return [newUser, ...prev];
+      });
 
       if (!isForCurrentChat) return;
 
