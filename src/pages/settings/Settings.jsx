@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Header from "../../components/ui/Header";
+import BottomNavBar from "../../components/ui/BottomNavBar";
 import { useNavigate, useParams } from "react-router-dom";
 import { useLogout } from "../../hooks/useLogout";
 import { checkCalendarConnection, connectCalendar } from "../../api/calendar";
@@ -213,6 +214,7 @@ const Settings = () => {
 					</div>
 				</div>
 			</div>
+			<BottomNavBar />
 		</div>
 	);
 };

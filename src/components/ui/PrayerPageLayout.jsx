@@ -7,8 +7,10 @@ import BottomNavBar from "./BottomNavBar";
 import Header from "./Header";
 import PrayerCard from "./PrayerCard";
 import CreatePrayerModal from "./CreatePrayerModal";
+import FlagModal from "./FlagModal";
 import { selectUser } from "../../store/userSlice";
-import { isSharedByUser, fetchPrayerStats } from "../../api/prayer";
+import { isSharedByUser, fetchPrayerStats, flagPrayer, reportPrayerGlobal } from "../../api/prayer";
+import toast from "react-hot-toast";
 import { useStableMasonry } from "../../hooks/useStableMasonry";
 
 const PrayerPageLayout = ({ 
@@ -56,6 +58,61 @@ const PrayerPageLayout = ({
     anonymous: null
   });
   const [prayerStats, setPrayerStats] = useState({ sharedPrayers: null, answeredPrayers: null });
+
+  // Flag Modal State
+  const [flagModalOpen, setFlagModalOpen] = useState(false);
+  const [selectedPrayerToFlag, setSelectedPrayerToFlag] = useState(null);
+  const [flagReason, setFlagReason] = useState("");
+  const [flagDescription, setFlagDescription] = useState("");
+
+  const handleFlagPrayer = (prayer) => {
+    setSelectedPrayerToFlag(prayer);
+    setFlagModalOpen(true);
+  };
+
+  const handleSubmitFlag = async (e) => {
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+    
+    if (!flagReason) {
+      toast.error("Please select a reason for reporting");
+      return;
+    }
+
+    try {
+      if (selectedPrayerToFlag.communities && selectedPrayerToFlag.communities.length > 0) {
+        // Community prayer
+        const communityId = selectedPrayerToFlag.communities[0]?._id || selectedPrayerToFlag.communities[0];
+        await flagPrayer(selectedPrayerToFlag._id, {
+          reason: flagReason,
+          description: flagDescription
+        }, communityId);
+      } else {
+        // Global prayer
+        await reportPrayerGlobal(selectedPrayerToFlag._id, {
+          reason: flagReason,
+          description: flagDescription
+        });
+      }
+
+      toast.success("Prayer reported successfully");
+      setFlagModalOpen(false);
+      setFlagReason("");
+      setFlagDescription("");
+      setSelectedPrayerToFlag(null);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to report prayer");
+      console.error(error);
+    }
+  };
+
+  const handleCloseFlagModal = () => {
+    setFlagModalOpen(false);
+    setFlagReason("");
+    setFlagDescription("");
+    setSelectedPrayerToFlag(null);
+  };
 
   useEffect(() => {
     const handlePrayerCreatedEvent = (event) => {
@@ -505,7 +562,7 @@ const PrayerPageLayout = ({
       {/* Prayer Cards Grid */}
       <div className="flex-1 px-6 pb-24">
         {/* Handle loading state for different tabs */}
-        {(loading || (activeTab === "Bookmarks" && loadingBookmarks)) ? (
+        {((activeTab !== "Bookmarks" && loading) || (activeTab === "Bookmarks" && loadingBookmarks)) ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -610,6 +667,7 @@ const PrayerPageLayout = ({
                             urgency={prayer.urgency}
                             prayerText={prayer.content || prayer.prayerText}
                             status={getPrayerStatus ? getPrayerStatus(prayer) : prayer.status}
+                            onFlag={handleFlagPrayer}
                             communities={prayer.communities || ["Prayer Community"]}
                             mood={prayer.moodEmoji || prayer.mood}
                             comments={prayer.comments ? prayer.comments.map(comment => {
@@ -744,8 +802,9 @@ const PrayerPageLayout = ({
                             console.log("Prayer state changed:", prayer._id || prayer.id, newState);
                           }}
                           onSharedStateChange={(newState) => {
-                            console.log("Share state changed:", prayer._id || prayer.id, newState);
+                            if (getPrayerStatus) getPrayerStatus(prayer._id, { isShared: newState });
                           }}
+                          onFlag={handleFlagPrayer}
                           onCommentsUpdate={(updatedComments) => {
                             console.log("Comments updated:", prayer._id || prayer.id, updatedComments);
                           }}
@@ -771,6 +830,18 @@ const PrayerPageLayout = ({
 
       <BottomNavBar />
 
+      {/* Flag Prayer Modal */}
+      <FlagModal
+        isOpen={flagModalOpen}
+        onClose={handleCloseFlagModal}
+        onSubmit={handleSubmitFlag}
+        flagReason={flagReason}
+        setFlagReason={setFlagReason}
+        flagDescription={flagDescription}
+        setFlagDescription={setFlagDescription}
+        selectedPrayerToFlag={selectedPrayerToFlag}
+      />
+      
       {/* Create Prayer Modal */}
       <CreatePrayerModal 
         isOpen={isCreateModalOpen}

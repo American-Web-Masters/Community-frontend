@@ -71,7 +71,7 @@ const MyPrayers = () => {
   });
 
   // Function to fetch bookmarked prayers
-  const fetchBookmarks = async () => {
+  const fetchBookmarks = useCallback(async () => {
     try {
       setLoadingBookmarks(true);
       
@@ -93,7 +93,7 @@ const MyPrayers = () => {
     } finally {
       setLoadingBookmarks(false);
     }
-  };
+  }, [user?._id]);
 
   // Fetch bookmarks on component mount
   useEffect(() => {

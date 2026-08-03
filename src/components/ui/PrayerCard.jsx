@@ -1,8 +1,4 @@
-import {
-  IoBookmarkOutline,
-  IoChatbubbleOutline,
-  IoShareOutline,
-} from "react-icons/io5";
+import { IoBookmarkOutline, IoChatbubbleOutline, IoShareOutline, IoFlagOutline } from "react-icons/io5";
 import { BsThreeDots } from "react-icons/bs";
 import { TbPin, TbPinFilled } from "react-icons/tb";
 import {
@@ -71,6 +67,7 @@ const PrayerCard = ({
   onCommentsUpdate,
   onBookmarkStateChange, // New callback for bookmark state changes
   showStatusPill = false,
+  onFlag = null, // New callback for flagging a prayer
   onPublishDraft = null, // New callback for publishing draft prayers
   isDraft = false, // Flag to show if this is a draft prayer
   isPinned = false, // Flag to show if prayer is pinned
@@ -479,6 +476,20 @@ const PrayerCard = ({
               </span>
             </div>
           </div>
+        )}
+
+        {/* Flag Icon */}
+        {onFlag && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onFlag(prayer);
+            }}
+            className="absolute bottom-3 right-3 p-2 bg-white rounded-full cursor-pointer border border-gray-200 transition-all duration-200 group z-20"
+            title="Report this prayer"
+          >
+            <IoFlagOutline className="w-4 h-4 text-gray-500 group-hover:text-red-500 transition-colors duration-200" />
+          </button>
         )}
 
         {/* Shared Post Indicator */}

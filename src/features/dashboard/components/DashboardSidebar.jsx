@@ -10,6 +10,7 @@ import {
   FaRegBell,
   FaCog,
   FaTimes,
+  FaFlag,
 } from 'react-icons/fa';
 
 const cx = (...classes) => classes.filter(Boolean).join(' ');
@@ -22,6 +23,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
       // { to: '/dashboard', label: 'Overview', icon: FaChartLine, end: true },
   { to: '/dashboard/faqs', label: "FAQs", icon: FaQuestionCircle },
         { to: '/dashboard/forum', label: 'Forum', icon: FaComments },
+        { to: '/dashboard/flagged', label: 'Flagged Posts', icon: FaFlag },
       // { to: '/dashboard/users', label: 'Users', icon: FaUsers },
       // { to: '/dashboard/events', label: 'Events', icon: FaRegCalendarAlt },
       // { to: '/dashboard/alerts', label: 'Alerts', icon: FaRegBell },
