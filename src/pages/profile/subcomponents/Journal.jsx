@@ -481,7 +481,7 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
                       <button
                         type="button"
                         onClick={() => {
-                          onOpenLinkedPrayer?.(linkedPrayerId);
+                          onOpenLinkedPrayer?.(linkedPrayerId, linkedPrayerObj);
                         }}
                         className="mt-5 w-full text-left rounded-xl border border-blue-200 bg-blue-50/70 px-4 py-3 hover:bg-blue-50 transition-colors cursor-pointer"
                         title="Open linked prayer"

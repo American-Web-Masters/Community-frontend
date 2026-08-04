@@ -13,6 +13,9 @@ import { isSharedByUser, fetchPrayerStats, flagPrayer, reportPrayerGlobal } from
 import toast from "react-hot-toast";
 import { useStableMasonry } from "../../hooks/useStableMasonry";
 
+// Cache prayer stats outside the component so they persist across mounts
+let cachedPrayerStats = { sharedPrayers: null, answeredPrayers: null };
+
 const PrayerPageLayout = ({ 
   pageType = "prayer-wall", // prayer-wall, my-prayers, updates, answered
   onLogout,
@@ -57,7 +60,7 @@ const PrayerPageLayout = ({
     tags: [],
     anonymous: null
   });
-  const [prayerStats, setPrayerStats] = useState({ sharedPrayers: null, answeredPrayers: null });
+  const [prayerStats, setPrayerStats] = useState(cachedPrayerStats);
 
   // Flag Modal State
   const [flagModalOpen, setFlagModalOpen] = useState(false);
@@ -150,16 +153,28 @@ const PrayerPageLayout = ({
       try {
         const res = await fetchPrayerStats();
         if (res.success && res.data) {
-          setPrayerStats({
+          const newStats = {
             sharedPrayers: res.data.sharedPrayers || 0,
             answeredPrayers: res.data.answeredPrayers || 0
-          });
+          };
+          setPrayerStats(newStats);
+          cachedPrayerStats = newStats;
         }
       } catch (err) {
         console.error("Failed to load prayer stats:", err);
       }
     };
+    
     loadPrayerStats();
+
+    // Listen to events that should trigger a stats refresh
+    window.addEventListener('prayer:statsUpdated', loadPrayerStats);
+    window.addEventListener('prayer:created', loadPrayerStats);
+
+    return () => {
+      window.removeEventListener('prayer:statsUpdated', loadPrayerStats);
+      window.removeEventListener('prayer:created', loadPrayerStats);
+    };
   }, []);
 
   const handleToggleExpand = (cardId) => {
@@ -412,8 +427,10 @@ const PrayerPageLayout = ({
                     </linearGradient>
                   </defs>
                 </svg>
-                <span className="font-semibold text-xs md:text-sm text-gray-900">
-                  {prayerStats.sharedPrayers !== null ? prayerStats.sharedPrayers : "..."} Shared Prayers
+                <span className="font-semibold text-xs md:text-sm text-gray-900 flex items-center gap-1">
+                  {prayerStats.sharedPrayers !== null ? prayerStats.sharedPrayers : (
+                    <span className="inline-block animate-pulse">...</span>
+                  )} Shared Prayers
                 </span>
               </div>
               <div className="flex items-center space-x-2">
@@ -463,8 +480,10 @@ const PrayerPageLayout = ({
                     </linearGradient>
                   </defs>
                 </svg>
-                <span className="font-semibold text-xs md:text-sm text-gray-900">
-                  {prayerStats.answeredPrayers !== null ? prayerStats.answeredPrayers : "..."} Prayers Answered
+                <span className="font-semibold text-xs md:text-sm text-gray-900 flex items-center gap-1">
+                  {prayerStats.answeredPrayers !== null ? prayerStats.answeredPrayers : (
+                    <span className="inline-block animate-pulse">...</span>
+                  )} Prayers Answered
                 </span>
               </div>
             </div>
@@ -536,11 +555,10 @@ const PrayerPageLayout = ({
         </div>
       </div>
 
-      {/* Tabs Section - only show if showTabs is true */}
       {showTabs && customTabs.length > 0 && (
-        <div className="px-4 md:px-6 mb-6 md:w-[70%] lg:w-[55%]">
-          <div className="bg-white/60 backdrop-blur-sm rounded-full shadow-sm border border-white/50 p-1 overflow-x-auto">
-            <div className="flex min-w-max">
+        <div className="px-4 md:px-6 mb-6">
+          <div className="bg-white/60 backdrop-blur-sm rounded-full shadow-sm border border-white/50 p-1 overflow-x-auto inline-flex max-w-full w-full md:w-auto">
+            <div className="flex w-full md:w-auto min-w-max">
               {customTabs.map((tab, index) => (
                 <button
                   key={tab}

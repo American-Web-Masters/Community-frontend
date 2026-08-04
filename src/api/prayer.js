@@ -138,6 +138,20 @@ export const fetchUserBookmarks = async (userId) => {
   }
 };
 
+/**
+ * Toggle a prayer's answered status
+ * @param {string} prayerId
+ */
+export const togglePrayerAnswered = async (prayerId) => {
+  try {
+    const response = await apiClient.patch(`/prayers/${prayerId}/answered`);
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling answered status:', error);
+    throw error;
+  }
+};
+
 // Utility function to check if a prayer is bookmarked by the current user
 export const isBookmarkedByUser = (prayer, userId) => {
   if (!prayer.bookmarks || !userId) return false;

@@ -135,38 +135,27 @@ const MyPrayers = () => {
   const getPrayerStatus = (prayer) => {
     if (prayer.isDraft) return "Draft";
     if (prayer.isScheduled) return "Scheduled";
-    // Check if user has prayed - handle both array formats
-    const userHasPrayed = prayer.isPrayed?.some(prayedUser => {
-      const userId = prayedUser.user?._id || prayedUser._id || prayedUser;
-      return userId === user?._id;
-    }) || false;
-    if (userHasPrayed) return "Answered";
+    if (prayer.isAnswered) return "Answered";
     if (!prayer.isDraft && !prayer.isScheduled) return "Submitted";
     return "Submitted"; // Default fallback
   };
 
-  // Function to filter prayers based on active tab
   const getFilteredPrayers = (prayers, activeTab) => {
     if (!activeTab || activeTab === "All") return prayers;
-    if (activeTab === "Bookmarks") return bookmarkedPrayers;
 
     return prayers.filter(prayer => {
       const status = getPrayerStatus(prayer);
       if (activeTab === "Submitted") {
-        const isBookmarked = bookmarkedPrayers.some(bookmarked => 
-          bookmarked._id === prayer._id || bookmarked.id === prayer.id
-        );
         return (
           status === "Submitted" || 
-          status === "Answered" || 
-          (isBookmarked && status !== "Draft" && status !== "Scheduled")
+          status === "Answered"
         );
       }
       return status === activeTab;
     });
   };
 
-  const myPrayersTabs = ["All", "Draft", "Scheduled", "Submitted", "Answered", "Bookmarks"];
+  const myPrayersTabs = ["All", "Draft", "Scheduled", "Submitted", "Answered"];
 
   if (!isLoggedIn || !user) {
     return (

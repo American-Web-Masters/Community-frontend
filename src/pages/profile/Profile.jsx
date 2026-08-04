@@ -316,10 +316,19 @@ const Profile = () => {
             <Journal
               ref={journalRef}
               userProfile={userProfile}
-              onOpenLinkedPrayer={(prayerId) => {
-                setActiveTab('Posts');
-                // Wait for Posts tab to render, then focus the card.
-                window.setTimeout(() => postsRef.current?.focusPrayerById?.(prayerId), 180);
+              onOpenLinkedPrayer={(prayerId, linkedPrayerObj) => {
+                const ownerId = linkedPrayerObj?.user?._id || linkedPrayerObj?.user;
+                
+                // If we know the owner and it's not the profile user, navigate to the home feed.
+                // Or if we don't know the owner (fallback), we could try home feed.
+                // But for now, if it's explicitly not the profile user's prayer:
+                if (ownerId && ownerId !== userProfile._id) {
+                  navigate('/?prayer=' + prayerId);
+                } else {
+                  setActiveTab('Posts');
+                  // Wait for Posts tab to render, then focus the card.
+                  window.setTimeout(() => postsRef.current?.focusPrayerById?.(prayerId), 180);
+                }
               }}
             />
           ) : (

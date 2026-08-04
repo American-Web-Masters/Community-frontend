@@ -24,7 +24,7 @@ const normalizeTags = (tags) =>
     )
   ).slice(0, MAX_TAGS);
 
-const JournalEntryTab = ({ onClose, onSuccess }) => {
+const JournalEntryTab = ({ onClose, onSuccess, initialData }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -36,8 +36,8 @@ const JournalEntryTab = ({ onClose, onSuccess }) => {
     verseNumber: '',
     tags: [],
     mood: 'Joyful',
-    prayer: null,
-    linkedPrayerPreview: null,
+    prayer: initialData?.prayer || null,
+    linkedPrayerPreview: initialData?.linkedPrayerPreview || null,
   });
 
   const [newTag, setNewTag] = useState('');

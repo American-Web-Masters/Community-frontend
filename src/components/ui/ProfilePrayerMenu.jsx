@@ -10,8 +10,10 @@ const ProfilePrayerMenu = ({
   onToggleVisibility,
   onEdit,
   onDelete,
+  onToggleAnswered,
   isPinned: isPinnedProp = false,
   isPrivate: isPrivateProp = false,
+  isAnswered: isAnsweredProp = false,
   isPinLoading = false,
   isVisibilityLoading = false,
   className = ""
@@ -23,6 +25,7 @@ const ProfilePrayerMenu = ({
   // Single source of truth: parent drives the state via props.
   const isPinned = !!isPinnedProp;
   const isPublic = !isPrivateProp;
+  const isAnswered = !!isAnsweredProp;
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -59,6 +62,13 @@ const ProfilePrayerMenu = ({
     }
   };
 
+  const handleToggleAnswered = () => {
+    setIsOpen(false);
+    if (onToggleAnswered) {
+      onToggleAnswered(prayer._id, !isAnswered);
+    }
+  };
+
   const handleEdit = () => {
     setIsOpen(false);
     if (onEdit) onEdit(prayer);
@@ -88,73 +98,96 @@ const ProfilePrayerMenu = ({
           className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 min-w-[160px]"
         >
           {/* Pin/Unpin Option */}
-          <button
-            onClick={handleTogglePin}
-            disabled={isPinLoading}
-            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {isPinLoading ? (
-              <>
-                <span className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin" />
-                <span>Updating...</span>
-              </>
-            ) : isPinned ? (
-              <>
-                <TbPinFilled className="w-4 h-4 text-blue-600 cursor-pointer" />
-                <span>Unpin Post</span>
-              </>
-            ) : (
-              <>
-                <TbPin className="w-4 h-4 cursor-pointer" />
-                <span>Pin Post</span>
-              </>
-            )}
-          </button>
+          {onTogglePin && (
+            <button
+              onClick={handleTogglePin}
+              disabled={isPinLoading}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isPinLoading ? (
+                <>
+                  <span className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin" />
+                  <span>Updating...</span>
+                </>
+              ) : isPinned ? (
+                <>
+                  <TbPinFilled className="w-4 h-4 text-blue-600 cursor-pointer" />
+                  <span>Unpin Post</span>
+                </>
+              ) : (
+                <>
+                  <TbPin className="w-4 h-4 cursor-pointer" />
+                  <span>Pin Post</span>
+                </>
+              )}
+            </button>
+          )}
 
           {/* Public/Private Option */}
-          <button
-            onClick={handleToggleVisibility}
-            disabled={isVisibilityLoading}
-            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {isVisibilityLoading ? (
-              <>
-                <span className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin" />
-                <span>Updating...</span>
-              </>
-            ) : isPublic ? (
-              <>
-                <IoEyeOffOutline className="w-4 h-4 cursor-pointer" />
-                <span>Make Private</span>
-              </>
-            ) : (
-              <>
-                <IoEyeOutline className="w-4 h-4 cursor-pointer" />
-                <span>Make Public</span>
-              </>
-            )}
-          </button>
+          {onToggleVisibility && (
+            <button
+              onClick={handleToggleVisibility}
+              disabled={isVisibilityLoading}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isVisibilityLoading ? (
+                <>
+                  <span className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin" />
+                  <span>Updating...</span>
+                </>
+              ) : isPublic ? (
+                <>
+                  <IoEyeOffOutline className="w-4 h-4 cursor-pointer" />
+                  <span>Make Private</span>
+                </>
+              ) : (
+                <>
+                  <IoEyeOutline className="w-4 h-4 cursor-pointer" />
+                  <span>Make Public</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Mark as Answered Option */}
+          {onToggleAnswered && (
+            <button
+              onClick={handleToggleAnswered}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2 cursor-pointer"
+            >
+              <div className="flex items-center justify-center w-4 h-4">
+                <span className="text-sm">🙏</span>
+              </div>
+              <span>{isAnswered ? "Unmark Answered" : "Mark as Answered"}</span>
+            </button>
+          )}
 
           {/* Divider */}
-          <div className="border-t border-gray-100 my-1" />
+          {(onTogglePin || onToggleVisibility || onToggleAnswered) && (onEdit || onDelete) && (
+            <div className="border-t border-gray-100 my-1" />
+          )}
 
           {/* Edit Option */}
-          <button
-            onClick={handleEdit}
-            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2 cursor-pointer"
-          >
-            <FiEdit2 className="w-4 h-4 text-blue-500 cursor-pointer" />
-            <span>Edit Post</span>
-          </button>
+          {onEdit && (
+            <button
+              onClick={handleEdit}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2 cursor-pointer"
+            >
+              <FiEdit2 className="w-4 h-4 text-blue-500 cursor-pointer" />
+              <span>Edit Post</span>
+            </button>
+          )}
 
           {/* Delete Option */}
-          <button
-            onClick={handleDelete}
-            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors duration-200 flex items-center space-x-2 cursor-pointer"
-          >
-            <FiTrash2 className="w-4 h-4 cursor-pointer" />
-            <span>Delete Post</span>
-          </button>
+          {onDelete && (
+            <button
+              onClick={handleDelete}
+              className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors duration-200 flex items-center space-x-2 cursor-pointer"
+            >
+              <FiTrash2 className="w-4 h-4 cursor-pointer" />
+              <span>Delete Post</span>
+            </button>
+          )}
         </div>
       )}
     </div>
