@@ -3,7 +3,7 @@ import { IoChatbubbleOutline} from "react-icons/io5";
 import { PiHandsPrayingThin } from "react-icons/pi";
 import { BsSend } from "react-icons/bs";
 import { FiBookmark } from "react-icons/fi";
-import { getActivityText, getTimelineActivityIcon, formatTimelineTime, getTimelineUserName } from '../../../utils/prayerUtils';
+import { getTimelineActivityText, getTimelineActivityIcon, formatTimelineTime, getTimelineUserName } from '../../../utils/prayerUtils';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../../store/userSlice';
 

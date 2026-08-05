@@ -58,7 +58,8 @@ const PrayerPageLayout = ({
     urgency: [],
     mood: [],
     tags: [],
-    anonymous: null
+    anonymous: null,
+    sortBy: 'recentActivity'
   });
   const [prayerStats, setPrayerStats] = useState(cachedPrayerStats);
 
@@ -222,8 +223,10 @@ const PrayerPageLayout = ({
       
       if (filterType === 'anonymous') {
         newFilters.anonymous = newFilters.anonymous === value ? null : value;
+      } else if (filterType === 'sortBy') {
+        newFilters.sortBy = value;
       } else {
-        const currentValues = newFilters[filterType];
+        const currentValues = newFilters[filterType] || [];
         if (currentValues.includes(value)) {
           newFilters[filterType] = currentValues.filter(v => v !== value);
         } else {
@@ -240,7 +243,8 @@ const PrayerPageLayout = ({
       urgency: [],
       mood: [],
       tags: [],
-      anonymous: null
+      anonymous: null,
+      sortBy: 'recentActivity'
     });
     setSearchQuery("");
   };
@@ -292,6 +296,19 @@ const PrayerPageLayout = ({
       filtered = filtered.filter(prayer => 
         prayer.anonymous === activeFilters.anonymous
       );
+    }
+
+    // Apply sort
+    const sortBy = activeFilters.sortBy || 'recentActivity';
+    if (sortBy === 'newest') {
+      filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else {
+      // Default: recentActivity
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.updatedAt || a.createdAt);
+        const dateB = new Date(b.updatedAt || b.createdAt);
+        return dateB - dateA; // Descending (most recent first)
+      });
     }
 
     return filtered;

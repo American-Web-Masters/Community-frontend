@@ -1,4 +1,4 @@
-import { IoBookmarkOutline, IoChatbubbleOutline, IoShareOutline, IoFlagOutline } from "react-icons/io5";
+import { IoBookmarkOutline, IoChatbubbleOutline, IoShareOutline, IoFlagOutline, IoNotifications, IoNotificationsOffOutline } from "react-icons/io5";
 import { BsThreeDots } from "react-icons/bs";
 import { TbPin, TbPinFilled } from "react-icons/tb";
 import {
@@ -28,6 +28,7 @@ import {
   isBookmarkedByUser,
   isSharedByUser,
   togglePrayerAnswered,
+  togglePrayerMute,
 } from "../../api/prayer";
 import { togglePrayerPin } from "../../api/communities";
 import { getUrgencyMeter, getTimelineUserName, getStatusPillStyle, getTimelineActivityText, getTimelineActivityIcon, formatTimelineTime } from "../../utils/prayerUtils";
@@ -98,8 +99,27 @@ const PrayerCard = ({
   const [newComment, setNewComment] = useState("");
   const [isPrayedState, setIsPrayedState] = useState(isPrayed);
   const [isSharedState, setIsSharedState] = useState(() => 
-    prayer ? isSharedByUser(prayer, currentUser?._id) : isShared
+    isShared || isSharedByUser(prayer, currentUser?._id)
   );
+  
+  const [isMutedState, setIsMutedState] = useState(() => {
+    return prayer?.mutedUsers?.some(
+      (muted) => muted.user === currentUser?._id || muted.user?._id === currentUser?._id
+    ) || false;
+  });
+
+  const handleMuteToggle = async (e) => {
+    e.stopPropagation();
+    try {
+      const newMutedState = !isMutedState;
+      setIsMutedState(newMutedState); // optimistic update
+      await togglePrayerMute(prayerId || prayer._id);
+      toast.success(newMutedState ? "Notifications off" : "Notifications on");
+    } catch (error) {
+      setIsMutedState(!isMutedState); // revert
+      toast.error("Failed to update notification settings");
+    }
+  };
   const [commentsState, setCommentsState] = useState(comments);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isSubmittingPrayer, setIsSubmittingPrayer] = useState(false);
@@ -618,6 +638,18 @@ const PrayerCard = ({
                 {status}
               </span>
             )}
+            
+            <button
+              onClick={handleMuteToggle}
+              className="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 focus:outline-none cursor-pointer"
+              title={isMutedState ? "Turn on notifications" : "Turn off notifications"}
+            >
+              {isMutedState ? (
+                <IoNotificationsOffOutline className="w-5 h-5 text-gray-500" />
+              ) : (
+                <IoNotifications className="w-5 h-5 text-gray-700" />
+              )}
+            </button>
             
             {/* Owner or Profile-specific menu */}
             {(isProfileContext || (currentUser?._id === (prayer?.user?._id || prayer?.user))) && (

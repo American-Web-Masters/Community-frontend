@@ -15,6 +15,16 @@ export const markAsPrayed = async (prayerId, userId) => {
   }
 };
 
+export const togglePrayerMute = async (prayerId) => {
+  try {
+    const response = await apiClient.patch(`/prayers/${prayerId}/mute`);
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling prayer mute:', error);
+    throw error;
+  }
+};
+
 export const unmarkAsPrayed = async (prayerId, userId) => {
   try {
     const response = await apiClient.delete(`/prayers/${prayerId}/prayed`, {
