@@ -27,6 +27,7 @@ import {
   getLiveEventsForUser,
   joinInnerCircle,
 } from "../../../api/innerCircle";
+import { joinCommunity } from "../../../api/communities";
 import { toIdString } from "../../../utils/MessageUtils";
 import toast from "react-hot-toast";
 
@@ -58,6 +59,8 @@ export const useMessagesController = () => {
   );
   const [onlineGroupMemberIds, setOnlineGroupMemberIds] = useState(new Set());
   const [discoverCommunities, setDiscoverCommunities] = useState([]);
+  const [refreshGroupsTrigger, setRefreshGroupsTrigger] = useState(0);
+  const [joiningCommunityId, setJoiningCommunityId] = useState(null);
   const [loadingCommunities, setLoadingCommunities] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -248,7 +251,7 @@ export const useMessagesController = () => {
       fetchPinnedUsers();
       fetchGroupConversations();
     }
-  }, [isLoggedIn, user]);
+  }, [isLoggedIn, user, refreshGroupsTrigger]);
 
   useEffect(() => {
     if (chatMode === "direct") {
@@ -318,12 +321,30 @@ export const useMessagesController = () => {
       }
     } catch (error) {
       console.error("Error joining inner circle:", error);
-      toast.error("Failed to join inner circle.");
+      toast.error("Failed to join inner circle");
     } finally {
       setJoiningInnerCircleId(null);
     }
   };
 
+  const handleJoinCommunity = async (communityId) => {
+    try {
+      setJoiningCommunityId(communityId);
+      const response = await joinCommunity(communityId);
+      if (response.success) {
+        toast.success(response.message || "Successfully joined community!");
+        setRefreshGroupsTrigger(prev => prev + 1);
+      } else {
+        toast.error(response.error || "Failed to join community");
+      }
+    } catch (error) {
+      toast.error("An error occurred while joining the community");
+    } finally {
+      setJoiningCommunityId(null);
+    }
+  };
+
+  // Close Inner Circle Session
   const resetInnerCircleSession = () => {
     setInnerCircleToken(null);
     setInnerCircleRoomId(null);
@@ -1249,5 +1270,7 @@ export const useMessagesController = () => {
     resetInnerCircleSession,
     sortUsers,
     formatTimestamp,
+    handleJoinCommunity,
+    joiningCommunityId,
   };
 };
