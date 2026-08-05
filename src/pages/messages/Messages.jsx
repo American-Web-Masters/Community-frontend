@@ -195,44 +195,48 @@ const Messages = () => {
         <div className="flex" style={{ height: 'calc(100vh - 80px)' }}>
           {/* Sidebar Toggle Button - desktop only */}
           <div className="hidden sm:flex w-14 flex-col items-center justify-center space-y-6 mr-5">
-            <div className="side-trapezoid py-28 btn-blue-gradient flex flex-col items-center justify-center space-y-6 pr-1">
+            <div className="side-trapezoid py-28 btn-blue-gradient flex flex-col items-center justify-center space-y-2 pr-1">
               <button
                 onClick={() => {
                   setChatMode('direct');
                   setIsSidebarOpen(true);
                 }}
-                className={`flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md ${
-                  chatMode === 'direct' ? 'opacity-100' : 'opacity-70'
+                className={`flex items-center justify-center hover:opacity-90 transition-all duration-300 w-8 h-8 p-0 flex-shrink-0 aspect-square rounded-full ${
+                  chatMode === 'direct' ? 'bg-white shadow-lg scale-110' : 'opacity-70 hover:bg-white/10'
                 }`}
                 title="Open direct chats"
               >
-                <IoMenu className="w-6 h-6 text-white" />
+                <IoMenu className={`w-7 h-7 ${chatMode === 'direct' ? 'text-[#03045E]' : 'text-white'}`} />
               </button>
               <button
                 onClick={() => {
                   setChatMode('group');
                   setIsSidebarOpen(true);
                 }}
-                className={`flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md ${
-                  chatMode === 'group' ? 'opacity-100' : 'opacity-70'
+                className={`flex items-center justify-center hover:opacity-90 transition-all duration-300 w-9 h-9 p-0 flex-shrink-0 aspect-square rounded-full ${
+                  chatMode === 'group' ? 'bg-white shadow-lg scale-110' : 'opacity-70 hover:bg-white/10'
                 }`}
                 title="Open group chats"
               >
-                <IoPeopleOutline className="w-6 h-6 text-white" />
+                <IoPeopleOutline className={`w-6 h-6 ${chatMode === 'group' ? 'text-[#03045E]' : 'text-white'}`} />
               </button>
               <button
                 onClick={() => {
                   setChatMode('inner-circle');
                   setIsSidebarOpen(true);
                 }}
-                className={`flex items-center justify-center hover:opacity-90 transition-all duration-200 shadow-md ${
-                  chatMode === 'inner-circle' ? 'opacity-100 scale-110' : 'opacity-70'
+                className={`flex items-center justify-center hover:opacity-90 transition-all duration-300 w-8 h-8 p-0 flex-shrink-0 aspect-square rounded-full ${
+                  chatMode === 'inner-circle' ? 'bg-white shadow-lg scale-110' : 'opacity-70 hover:bg-white/10'
                 }`}
                 title="Inner Circle (Live Audio)"
               >
                 <div className="relative">
-                  <div className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center">
-                    <div className={`w-2 h-2 rounded-full ${chatMode === 'inner-circle' ? 'bg-red-500 animate-pulse' : 'bg-white'}`}></div>
+                  <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${
+                    chatMode === 'inner-circle' ? 'border-[#03045E]' : 'border-white'
+                  }`}>
+                    <div className={`w-2.5 h-2.5 rounded-full ${
+                      chatMode === 'inner-circle' ? 'bg-red-500 animate-pulse' : 'bg-white'
+                    }`}></div>
                   </div>
                 </div>
               </button>
