@@ -15,6 +15,16 @@ export const markAsPrayed = async (prayerId, userId) => {
   }
 };
 
+export const togglePrayerMute = async (prayerId) => {
+  try {
+    const response = await apiClient.patch(`/prayers/${prayerId}/mute`);
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling prayer mute:', error);
+    throw error;
+  }
+};
+
 export const unmarkAsPrayed = async (prayerId, userId) => {
   try {
     const response = await apiClient.delete(`/prayers/${prayerId}/prayed`, {
@@ -138,6 +148,20 @@ export const fetchUserBookmarks = async (userId) => {
   }
 };
 
+/**
+ * Toggle a prayer's answered status
+ * @param {string} prayerId
+ */
+export const togglePrayerAnswered = async (prayerId) => {
+  try {
+    const response = await apiClient.patch(`/prayers/${prayerId}/answered`);
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling answered status:', error);
+    throw error;
+  }
+};
+
 // Utility function to check if a prayer is bookmarked by the current user
 export const isBookmarkedByUser = (prayer, userId) => {
   if (!prayer.bookmarks || !userId) return false;
@@ -170,6 +194,19 @@ export const flagPrayer = async (prayerId, flagData, communityId) => {
 };
 
 /**
+ * Report prayer globally (for super admins)
+ */
+export const reportPrayerGlobal = async (prayerId, flagData) => {
+  try {
+    const response = await apiClient.post(`/prayers/${prayerId}/report`, flagData);
+    return response.data;
+  } catch (error) {
+    console.error('Error reporting prayer globally:', error);
+    throw error;
+  }
+};
+
+/**
  * Get reported prayers for a community
  */
 export const getReportedPrayers = async (communityId) => {
@@ -178,6 +215,32 @@ export const getReportedPrayers = async (communityId) => {
     return response.data;
   } catch (error) {
     console.error('Error fetching reported prayers:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all globally reported prayers (Admin only)
+ */
+export const getGlobalReportedPrayers = async (page = 1, limit = 20) => {
+  try {
+    const response = await apiClient.get(`/prayers/admin/flagged?page=${page}&limit=${limit}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching global reported prayers:', error);
+    throw error;
+  }
+};
+
+/**
+ * Dismiss reports for a globally reported prayer (Admin only)
+ */
+export const dismissGlobalReport = async (prayerId) => {
+  try {
+    const response = await apiClient.patch(`/prayers/admin/flagged/${prayerId}/dismiss`);
+    return response.data;
+  } catch (error) {
+    console.error('Error dismissing global report:', error);
     throw error;
   }
 };

@@ -28,22 +28,6 @@ const Home = () => {
       return response.data;
     } catch (err) {
       console.error('Error fetching prayers:', err);
-      
-      // Fallback to mock data only on first page for development
-      if (page === 1) {
-        return {
-          success: true,
-          data: {
-            prayers: mockPrayerCards,
-            pagination: {
-              currentPage: 1,
-              hasNextPage: false,
-              totalCount: mockPrayerCards.length
-            }
-          }
-        };
-      }
-      
       throw new Error('Failed to fetch prayers');
     }
   }, []);

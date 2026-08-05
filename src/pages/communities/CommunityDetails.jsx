@@ -6,6 +6,7 @@ import { useStableMasonry } from "../../hooks/useStableMasonry";
 import PrayerCard from "../../components/ui/PrayerCard";
 import StripeStatusBanner from "../../components/ui/StripeStatusBanner";
 import Header from "../../components/ui/Header";
+import BottomNavBar from "../../components/ui/BottomNavBar";
 import { useLogout } from "../../hooks/useLogout";
 import { IoPersonOutline, IoArrowBackOutline, IoFlagOutline } from "react-icons/io5";
 import { PiChatText , PiBellLight} from "react-icons/pi";
@@ -1242,19 +1243,8 @@ const CommunityDetails = () => {
                             onPinStateChange={(newState) => {
                               handlePinStateChange(prayer._id || prayer.id, newState);
                             }}
+                            onFlag={handleFlagPrayer}
                           />
-                          
-                          {/* Flag button - positioned at bottom right */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleFlagPrayer(prayer);
-                            }}
-                            className="absolute bottom-3 right-3 p-2 bg-white rounded-full cursor-pointer border border-gray-200  transition-all duration-200 group z-10"
-                            title="Flag this prayer"
-                          >
-                            <IoFlagOutline className="w-4 h-4 text-gray-500 group-hover:text-red-500 transition-colors duration-200" />
-                          </button>
                           </div>
                         </div>
                       );
@@ -1333,6 +1323,7 @@ const CommunityDetails = () => {
         setFlagDescription={setFlagDescription}
         selectedPrayerToFlag={selectedPrayerToFlag}
       />
+      <BottomNavBar />
     </div>
   );
 };

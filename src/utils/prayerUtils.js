@@ -21,6 +21,8 @@ export function localInputToUTC(localString) {
         return `prayed for ${ownerText}`;
       case 'share':
         return `shared ${ownerText}`;
+      case 'bookmark':
+        return `bookmarked this prayer`;
       default:
         return `interacted with ${ownerText}`;
     }
@@ -146,22 +148,46 @@ export const getUrgencyColor = (urgency) => {
 
 
       // Helper function to format timeline activity text
-  export const getTimelineActivityText = (activityType, activityData) => {
+  export const getTimelineActivityText = (activityType, activityData, prayerOwnerName, currentUser) => {
+    // If the owner is the current user, or if we don't know the owner, just say "this prayer"
+    // To properly say "your prayer", we need to check if the owner is the current user.
+    // For now, use prayerOwnerName if provided, otherwise 'this prayer'
+    const ownerText = prayerOwnerName === 'your' 
+      ? 'your prayer' 
+      : prayerOwnerName 
+        ? `${prayerOwnerName}'s prayer` 
+        : 'this prayer';
+    
     switch (activityType) {
       case 'prayer_prayed':
-        return 'prayed for this prayer';
+        return `prayed for ${ownerText}`;
       case 'prayer_commented':
         return activityData?.commentText 
-          ? `commented: "${activityData.commentText.substring(0, 50)}${activityData.commentText.length > 50 ? '...' : ''}"`
-          : 'commented on this prayer';
+          ? `commented on ${ownerText}: "${activityData.commentText.substring(0, 50)}${activityData.commentText.length > 50 ? '...' : ''}"`
+          : `commented on ${ownerText}`;
       case 'comment_reacted':
-        return `reacted ${activityData?.reactionEmoji || '❤️'} to a comment`;
+        return `reacted ${activityData?.reactionEmoji || '❤️'} to a comment on ${ownerText}`;
       case 'prayer_shared':
-        return 'shared this prayer';
+        return `shared ${ownerText}`;
       case 'prayer_bookmarked':
-        return 'bookmarked this prayer';
+        return `bookmarked ${ownerText}`;
+      case 'prayer_edited':
+        return `edited ${ownerText}`;
+      case 'prayer_mood_urgency_changed':
+        return `updated the mood or urgency of ${ownerText}`;
+      case 'prayer_answered':
+        return `marked ${ownerText} as answered`;
+      // Legacy fallbacks just in case
+      case 'comment':
+        return `commented on ${ownerText}`;
+      case 'prayed':
+        return `prayed for ${ownerText}`;
+      case 'share':
+        return `shared ${ownerText}`;
+      case 'bookmark':
+        return `bookmarked ${ownerText}`;
       default:
-        return 'interacted with this prayer';
+        return `interacted with ${ownerText}`;
     }
   };
 
@@ -209,6 +235,12 @@ export const getUrgencyColor = (urgency) => {
         return '🔗';
       case 'prayer_bookmarked':
         return '🔖';
+      case 'prayer_edited':
+        return '✏️';
+      case 'prayer_mood_urgency_changed':
+        return '🎭';
+      case 'prayer_answered':
+        return '✨';
       default:
         return '📝';
     }

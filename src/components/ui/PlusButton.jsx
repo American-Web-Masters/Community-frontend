@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import { FaTimes } from 'react-icons/fa';
 import PrayerRequestTab from './tabs/PrayerRequestTab';
@@ -7,8 +8,15 @@ import InnerCircleTab from './tabs/InnerCircleTab';
 import JournalEntryTab from './tabs/JournalEntryTab';
 import { getTabTitle, getTabSubtitle } from '../../utils/plusButtonUtils';
 
-const PlusButton = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState('prayer-request');
+const PlusButton = ({ isOpen, onClose, initialTab = 'prayer-request', initialData = null }) => {
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Sync activeTab when initialTab changes (e.g. reopening modal with a specific tab)
+  React.useEffect(() => {
+    if (isOpen) {
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
 
   const tabs = [
     { id: 'prayer-request', label: 'Prayer Request' },
@@ -64,7 +72,7 @@ const PlusButton = ({ isOpen, onClose }) => {
       case 'inner-circle':
         return <InnerCircleTab {...tabProps} />;
       case 'journal-entry':
-        return <JournalEntryTab {...tabProps} />;
+        return <JournalEntryTab {...tabProps} initialData={initialData} />;
       default:
         return <PrayerRequestTab {...tabProps} />;
     }
@@ -72,7 +80,7 @@ const PlusButton = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div 
       className="plus-button-modal fixed inset-0 z-50 flex items-center justify-center p-4 light-background backdrop-blur-sm"
       onClick={handleBackdropClick}
@@ -120,7 +128,8 @@ const PlusButton = ({ isOpen, onClose }) => {
           {renderTabContent()}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

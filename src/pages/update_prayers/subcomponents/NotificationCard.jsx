@@ -2,25 +2,21 @@ import React from 'react';
 import { IoChatbubbleOutline} from "react-icons/io5";
 import { PiHandsPrayingThin } from "react-icons/pi";
 import { BsSend } from "react-icons/bs";
-import {getActivityText,getLatestActivity,getTimeAgo } from '../../../utils/prayerUtils';
-const NotificationCard = ({ prayer, activityType, onCardClick }) => {
+import { FiBookmark } from "react-icons/fi";
+import { getTimelineActivityText, getTimelineActivityIcon, formatTimelineTime, getTimelineUserName } from '../../../utils/prayerUtils';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../../store/userSlice';
+
+const NotificationCard = ({ activity, onCardClick }) => {
+  const currentUser = useSelector(selectUser);
+  const prayer = activity.prayer || activity; // Handle both timeline activity and legacy prayer format
+  const activityType = activity.activityType;
   
-   const getActivityIcon = () => {
-    switch (activityType) {
-      case 'comment':
-        return <IoChatbubbleOutline className="w-5 h-5 text-blue-600" />;
-      case 'prayed':
-        return <PiHandsPrayingThin className="w-5 h-5 text-blue-600" />;
-      case 'share':
-        return <BsSend className="w-5 h-5 text-blue-600" />;
-      default:
-        return <IoChatbubbleOutline className="w-5 h-5 text-blue-600" />;
-    }
-  };
-  const latestActivity = getLatestActivity(activityType, prayer);
-  const userName = latestActivity?.user?.firstname || 'Someone';
-  const prayerOwnerName = prayer.user?.firstname || null;
-  const activityTime = latestActivity?.createdAt || latestActivity?.prayedAt || latestActivity?.sharedAt || prayer.createdAt;
+  const userName = getTimelineUserName(activity, currentUser);
+  const prayerOwnerName = (prayer.user?._id === currentUser?._id || prayer.user === currentUser?._id) 
+                          ? 'your' 
+                          : prayer.user?.firstname;
+  const activityTime = activity.createdAt || prayer.createdAt;
 
   return (
     <div 
@@ -29,8 +25,8 @@ const NotificationCard = ({ prayer, activityType, onCardClick }) => {
     >
       <div className="flex items-start space-x-3">
         <div className="flex-shrink-0">
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-            {getActivityIcon(activityType)}
+          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl">
+            {getTimelineActivityIcon(activityType, activity.activityData?.reactionEmoji)}
           </div>
         </div>
         
@@ -38,14 +34,14 @@ const NotificationCard = ({ prayer, activityType, onCardClick }) => {
           <div className="flex items-start justify-between">
             <div className="flex-1 gap-y-2">
               <p className="text-medium text-gray-900">
-                <span className="font-medium">You</span> {getActivityText(activityType, prayerOwnerName)}
+                <span className="font-medium">{userName}</span> {getTimelineActivityText(activityType, activity.activityData, prayerOwnerName, currentUser)}
               </p>
               <p className="text-medium text-gray-500 mt-1 line-clamp-2">
                 "{prayer.content?.substring(0, 80)}..."
               </p>
             </div>
             <span className="text-sm text-gray-400 flex-shrink-0 ml-2">
-              {getTimeAgo(activityTime)}
+              {formatTimelineTime(activityTime)}
             </span>
           </div>
           

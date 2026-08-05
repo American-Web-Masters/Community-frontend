@@ -7,9 +7,14 @@ import BottomNavBar from "./BottomNavBar";
 import Header from "./Header";
 import PrayerCard from "./PrayerCard";
 import CreatePrayerModal from "./CreatePrayerModal";
+import FlagModal from "./FlagModal";
 import { selectUser } from "../../store/userSlice";
-import { isSharedByUser, fetchPrayerStats } from "../../api/prayer";
+import { isSharedByUser, fetchPrayerStats, flagPrayer, reportPrayerGlobal } from "../../api/prayer";
+import toast from "react-hot-toast";
 import { useStableMasonry } from "../../hooks/useStableMasonry";
+
+// Cache prayer stats outside the component so they persist across mounts
+let cachedPrayerStats = { sharedPrayers: null, answeredPrayers: null };
 
 const PrayerPageLayout = ({ 
   pageType = "prayer-wall", // prayer-wall, my-prayers, updates, answered
@@ -53,9 +58,65 @@ const PrayerPageLayout = ({
     urgency: [],
     mood: [],
     tags: [],
-    anonymous: null
+    anonymous: null,
+    sortBy: 'recentActivity'
   });
-  const [prayerStats, setPrayerStats] = useState({ sharedPrayers: null, answeredPrayers: null });
+  const [prayerStats, setPrayerStats] = useState(cachedPrayerStats);
+
+  // Flag Modal State
+  const [flagModalOpen, setFlagModalOpen] = useState(false);
+  const [selectedPrayerToFlag, setSelectedPrayerToFlag] = useState(null);
+  const [flagReason, setFlagReason] = useState("");
+  const [flagDescription, setFlagDescription] = useState("");
+
+  const handleFlagPrayer = (prayer) => {
+    setSelectedPrayerToFlag(prayer);
+    setFlagModalOpen(true);
+  };
+
+  const handleSubmitFlag = async (e) => {
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+    
+    if (!flagReason) {
+      toast.error("Please select a reason for reporting");
+      return;
+    }
+
+    try {
+      if (selectedPrayerToFlag.communities && selectedPrayerToFlag.communities.length > 0) {
+        // Community prayer
+        const communityId = selectedPrayerToFlag.communities[0]?._id || selectedPrayerToFlag.communities[0];
+        await flagPrayer(selectedPrayerToFlag._id, {
+          reason: flagReason,
+          description: flagDescription
+        }, communityId);
+      } else {
+        // Global prayer
+        await reportPrayerGlobal(selectedPrayerToFlag._id, {
+          reason: flagReason,
+          description: flagDescription
+        });
+      }
+
+      toast.success("Prayer reported successfully");
+      setFlagModalOpen(false);
+      setFlagReason("");
+      setFlagDescription("");
+      setSelectedPrayerToFlag(null);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to report prayer");
+      console.error(error);
+    }
+  };
+
+  const handleCloseFlagModal = () => {
+    setFlagModalOpen(false);
+    setFlagReason("");
+    setFlagDescription("");
+    setSelectedPrayerToFlag(null);
+  };
 
   useEffect(() => {
     const handlePrayerCreatedEvent = (event) => {
@@ -93,16 +154,28 @@ const PrayerPageLayout = ({
       try {
         const res = await fetchPrayerStats();
         if (res.success && res.data) {
-          setPrayerStats({
+          const newStats = {
             sharedPrayers: res.data.sharedPrayers || 0,
             answeredPrayers: res.data.answeredPrayers || 0
-          });
+          };
+          setPrayerStats(newStats);
+          cachedPrayerStats = newStats;
         }
       } catch (err) {
         console.error("Failed to load prayer stats:", err);
       }
     };
+    
     loadPrayerStats();
+
+    // Listen to events that should trigger a stats refresh
+    window.addEventListener('prayer:statsUpdated', loadPrayerStats);
+    window.addEventListener('prayer:created', loadPrayerStats);
+
+    return () => {
+      window.removeEventListener('prayer:statsUpdated', loadPrayerStats);
+      window.removeEventListener('prayer:created', loadPrayerStats);
+    };
   }, []);
 
   const handleToggleExpand = (cardId) => {
@@ -150,8 +223,10 @@ const PrayerPageLayout = ({
       
       if (filterType === 'anonymous') {
         newFilters.anonymous = newFilters.anonymous === value ? null : value;
+      } else if (filterType === 'sortBy') {
+        newFilters.sortBy = value;
       } else {
-        const currentValues = newFilters[filterType];
+        const currentValues = newFilters[filterType] || [];
         if (currentValues.includes(value)) {
           newFilters[filterType] = currentValues.filter(v => v !== value);
         } else {
@@ -168,7 +243,8 @@ const PrayerPageLayout = ({
       urgency: [],
       mood: [],
       tags: [],
-      anonymous: null
+      anonymous: null,
+      sortBy: 'recentActivity'
     });
     setSearchQuery("");
   };
@@ -220,6 +296,19 @@ const PrayerPageLayout = ({
       filtered = filtered.filter(prayer => 
         prayer.anonymous === activeFilters.anonymous
       );
+    }
+
+    // Apply sort
+    const sortBy = activeFilters.sortBy || 'recentActivity';
+    if (sortBy === 'newest') {
+      filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else {
+      // Default: recentActivity
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.updatedAt || a.createdAt);
+        const dateB = new Date(b.updatedAt || b.createdAt);
+        return dateB - dateA; // Descending (most recent first)
+      });
     }
 
     return filtered;
@@ -355,8 +444,10 @@ const PrayerPageLayout = ({
                     </linearGradient>
                   </defs>
                 </svg>
-                <span className="font-semibold text-xs md:text-sm text-gray-900">
-                  {prayerStats.sharedPrayers !== null ? prayerStats.sharedPrayers : "..."} Shared Prayers
+                <span className="font-semibold text-xs md:text-sm text-gray-900 flex items-center gap-1">
+                  {prayerStats.sharedPrayers !== null ? prayerStats.sharedPrayers : (
+                    <span className="inline-block animate-pulse">...</span>
+                  )} Shared Prayers
                 </span>
               </div>
               <div className="flex items-center space-x-2">
@@ -406,8 +497,10 @@ const PrayerPageLayout = ({
                     </linearGradient>
                   </defs>
                 </svg>
-                <span className="font-semibold text-xs md:text-sm text-gray-900">
-                  {prayerStats.answeredPrayers !== null ? prayerStats.answeredPrayers : "..."} Prayers Answered
+                <span className="font-semibold text-xs md:text-sm text-gray-900 flex items-center gap-1">
+                  {prayerStats.answeredPrayers !== null ? prayerStats.answeredPrayers : (
+                    <span className="inline-block animate-pulse">...</span>
+                  )} Prayers Answered
                 </span>
               </div>
             </div>
@@ -479,11 +572,10 @@ const PrayerPageLayout = ({
         </div>
       </div>
 
-      {/* Tabs Section - only show if showTabs is true */}
       {showTabs && customTabs.length > 0 && (
-        <div className="px-4 md:px-6 mb-6 md:w-[70%] lg:w-[55%]">
-          <div className="bg-white/60 backdrop-blur-sm rounded-full shadow-sm border border-white/50 p-1 overflow-x-auto">
-            <div className="flex min-w-max">
+        <div className="px-4 md:px-6 mb-6">
+          <div className="bg-white/60 backdrop-blur-sm rounded-full shadow-sm border border-white/50 p-1 overflow-x-auto inline-flex max-w-full w-full md:w-auto">
+            <div className="flex w-full md:w-auto min-w-max">
               {customTabs.map((tab, index) => (
                 <button
                   key={tab}
@@ -505,7 +597,7 @@ const PrayerPageLayout = ({
       {/* Prayer Cards Grid */}
       <div className="flex-1 px-6 pb-24">
         {/* Handle loading state for different tabs */}
-        {(loading || (activeTab === "Bookmarks" && loadingBookmarks)) ? (
+        {((activeTab !== "Bookmarks" && loading) || (activeTab === "Bookmarks" && loadingBookmarks)) ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -610,6 +702,7 @@ const PrayerPageLayout = ({
                             urgency={prayer.urgency}
                             prayerText={prayer.content || prayer.prayerText}
                             status={getPrayerStatus ? getPrayerStatus(prayer) : prayer.status}
+                            onFlag={handleFlagPrayer}
                             communities={prayer.communities || ["Prayer Community"]}
                             mood={prayer.moodEmoji || prayer.mood}
                             comments={prayer.comments ? prayer.comments.map(comment => {
@@ -744,8 +837,9 @@ const PrayerPageLayout = ({
                             console.log("Prayer state changed:", prayer._id || prayer.id, newState);
                           }}
                           onSharedStateChange={(newState) => {
-                            console.log("Share state changed:", prayer._id || prayer.id, newState);
+                            if (getPrayerStatus) getPrayerStatus(prayer._id, { isShared: newState });
                           }}
+                          onFlag={handleFlagPrayer}
                           onCommentsUpdate={(updatedComments) => {
                             console.log("Comments updated:", prayer._id || prayer.id, updatedComments);
                           }}
@@ -771,6 +865,18 @@ const PrayerPageLayout = ({
 
       <BottomNavBar />
 
+      {/* Flag Prayer Modal */}
+      <FlagModal
+        isOpen={flagModalOpen}
+        onClose={handleCloseFlagModal}
+        onSubmit={handleSubmitFlag}
+        flagReason={flagReason}
+        setFlagReason={setFlagReason}
+        flagDescription={flagDescription}
+        setFlagDescription={setFlagDescription}
+        selectedPrayerToFlag={selectedPrayerToFlag}
+      />
+      
       {/* Create Prayer Modal */}
       <CreatePrayerModal 
         isOpen={isCreateModalOpen}

@@ -337,6 +337,33 @@ const Header = ({
                   </button>
                 </div>
                 
+                {/* Sort Filter */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-700 mb-4">Sort By</h4>
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => onFilterChange('sortBy', 'recentActivity')}
+                      className={`w-full cursor-pointer text-left px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
+                        (!activeFilters?.sortBy || activeFilters?.sortBy === 'recentActivity')
+                          ? 'bg-blue-500 text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Most Recent Activity
+                    </button>
+                    <button
+                      onClick={() => onFilterChange('sortBy', 'newest')}
+                      className={`w-full cursor-pointer text-left px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
+                        activeFilters?.sortBy === 'newest'
+                          ? 'bg-blue-500 text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Newest Created
+                    </button>
+                  </div>
+                </div>
+
                 {/* Urgency Filter */}
                 <div>
                   <h4 className="text-lg font-semibold text-gray-700 mb-4">Urgency Level</h4>

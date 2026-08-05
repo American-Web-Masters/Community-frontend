@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
 import { NotificationCard, PrayerModal } from "./subcomponents";
 import { apiClient } from "../../api";
+import { fetchUserBookmarks } from "../../api/prayer";
 import PrayerPageLayout from "../../components/ui/PrayerPageLayout";
 import { useLogout } from "../../hooks/useLogout";
 
@@ -10,7 +11,9 @@ const UpdatePrayers = () => {
   const user = useSelector(selectUser);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const { logout } = useLogout();
-  const [activities, setActivities] = useState({ comments: [], prayed: [], shares: [] });
+  const [activities, setActivities] = useState([]);
+  const [bookmarkedPrayers, setBookmarkedPrayers] = useState([]);
+  const [loadingBookmarks, setLoadingBookmarks] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPrayer, setSelectedPrayer] = useState(null);
@@ -21,7 +24,7 @@ const UpdatePrayers = () => {
   };
 
   // Function to fetch prayer updates from API
-  const fetchPrayerUpdates = async () => {
+  const fetchPrayerUpdates = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -29,33 +32,71 @@ const UpdatePrayers = () => {
       console.log(response?.data?.data?.recentActivity);
       
       if (response.data.success) {
-        const recentActivity = response.data.data.recentActivity;
-        setActivities({
-          comments: recentActivity.comments || [],
-          prayed: recentActivity.prayed || [],
-          shares: recentActivity.shares || []
+        const recentPrayers = response.data.data.prayers || [];
+        let allActivities = [];
+        
+        recentPrayers.forEach(prayer => {
+          if (prayer.timeline && prayer.timeline.length > 0) {
+            prayer.timeline.forEach(activity => {
+              allActivities.push({
+                ...activity,
+                prayer: prayer // Attach parent prayer for the modal
+              });
+            });
+          }
         });
+        
+        // Sort by newest activity first
+        allActivities.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        setActivities(allActivities);
       } else {
         throw new Error('Failed to fetch prayer updates');
       }
     } catch (err) {
       console.error('Error fetching prayer updates:', err);
       setError('Failed to load prayer updates. Please try again.');
-      // Set empty activities on error
-      setActivities({ comments: [], prayed: [], shares: [] });
+      setActivities([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?._id]);
+
+  // Fetch bookmarks
+  const fetchBookmarks = useCallback(async () => {
+    try {
+      setLoadingBookmarks(true);
+      if (!user?._id) {
+        setBookmarkedPrayers([]);
+        return;
+      }
+      const response = await fetchUserBookmarks(user._id);
+      if (response.success) {
+        setBookmarkedPrayers(response.data.prayers || []);
+      }
+    } catch (err) {
+      console.error('Error fetching bookmarked prayers:', err);
+      setBookmarkedPrayers([]);
+    } finally {
+      setLoadingBookmarks(false);
+    }
+  }, [user?._id]);
 
   // Fetch prayers on component mount
   useEffect(() => {
     if (isLoggedIn && user) {
       fetchPrayerUpdates();
+      fetchBookmarks();
     }
   }, [isLoggedIn, user]);
 
-  const handleCardClick = (prayer) => {
+  const handleBookmarkRemoved = (prayerId) => {
+    setBookmarkedPrayers(prev => prev.filter(prayer => prayer._id !== prayerId && prayer.id !== prayerId));
+  };
+
+  const handleCardClick = (activityOrPrayer) => {
+    // If it's a timeline activity, it has the parent prayer attached as .prayer
+    const prayer = activityOrPrayer.prayer || activityOrPrayer;
     setSelectedPrayer(prayer);
     setIsModalOpen(true);
   };
@@ -71,25 +112,29 @@ const UpdatePrayers = () => {
     fetchPrayerUpdates();
   };
 
-  // Custom function to get filtered prayers based on tab
+  // Custom function to get filtered activities based on tab
   const getFilteredPrayers = (tab) => {
     switch (tab) {
       case 'Comments':
-        return activities.comments.map(prayer => ({ ...prayer, activityType: 'comment' }));
+        return activities.filter(a => a.activityType === 'prayer_commented');
       case 'Prayed':
-        return activities.prayed.map(prayer => ({ ...prayer, activityType: 'prayed' }));
+        return activities.filter(a => a.activityType === 'prayer_prayed');
       case 'Shares':
-        return activities.shares.map(prayer => ({ ...prayer, activityType: 'share' }));
+        return activities.filter(a => a.activityType === 'prayer_shared');
+      case 'Edits':
+        return activities.filter(a => a.activityType === 'prayer_edited');
+      case 'Mood/Urgency':
+        return activities.filter(a => a.activityType === 'prayer_mood_urgency_changed');
+      case 'Answered':
+        return activities.filter(a => a.activityType === 'prayer_answered');
+      case 'Bookmarks':
+        return bookmarkedPrayers.map(prayer => ({ prayer, activityType: 'prayer_bookmarked', user: prayer.user }));
       default:
-        return [
-          ...activities.comments.map(prayer => ({ ...prayer, activityType: 'comment' })),
-          ...activities.prayed.map(prayer => ({ ...prayer, activityType: 'prayed' })),
-          ...activities.shares.map(prayer => ({ ...prayer, activityType: 'share' }))
-        ].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        return activities;
     }
   };
 
-  const customTabs = ["All", "Comments", "Prayed", "Shares"];
+  const customTabs = ["All", "Comments", /* "Prayed", "Shares", */ "Bookmarks", "Edits", "Mood/Urgency", "Answered"];
 
   if (!isLoggedIn || !user) {
     return (
@@ -123,8 +168,7 @@ const UpdatePrayers = () => {
         {filteredPrayers.map((activity, index) => (
           <NotificationCard
             key={`${activity._id}-${activity.activityType}-${index}`}
-            prayer={activity}
-            activityType={activity.activityType}
+            activity={activity}
             onCardClick={handleCardClick}
           />
         ))}
@@ -146,6 +190,10 @@ const UpdatePrayers = () => {
         onCreatePrayer={handlePrayerCreated}
         getFilteredPrayers={getFilteredPrayers}
         customRenderer={renderNotificationCards}
+        bookmarkedPrayers={bookmarkedPrayers}
+        loadingBookmarks={loadingBookmarks}
+        onRefreshBookmarks={fetchBookmarks}
+        onRemoveBookmark={handleBookmarkRemoved}
       />
 
       {/* Prayer Modal */}

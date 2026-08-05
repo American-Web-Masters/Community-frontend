@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser, selectIsLoggedIn } from "../../store/userSlice";
 import { useLogout } from "../../hooks/useLogout";
@@ -52,7 +52,8 @@ const AnsweredPrayers = () => {
     loading,
     error,
     fetchMoreItems,
-    refresh
+    refresh,
+    setItems
   } = useInfiniteScroll(fetchAnsweredPrayers, {
     limit: 20,
     enabledCondition: isLoggedIn && user
@@ -63,6 +64,20 @@ const AnsweredPrayers = () => {
     // Refresh prayers list after creating new prayer
     refresh();
   };
+
+  useEffect(() => {
+    const handleUnanswered = (e) => {
+      const { prayerId } = e.detail;
+      setItems((prevItems) => 
+        prevItems.filter(p => (p._id || p.id) !== prayerId)
+      );
+    };
+
+    window.addEventListener('prayer:unanswered', handleUnanswered);
+    return () => {
+      window.removeEventListener('prayer:unanswered', handleUnanswered);
+    };
+  }, [setItems]);
 
 
   if (!isLoggedIn || !user) {

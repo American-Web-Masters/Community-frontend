@@ -159,6 +159,14 @@ const CreatePrayerModal = ({
         console.log('Draft saved successfully:', response.data.data);
         resetForm();
         if (onSuccess) onSuccess(response.data.data);
+        window.dispatchEvent(
+          new CustomEvent('prayer:created', {
+            detail: {
+              tab: 'prayer-request',
+              prayer: response.data.data
+            }
+          })
+        );
         onClose();
       } else {
         throw new Error(response.data?.message || 'Failed to save draft');
@@ -199,6 +207,14 @@ const CreatePrayerModal = ({
         console.log('Scheduled prayer created:', response.data.data);
         resetForm();
         if (onSuccess) onSuccess(response.data.data);
+        window.dispatchEvent(
+          new CustomEvent('prayer:created', {
+            detail: {
+              tab: 'prayer-request',
+              prayer: response.data.data
+            }
+          })
+        );
         onClose();
       } else {
         throw new Error(response.data?.message || 'Failed to schedule prayer');
@@ -259,6 +275,14 @@ const CreatePrayerModal = ({
           console.log('Prayer published successfully:', response.data.data);
           resetForm();
           if (onSuccess) onSuccess(response.data.data);
+          window.dispatchEvent(
+            new CustomEvent('prayer:created', {
+              detail: {
+                tab: 'prayer-request',
+                prayer: response.data.data
+              }
+            })
+          );
           onClose();
         } else {
           throw new Error(response.data?.message || 'Failed to publish prayer');
@@ -280,6 +304,14 @@ const CreatePrayerModal = ({
           console.log('Prayer created successfully:', response.data.data);
           resetForm();
           if (onSuccess) onSuccess(response.data.data);
+          window.dispatchEvent(
+            new CustomEvent('prayer:created', {
+              detail: {
+                tab: 'prayer-request',
+                prayer: response.data.data
+              }
+            })
+          );
           onClose();
         } else {
           throw new Error(response.data?.message || 'Failed to create prayer');

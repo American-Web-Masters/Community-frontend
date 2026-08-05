@@ -1,8 +1,4 @@
-import {
-  IoBookmarkOutline,
-  IoChatbubbleOutline,
-  IoShareOutline,
-} from "react-icons/io5";
+import { IoBookmarkOutline, IoChatbubbleOutline, IoShareOutline, IoFlagOutline, IoNotifications, IoNotificationsOffOutline } from "react-icons/io5";
 import { BsThreeDots } from "react-icons/bs";
 import { TbPin, TbPinFilled } from "react-icons/tb";
 import {
@@ -11,6 +7,7 @@ import {
 } from "react-icons/pi";
 import { BsSend } from "react-icons/bs";
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from 'react-router-dom';
 import { FiTrash2 } from 'react-icons/fi';
 import { useSelector } from "react-redux";
@@ -18,6 +15,7 @@ import { selectUser } from "../../store/userSlice";
 import {CommentsModal, TimelineModal} from "../../pages/home/subcomponents";
 import ProfilePrayerMenu from "./ProfilePrayerMenu";
 import ShareModal from "./ShareModal";
+import PlusButton from "./PlusButton";
 import {
   markAsPrayed, 
   unmarkAsPrayed, 
@@ -29,6 +27,8 @@ import {
   unbookmarkPrayer,
   isBookmarkedByUser,
   isSharedByUser,
+  togglePrayerAnswered,
+  togglePrayerMute,
 } from "../../api/prayer";
 import { togglePrayerPin } from "../../api/communities";
 import { getUrgencyMeter, getTimelineUserName, getStatusPillStyle, getTimelineActivityText, getTimelineActivityIcon, formatTimelineTime } from "../../utils/prayerUtils";
@@ -71,6 +71,7 @@ const PrayerCard = ({
   onCommentsUpdate,
   onBookmarkStateChange, // New callback for bookmark state changes
   showStatusPill = false,
+  onFlag = null, // New callback for flagging a prayer
   onPublishDraft = null, // New callback for publishing draft prayers
   isDraft = false, // Flag to show if this is a draft prayer
   isPinned = false, // Flag to show if prayer is pinned
@@ -98,8 +99,27 @@ const PrayerCard = ({
   const [newComment, setNewComment] = useState("");
   const [isPrayedState, setIsPrayedState] = useState(isPrayed);
   const [isSharedState, setIsSharedState] = useState(() => 
-    prayer ? isSharedByUser(prayer, currentUser?._id) : isShared
+    isShared || isSharedByUser(prayer, currentUser?._id)
   );
+  
+  const [isMutedState, setIsMutedState] = useState(() => {
+    return prayer?.mutedUsers?.some(
+      (muted) => muted.user === currentUser?._id || muted.user?._id === currentUser?._id
+    ) || false;
+  });
+
+  const handleMuteToggle = async (e) => {
+    e.stopPropagation();
+    try {
+      const newMutedState = !isMutedState;
+      setIsMutedState(newMutedState); // optimistic update
+      await togglePrayerMute(prayerId || prayer._id);
+      toast.success(newMutedState ? "Notifications off" : "Notifications on");
+    } catch (error) {
+      setIsMutedState(!isMutedState); // revert
+      toast.error("Failed to update notification settings");
+    }
+  };
   const [commentsState, setCommentsState] = useState(comments);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isSubmittingPrayer, setIsSubmittingPrayer] = useState(false);
@@ -117,9 +137,13 @@ const PrayerCard = ({
   const [isBookmarkedState, setIsBookmarkedState] = useState(() => 
     prayer ? isBookmarkedByUser(prayer, currentUser?._id) : false
   );
+  const [isAnsweredState, setIsAnsweredState] = useState(() => !!prayer?.isAnswered);
   const [isModeratorMenuOpen, setIsModeratorMenuOpen] = useState(false);
   const [internalExpanded, setInternalExpanded] = useState(false);
+  const [isJournalPromptOpen, setIsJournalPromptOpen] = useState(false);
+  const [isJournalModalOpen, setIsJournalModalOpen] = useState(false);
   const moderatorMenuRef = useRef(null);
+
 
   // Close moderator menu when clicking outside
   useEffect(() => {
@@ -219,6 +243,7 @@ const PrayerCard = ({
           },
         });
       }
+      window.dispatchEvent(new CustomEvent('prayer:statsUpdated'));
     } catch (error) {
       console.error("Error sharing prayer:", error);
       // Revert optimistic update on error
@@ -231,7 +256,22 @@ const PrayerCard = ({
     }
   };
 
-  const handleShareClick = () => {
+  const handleToggleAnswered = async (id, newValue) => {
+    try {
+        setIsAnsweredState(newValue);
+        await togglePrayerAnswered(prayerId);
+        toast.success(newValue ? "Prayer marked as answered!" : "Prayer unmarked as answered");
+        window.dispatchEvent(new CustomEvent('prayer:statsUpdated'));
+        if (!newValue) {
+          window.dispatchEvent(new CustomEvent('prayer:unanswered', { detail: { prayerId } }));
+        }
+    } catch (err) {
+      setIsAnsweredState(!newValue);
+      toast.error("Failed to update answered status");
+    }
+  };
+
+  const handleShareClick = async () => {
     setIsShareModalOpen(true);
   };
 
@@ -433,6 +473,7 @@ const PrayerCard = ({
   
   const prayerUrl = `${window.location.origin}/prayer/${prayerId}`;
   
+  console.log("Testing:", prayer?.user?.profile?.profilePicture);
   return (
     <>
       {/* Comments Modal */}
@@ -481,6 +522,20 @@ const PrayerCard = ({
           </div>
         )}
 
+        {/* Flag Icon */}
+        {onFlag && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onFlag(prayer);
+            }}
+            className="absolute bottom-3 right-3 p-2 bg-white rounded-full cursor-pointer border border-gray-200 transition-all duration-200 group z-20"
+            title="Report this prayer"
+          >
+            <IoFlagOutline className="w-4 h-4 text-gray-500 group-hover:text-red-500 transition-colors duration-200" />
+          </button>
+        )}
+
         {/* Shared Post Indicator */}
         {sharedByText && (
           <div className="inline-flex items-center space-x-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs px-3 py-1.5 rounded-full mb-3 font-semibold shadow-sm border border-indigo-100 transition-all duration-200 cursor-default group">
@@ -511,8 +566,18 @@ const PrayerCard = ({
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-              <img className="rounded-full" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPnE_fy9lLMRP5DLYLnGN0LRLzZOiEpMrU4g&s" alt="banda" />
+          <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden shrink-0">
+            {prayer?.user?.profile?.profilePicture ? (
+              <img 
+                className="w-full h-full object-cover" 
+                src={prayer?.user?.profile?.profilePicture} 
+                alt={user?.name || user?.firstname || "User"} 
+              />
+            ) : (
+              <span className="text-gray-600 font-semibold text-lg uppercase">
+                {(user?.name || user?.firstname || user?.username || "A").charAt(0)}
+              </span>
+            )}
           </div>
           <div>
             <div className="w-full flex items-center justify-between space-x-2">
@@ -574,16 +639,30 @@ const PrayerCard = ({
               </span>
             )}
             
-            {/* Profile-specific menu */}
-            {isProfileContext && (
+            <button
+              onClick={handleMuteToggle}
+              className="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 focus:outline-none cursor-pointer"
+              title={isMutedState ? "Turn on notifications" : "Turn off notifications"}
+            >
+              {isMutedState ? (
+                <IoNotificationsOffOutline className="w-5 h-5 text-gray-500" />
+              ) : (
+                <IoNotifications className="w-5 h-5 text-gray-700" />
+              )}
+            </button>
+            
+            {/* Owner or Profile-specific menu */}
+            {(isProfileContext || (currentUser?._id === (prayer?.user?._id || prayer?.user))) && (
               <ProfilePrayerMenu
                 prayer={prayer}
-                onTogglePin={onProfileTogglePin}
-                onToggleVisibility={onProfileToggleVisibility}
-                onEdit={onProfileEdit}
-                onDelete={onProfileDelete}
+                onTogglePin={isProfileContext ? onProfileTogglePin : null}
+                onToggleVisibility={isProfileContext ? onProfileToggleVisibility : null}
+                onEdit={isProfileContext ? onProfileEdit : null}
+                onDelete={isProfileContext ? onProfileDelete : null}
+                onToggleAnswered={handleToggleAnswered}
                 isPinned={isPinnedState}
                 isPrivate={isPrivate}
+                isAnswered={isAnsweredState}
                 isPinLoading={isPinLoading}
                 isVisibilityLoading={isVisibilityLoading}
               />
@@ -654,10 +733,13 @@ const PrayerCard = ({
         </div>
       </div>
 
-      {/* Prayer Text */}
-      <div className="mb-4 relative overflow-hidden smooth-height">
-        {isContentExpanded ? (
-          <div className="expand-animation transform transition-all duration-500 ease-out">
+      {/* Prayer Content Area */}
+      <div className="mb-4 smooth-height">
+        
+        {/* Text Container */}
+        <div className="overflow-hidden mb-3">
+          {isContentExpanded ? (
+            <div className="expand-animation transform transition-all duration-500 ease-out">
             {/* Community Pills - Show all in expanded view */}
             <div className="flex flex-wrap gap-2 mb-3">
               {communities.map((community, index) => (
@@ -673,29 +755,49 @@ const PrayerCard = ({
             <p className="text-gray-800 leading-relaxed text-sm mb-4">
               {prayerText}
             </p>
-            
-            {/* Mood and Urgency Meter in expanded view */}
-            <div className="flex items-center justify-between mb-4">
-            
-                <div className={`Flex items-center space-x-2 ${mood ? 'visible' : 'invisible'}`}>
-                  <span className="text-sm text-gray-600 font-medium">Mood:</span>
-                  <span className="text-lg">{mood}</span>
-                </div>
-              
-              
-              <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-600 font-medium">{urgency}</span>
-                <div className="flex items-end space-x-0.5 h-8">
-                  {urgencyMeter.bars.map((bar, index) => (
-                    <div
-                      key={index}
-                      className={`w-2 ${bar.height} ${bar.color} rounded-sm`}
-                    ></div>
-                  ))}
-                </div>
-              </div>
+          </div>
+        ) : (
+          <div className="transition-all duration-300 ease-in-out transform smooth-height">
+            <p className="text-gray-800 leading-relaxed text-sm line-clamp-2 overflow-hidden transition-all duration-500 ease-in-out">
+              {prayerText}
+            </p>
+          </div>
+        )}
+        </div>
+
+        {/* Mood and Urgency Meter - Always visible below text */}
+        <div className="flex items-center justify-between mb-3">
+          <div className={`flex items-center space-x-2 ${mood ? 'visible' : 'invisible'}`}>
+            <span className="text-sm text-gray-600 font-medium">Mood:</span>
+            <span className="text-lg">{mood}</span>
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            <span className="text-sm text-gray-600 font-medium">{urgency}</span>
+            <div className="flex items-end space-x-0.5 h-8">
+              {urgencyMeter.bars.map((bar, index) => (
+                <div
+                  key={index}
+                  className={`w-2 ${bar.height} ${bar.color} rounded-sm`}
+                ></div>
+              ))}
             </div>
-            
+          </div>
+        </div>
+
+        {/* Read more button (only when collapsed) */}
+        {!isContentExpanded && (
+          <button 
+            onClick={handleToggleExpand}
+            className="text-[#03045E] cursor-pointer text-sm font-medium hover:underline transition-all duration-300 hover:text-blue-600 mb-2 block"
+          >
+            Read more
+          </button>
+        )}
+
+        {/* Expanded specific details (Tags, Timeline, Show less) */}
+        {isContentExpanded && (
+          <div className="expand-animation transform transition-all duration-500 ease-out">
             {/* Tags Section */}
             {tags && tags.length > 0 && (
               <div className="mb-4">
@@ -756,25 +858,11 @@ const PrayerCard = ({
               </div>
             </div>
             
-
-            
             <button 
               onClick={handleToggleExpand}
               className="text-[#03045E] cursor-pointer text-sm font-medium hover:underline transition-all duration-300 hover:text-blue-600"
             >
               Show less
-            </button>
-          </div>
-        ) : (
-          <div className="transition-all duration-300 ease-in-out transform smooth-height">
-            <p className="text-gray-800 leading-relaxed text-sm line-clamp-2 overflow-hidden pr-20 transition-all duration-500 ease-in-out">
-              {prayerText}
-            </p>
-            <button 
-              onClick={handleToggleExpand}
-              className="absolute bottom-0 cursor-pointer right-0 text-[#03045E] text-sm font-medium hover:underline bg-gradient-to-l from-blue-100 to-transparent pl-4 transition-all duration-300 hover:text-blue-600"
-            >
-              Read more
             </button>
           </div>
         )}
@@ -897,7 +985,7 @@ const PrayerCard = ({
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between pt-3 border-t border-blue-200/50">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1">
           <button
             onClick={handlePrayClick}
             disabled={!currentUser?._id || isSubmittingPrayer}
@@ -921,6 +1009,15 @@ const PrayerCard = ({
           </button>
 
           <button
+            onClick={() => setIsJournalPromptOpen(true)}
+            disabled={!currentUser?._id}
+            className="flex items-center cursor-pointer space-x-1 transition-all duration-200 px-2 py-1 rounded-full text-gray-600 hover:text-blue-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Link prayer in journal"
+          >
+            <img src="/journal.png" alt="Journal" className="w-4 h-5 opacity-70 hover:opacity-100 transition-opacity" />
+          </button>
+
+          <button
             onClick={handleBookmarkClick}
             disabled={!currentUser?._id || isSubmittingBookmark}
             className={`flex items-center cursor-pointer space-x-1 transition-all duration-200 px-2 py-1 rounded-full ${
@@ -939,12 +1036,13 @@ const PrayerCard = ({
 
           <button
             onClick={() => setShowComments(!showComments)}
-            className="flex items-center cursor-pointer space-x-1 transition-colors duration-200 px-2 py-1 rounded-full text-gray-600 hover:text-blue-600 hover:bg-gray-50"
+            className={`flex items-center cursor-pointer space-x-1 transition-colors duration-200 px-2 py-1 rounded-full ${
+              commentsState.length > 0
+                ? 'text-blue-600 bg-blue-50'
+                : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+            }`}
           >
             <IoChatbubbleOutline className="w-5 h-5 cursor-pointer" />
-            {commentsState.length > 0 && (
-              <span className="text-xs">{commentsState.length}</span>
-            )}
           </button>
 
           <button
@@ -965,6 +1063,47 @@ const PrayerCard = ({
         </div>
       </div>
     </div>
+
+    {/* Journal Confirmation Prompt */}
+    {isJournalPromptOpen && createPortal(
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-auto text-center">
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Link to Journal?</h3>
+          <p className="text-gray-600 mb-6">
+            Do you want to create a new journal entry linked to this prayer?
+          </p>
+          <div className="flex space-x-3 w-full">
+            <button
+              onClick={() => setIsJournalPromptOpen(false)}
+              className="flex-1 py-2.5 rounded-xl font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                setIsJournalPromptOpen(false);
+                setIsJournalModalOpen(true);
+              }}
+              className="flex-1 py-2.5 rounded-xl font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-md shadow-blue-200 cursor-pointer"
+            >
+              Yes, link it
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+
+    {/* PlusButton Modal for Journal Entry */}
+    <PlusButton 
+      isOpen={isJournalModalOpen} 
+      onClose={() => setIsJournalModalOpen(false)} 
+      initialTab="journal-entry"
+      initialData={{
+        prayer: prayer?._id,
+        linkedPrayerPreview: prayer?.content || prayerText || ''
+      }}
+    />
     </>
   );
 };

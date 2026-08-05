@@ -29,7 +29,7 @@ import StripeOnboardingRefresh from "../pages/communities/StripeOnboardingRefres
 import { UserStripeOnboardingRefresh, UserStripeOnboardingSuccess } from "../pages/profile/subcomponents";
 import Settings from "../pages/settings/Settings";
 import HelpCenter from "../pages/help_center/HelpCenter";
-import { DashboardForum, DashboardHome, DashboardLayout, DashboardPlaceholder } from "../features/dashboard";
+import { DashboardForum, DashboardHome, DashboardLayout, DashboardPlaceholder, DashboardFlaggedPosts } from "../features/dashboard";
 import DashboardFaqs from "../features/dashboard/pages/DashboardFaqs";
 
 const Routes = () =>{
@@ -285,6 +285,10 @@ const Routes = () =>{
                                         description="Manage users, roles, and access."
                                     />
                                 }
+                            />
+                            <Route
+                                path="flagged"
+                                element={<DashboardFlaggedPosts />}
                             />
                             <Route
                                 path="events"
