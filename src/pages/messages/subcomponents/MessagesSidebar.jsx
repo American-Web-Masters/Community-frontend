@@ -31,7 +31,9 @@ const MessagesSidebar = ({
   loadingCommunities,
   discoverCommunities,
   onJoinInnerCircle,
-  joiningInnerCircleId
+  joiningInnerCircleId,
+  handleJoinCommunity,
+  joiningCommunityId
 }) => {
   const navigate = useNavigate();
   const isGroupMode = chatMode === 'group';
@@ -404,7 +406,8 @@ const MessagesSidebar = ({
                       privacyLevel={community.privacyLevel}
                       status={community.privacyLevel === 'private' ? 'Private' : 'Public'}
                       isJoined={false}
-                      onJoinClick={() => navigate('/communities')}
+                      isLoading={joiningCommunityId === (community._id || community.id)}
+                      onJoinClick={() => handleJoinCommunity(community._id || community.id)}
                       onViewClick={() => navigate('/communities')}
                     />
                   ))}

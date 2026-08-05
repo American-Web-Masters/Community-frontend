@@ -74,6 +74,8 @@ const Messages = () => {
     handlePinUser,
     sortUsers,
     formatTimestamp,
+    handleJoinCommunity,
+    joiningCommunityId,
   } = useMessagesController();
 
   const justClosedRef = useRef(false);
@@ -266,6 +268,8 @@ const Messages = () => {
             discoverCommunities={discoverCommunities}
             onJoinInnerCircle={handleJoinInnerCircle}
             joiningInnerCircleId={joiningInnerCircleId}
+            handleJoinCommunity={handleJoinCommunity}
+            joiningCommunityId={joiningCommunityId}
           />
 
           {/* Main Chat Area */}
