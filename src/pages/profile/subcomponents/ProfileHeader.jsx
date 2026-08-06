@@ -7,6 +7,7 @@ import { MdCheck, MdClose, MdCameraAlt, MdSettings, MdShare } from "react-icons/
 import { FaEdit } from "react-icons/fa";
 import toast from "react-hot-toast";
 import useBiblePassageLookup from "../../../hooks/useBiblePassageLookup";
+import ShareModal from "../../../components/ui/ShareModal";
 
 const ProfileHeader = ({
   userProfile,
@@ -21,6 +22,8 @@ const ProfileHeader = ({
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [headerLoading, setHeaderLoading] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
   const [verseBook, setVerseBook] = useState("");
   const [verseNumber, setVerseNumber] = useState("");
   const [fetchedVerseReference, setFetchedVerseReference] = useState("");
@@ -162,34 +165,19 @@ const ProfileHeader = ({
     }
 
     const url = `${window.location.origin}/profile/${usernameToShare}`;
-
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Profile link copied to clipboard!", { duration: 3000 });
-    } catch {
-      // Clipboard API may be blocked (e.g. non-HTTPS or permissions denied)
-      // Fall back to the legacy execCommand approach
-      try {
-        const textArea = document.createElement("textarea");
-        textArea.value = url;
-        textArea.style.position = "fixed";
-        textArea.style.opacity = "0";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
-        toast.success("Profile link copied to clipboard! 🔗", { duration: 3000 });
-      } catch {
-        toast.error("Failed to copy link. Please copy it manually: " + url, {
-          duration: 6000,
-        });
-      }
-    }
+    setShareUrl(url);
+    setIsShareModalOpen(true);
   };
 
   return (
     <div className="bg-gradient-to-br from-blue-50 to-blue-100 w-4/6 mx-auto rounded-xl shadow-md overflow-hidden mb-6 max-md:w-[98%]">
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        shareUrl={shareUrl}
+        title="Share Profile"
+        shareText="Check out this profile: "
+      />
       {/* Main Profile Section */}
       <div className="relative px-6 pt-6 pb-4">
   {isEditing ? (

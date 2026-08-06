@@ -29,6 +29,7 @@ import StripeOnboardingRefresh from "../pages/communities/StripeOnboardingRefres
 import { UserStripeOnboardingRefresh, UserStripeOnboardingSuccess } from "../pages/profile/subcomponents";
 import Settings from "../pages/settings/Settings";
 import HelpCenter from "../pages/help_center/HelpCenter";
+import Notifications from "../pages/notifications/Notifications";
 import { DashboardForum, DashboardHome, DashboardLayout, DashboardPlaceholder, DashboardFlaggedPosts } from "../features/dashboard";
 import DashboardFaqs from "../features/dashboard/pages/DashboardFaqs";
 
@@ -255,6 +256,14 @@ const Routes = () =>{
             element={
                 <ProtectedRoute>
                     <DemoSubscriptionManagement/>
+                </ProtectedRoute>
+            }
+            />
+            <Route
+            path="/notifications"
+            element={
+                <ProtectedRoute>
+                    <Notifications/>
                 </ProtectedRoute>
             }
             />

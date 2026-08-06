@@ -558,6 +558,7 @@ const ModeratorQueue = ({ community, currentUser, feedPrayers = [], onPrayerDele
                 isOwnerOrModerator={false}
                 isModeratorContext={true}
                 onModeratorDelete={openDeleteModal}
+                hideMarkAsAnswered={true}
               />
             ))
           ) : (
