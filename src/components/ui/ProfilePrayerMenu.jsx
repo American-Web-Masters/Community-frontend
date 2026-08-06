@@ -22,6 +22,12 @@ const ProfilePrayerMenu = ({
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
 
+  const hasAnyOption = onTogglePin || onToggleVisibility || onToggleAnswered || onEdit || onDelete;
+
+  if (!hasAnyOption) {
+    return null;
+  }
+
   // Single source of truth: parent drives the state via props.
   const isPinned = !!isPinnedProp;
   const isPublic = !isPrivateProp;

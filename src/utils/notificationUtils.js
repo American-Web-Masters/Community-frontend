@@ -17,7 +17,7 @@ export const buildNotificationText = (notification) => {
 
   switch (notification?.type) {
     case 'PRAYER_LIKED':
-      return `${first}${suffix} liked your prayer`;
+      return `${first}${suffix} prayed on your prayer`;
     case 'PRAYER_COMMENTED':
       return `${first}${suffix} commented on your prayer`;
     case 'COMMENT_REPLIED':

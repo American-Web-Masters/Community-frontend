@@ -22,6 +22,7 @@ import CreatePrayerModal from "../../components/ui/CreatePrayerModal";
 import CreateEventModal from "./subcomponents/CreateEventModal";
 import FlagModal from "../../components/ui/FlagModal";
 import DivineLoader from '../../components/ui/PlusLoader';
+import ShareModal from "../../components/ui/ShareModal";
 
 const CommunityDetails = () => {
   const { id } = useParams();
@@ -51,6 +52,8 @@ const CommunityDetails = () => {
   // Header editing states
   const [isEditingHeader, setIsEditingHeader] = useState(false);
   const [headerLoading, setHeaderLoading] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
   const [editHeaderData, setEditHeaderData] = useState({
     name: '',
     affiliatedOrganization: '',
@@ -577,35 +580,19 @@ const CommunityDetails = () => {
 
   const handleInviteClick = async () => {
     setLoading2(true);
-    const response = await apiClient.post('/invites/generate',{communityId: community._id});
-    if (response.data.status == "success") {  
-      toast.success('Invite link generated successfully!');
-      setLoading2(false);
-    }
     try {
-      // Create the full invite URL (you might need to adjust the domain based on your app's URL structure)
-      const inviteUrl = response.data?.data?.inviteUrl
-      
-      await navigator.clipboard.writeText(inviteUrl);
-      setCopied(true);
-      
-      // Reset the copied state after 2 seconds
-      setTimeout(() => setCopied(false), 2000);
+      const response = await apiClient.post('/invites/generate', { communityId: community._id });
+      if (response.data.status === "success" || response.data.status === 200) {
+        const inviteUrl = response.data?.data?.inviteUrl || `${window.location.origin}/invite/${community.inviteLink}`;
+        setShareUrl(inviteUrl);
+        setIsShareModalOpen(true);
+      } else {
+        toast.error('Failed to generate invite link');
+      }
     } catch (err) {
-      console.error('Failed to copy invite link:', err);
-      
-      // Fallback for browsers that don't support clipboard API
-      const textArea = document.createElement('textarea');
-      textArea.value = `${window.location.origin}/invite/${community.inviteLink}`;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-    finally {
+      console.error('Failed to generate invite link:', err);
+      toast.error('Failed to generate invite link. Please try again.');
+    } finally {
       setLoading2(false);
     }
   };
@@ -674,6 +661,13 @@ const CommunityDetails = () => {
 
   return (
     <div className="min-h-screen light-background overflow-x-hidden">
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        shareUrl={shareUrl}
+        title="Invite to Community"
+        shareText="Join our community: "
+      />
       {/* App Header */}
       <div className="mt-2">
         <Header
@@ -913,22 +907,12 @@ const CommunityDetails = () => {
                 {isOwnerOrModerator && (
                                   <button 
                   onClick={handleInviteClick}
-                  className={`px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 transition-all duration-200 justify-center ${
-                    copied 
-                      ? 'bg-green-500 text-white' 
-                      : 'btn-blue-gradient hover:opacity-90'
-                  } cursor-pointer`}
+                  className={`px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 transition-all duration-200 justify-center btn-blue-gradient hover:opacity-90 cursor-pointer`}
                 >
                   <span>
-                    {copied ? (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    ) : (
-                      <IoShareSocialOutline className="w-4 h-4" />
-                    )}
+                    <IoShareSocialOutline className="w-4 h-4" />
                   </span>
-                  {loading2 ? (<span>Loading...</span>) : <span>{copied ? 'Copied!' : 'Invite'}</span>}
+                  {loading2 ? (<span>Loading...</span>) : <span>Invite</span>}
                 </button>
                 )}
               </div>
@@ -1244,6 +1228,7 @@ const CommunityDetails = () => {
                               handlePinStateChange(prayer._id || prayer.id, newState);
                             }}
                             onFlag={handleFlagPrayer}
+                            hideMarkAsAnswered={true}
                           />
                           </div>
                         </div>

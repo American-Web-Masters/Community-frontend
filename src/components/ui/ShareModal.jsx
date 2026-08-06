@@ -4,32 +4,43 @@ import { FaFacebook, FaWhatsapp, FaTwitter, FaLink, FaRegUserCircle } from 'reac
 import { IoClose } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 
-const ShareModal = ({ isOpen, onClose, prayerUrl, onShareToProfile, isShared }) => {
+const ShareModal = ({ 
+  isOpen, 
+  onClose, 
+  shareUrl, 
+  prayerUrl, // backward compatibility
+  onShareToProfile, 
+  isShared,
+  title = "Share",
+  shareText = "Check this out: "
+}) => {
   const [isCopied, setIsCopied] = useState(false);
 
   if (!isOpen) return null;
 
+  const finalUrl = shareUrl || prayerUrl;
+
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(prayerUrl);
+    navigator.clipboard.writeText(finalUrl);
     setIsCopied(true);
     toast.success("Link copied to clipboard!");
     setTimeout(() => setIsCopied(false), 2000);
   };
 
   const handleFacebookShare = () => {
-    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(prayerUrl)}`;
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(finalUrl)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
     onClose();
   };
 
   const handleWhatsappShare = () => {
-    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent('Please pray for this: ' + prayerUrl)}`;
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + finalUrl)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
     onClose();
   };
 
   const handleTwitterShare = () => {
-    const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(prayerUrl)}&text=${encodeURIComponent('Please pray for this:')}`;
+    const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(finalUrl)}&text=${encodeURIComponent(shareText)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
     onClose();
   };
@@ -44,7 +55,7 @@ const ShareModal = ({ isOpen, onClose, prayerUrl, onShareToProfile, isShared }) 
           <IoClose className="w-6 h-6" />
         </button>
 
-        <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">Share Prayer</h3>
+        <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">{title}</h3>
 
         <div className="grid grid-cols-4 gap-4 mb-6">
           <button 
@@ -88,24 +99,26 @@ const ShareModal = ({ isOpen, onClose, prayerUrl, onShareToProfile, isShared }) 
           </button>
         </div>
 
-        <div className="border-t border-gray-100 pt-4">
-          <button 
-            onClick={() => {
-              if (isShared) return;
-              if(onShareToProfile) onShareToProfile();
-              onClose();
-            }}
-            disabled={isShared}
-            className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium transition-colors duration-200 cursor-pointer ${
-              isShared
-                ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700'
-            }`}
-          >
-            <FaRegUserCircle className="w-5 h-5" />
-            {isShared ? "Already Shared to Profile" : "Share to Profile"}
-          </button>
-        </div>
+        {onShareToProfile && (
+          <div className="border-t border-gray-100 pt-4">
+            <button 
+              onClick={() => {
+                if (isShared) return;
+                if(onShareToProfile) onShareToProfile();
+                onClose();
+              }}
+              disabled={isShared}
+              className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium transition-colors duration-200 cursor-pointer ${
+                isShared
+                  ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700'
+              }`}
+            >
+              <FaRegUserCircle className="w-5 h-5" />
+              {isShared ? "Already Shared to Profile" : "Share to Profile"}
+            </button>
+          </div>
+        )}
       </div>
     </div>,
     document.body
