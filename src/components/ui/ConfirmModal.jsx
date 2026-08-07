@@ -14,14 +14,14 @@ const ConfirmModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md shadow-xl border border-gray-100">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-md transition-all duration-300 animate-in fade-in ease-out flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-md shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] transform transition-all duration-300 animate-in zoom-in-95 slide-in-from-bottom-4 ease-out border border-gray-100">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-xl leading-none transition-colors"
+              className="text-gray-400 hover:text-gray-600 text-xl leading-none hover:rotate-90 hover:shadow-sm active:scale-90 transition-all duration-300"
             >
               <span className="sr-only">Close</span>
               ×
@@ -42,7 +42,7 @@ const ConfirmModal = ({
           <div className="flex space-x-3 justify-end">
             <button
               onClick={onClose}
-              className="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium text-sm cursor-pointer"
+              className="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow-sm transition-all duration-300 font-medium text-sm cursor-pointer"
             >
               Cancel
             </button>
@@ -51,7 +51,7 @@ const ConfirmModal = ({
                 onConfirm();
                 onClose();
               }}
-              className={`px-5 py-2 rounded-lg transition-colors font-medium text-sm flex items-center gap-2 cursor-pointer shadow-sm ${confirmColor}`}
+              className={`px-5 py-2 rounded-lg font-medium text-sm flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 ${confirmColor}`}
             >
               {confirmText}
             </button>

@@ -9,8 +9,8 @@ const JoinRequestModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md transition-all duration-300 animate-in fade-in ease-out">
+      <div className="bg-white rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] transform transition-all duration-300 animate-in zoom-in-95 slide-in-from-bottom-4 ease-out w-full max-w-md">
         <div className="p-6">
           <div className="text-center">
             {/* Success icon */}
@@ -31,7 +31,7 @@ const JoinRequestModal = ({
             {/* Close button */}
             <button
               onClick={onClose}
-              className="w-full py-3 px-4 btn-blue-gradient cursor-pointer text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200"
+              className="w-full py-3 px-4 btn-blue-gradient cursor-pointer text-white rounded-xl font-medium shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
             >
               Got it
             </button>

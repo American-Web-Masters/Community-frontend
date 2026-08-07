@@ -31,12 +31,12 @@ const TimelineModal = ({
 
   const modalContent = (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal-portal p-4"
+      className="fixed inset-0 bg-black/40 backdrop-blur-md transition-all duration-300 animate-in fade-in ease-out flex items-center justify-center modal-portal p-4"
       onClick={() => setShowTimelineModal(false)}
       style={{ zIndex: 9999 }}
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
+        className="bg-white rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] transform transition-all duration-300 animate-in zoom-in-95 slide-in-from-bottom-4 ease-out w-full max-w-2xl max-h-[80vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -46,7 +46,7 @@ const TimelineModal = ({
           </h3>
           <button
             onClick={() => setShowTimelineModal(false)}
-            className="text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer"
+            className="text-gray-400 hover:text-gray-600 cursor-pointer hover:rotate-90 hover:shadow-sm active:scale-90 transition-all duration-300"
           >
             <IoClose className="w-6 h-6" />
           </button>

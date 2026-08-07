@@ -276,14 +276,14 @@ const HelpCenterForumTab = () => {
           value={questionTitle}
           onChange={(e) => setQuestionTitle(e.target.value)}
           placeholder="Question title..."
-          className="mt-4 w-full h-[48px] px-4 rounded-[10px] border border-primary-100 bg-white text-[15px] text-primary-800 placeholder:text-primary-300 outline-none"
+          className="mt-4 w-full h-[48px] px-5 rounded-[10px] border border-primary-100 bg-white/70 backdrop-blur-sm shadow-inner focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 text-[15px] text-primary-800 placeholder:text-primary-300 outline-none"
         />
 
         <textarea
           value={questionDescription}
           onChange={(e) => setQuestionDescription(e.target.value)}
           placeholder="Describe your question in detail..."
-          className="mt-3 w-full min-h-[120px] px-4 py-3 rounded-[10px] border border-primary-100 bg-white text-[15px] text-primary-800 placeholder:text-primary-300 outline-none resize-none"
+          className="mt-3 w-full min-h-[120px] px-5 py-4 rounded-[10px] border border-primary-100 bg-white/70 backdrop-blur-sm shadow-inner focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 text-[15px] text-primary-800 placeholder:text-primary-300 outline-none resize-none"
         />
 
         {!canCreateForum ? (
@@ -294,7 +294,7 @@ const HelpCenterForumTab = () => {
           type="button"
           disabled={createForumDisabled}
           onClick={handleCreateForum}
-          className="mt-5 px-6 py-2 rounded-full btn-blue-gradient text-white text-[12px] font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          className="mt-5 px-6 py-2 rounded-full btn-blue-gradient text-white text-[12px] font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
         >
           {creatingForum ? "Posting..." : "Post Question"}
         </button>
@@ -318,7 +318,7 @@ const HelpCenterForumTab = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search forum..."
-              className="w-full h-12 pl-11 pr-4 rounded-full bg-white/80 border border-white/60 shadow-sm text-[15px] font-semibold text-[#24467f] placeholder:text-[#24467f]/50 outline-none"
+              className="w-full h-12 pl-11 pr-5 rounded-full bg-white/80 border border-white/60 shadow-inner focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 text-[15px] font-semibold text-[#24467f] placeholder:text-[#24467f]/50 outline-none backdrop-blur-sm"
             />
           </div>
         </div>

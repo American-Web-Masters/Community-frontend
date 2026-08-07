@@ -359,10 +359,10 @@ const CreatePrayerModal = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md transition-all duration-300 animate-in fade-in ease-out"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] transform transition-all duration-300 animate-in zoom-in-95 slide-in-from-bottom-4 ease-out">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800">
@@ -374,7 +374,7 @@ const CreatePrayerModal = ({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full cursor-pointer transition-colors duration-200"
+            className="p-2 hover:bg-gray-100 rounded-full cursor-pointer hover:rotate-90 hover:shadow-sm active:scale-90 transition-all duration-300"
             disabled={loading}
           >
             <FaTimes className="w-5 h-5 text-gray-600" />
@@ -392,7 +392,7 @@ const CreatePrayerModal = ({
                   placeholder="Write your prayer request here..."
                   value={formData.content}
                   onChange={(e) => handleInputChange('content', e.target.value)}
-                  className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[140px] lg:min-h-[180px]"
+                  className="w-full px-5 py-5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 bg-white/70 backdrop-blur-sm shadow-inner transition-all duration-300 min-h-[140px] lg:min-h-[180px]"
                   rows={6}
                   required
                 />
@@ -569,13 +569,13 @@ const CreatePrayerModal = ({
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 bg-white/70 backdrop-blur-sm shadow-inner transition-all duration-300"
                   />
                   <button
                     type="button"
                     onClick={handleAddTag}
                     disabled={!newTag.trim()}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 hover:shadow-sm transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Add
                   </button>
@@ -636,7 +636,7 @@ const CreatePrayerModal = ({
                   value={scheduledDate}
                   onChange={(e) => setScheduledDate(e.target.value)}
                   min={getMinDate()}
-                  className="w-full px-3 py-2 border cursor-pointer border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border cursor-pointer border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 bg-white/70 backdrop-blur-sm shadow-inner transition-all duration-300"
                   required={showScheduler}
                 />
               </div>
@@ -656,7 +656,7 @@ const CreatePrayerModal = ({
                   type="button"
                   onClick={() => setShowScheduler(true)}
                   disabled={loading}
-                  className="w-full py-3 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3.5 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 hover:shadow-sm transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <FaCalendarAlt className="w-4 h-4" />
                   Schedule Entry
@@ -668,7 +668,7 @@ const CreatePrayerModal = ({
                   type="button"
                   onClick={() => setShowScheduler(false)}
                   disabled={loading}
-                  className="w-full py-3 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
+                  className="w-full py-3.5 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 hover:shadow-sm transition-all duration-300 cursor-pointer"
                 >
                   Remove Schedule
                 </button>
@@ -680,7 +680,7 @@ const CreatePrayerModal = ({
                     type="button"
                     onClick={handleSaveAsDraft}
                     disabled={loading || !formData.content.trim()}
-                    className="flex-1 py-3 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50 cursor-pointer"
+                    className="flex-1 py-3.5 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 hover:shadow-sm transition-all duration-300 disabled:opacity-50 cursor-pointer"
                   >
                     {loading ? 'Saving...' : 'Save as Draft'}
                   </button>
@@ -688,7 +688,7 @@ const CreatePrayerModal = ({
                 <button
                   type="submit"
                   disabled={loading || !formData.content.trim() || (!communityMode && !profileEditMode && showScheduler && !scheduledDate)}
-                  className={`${editMode || communityMode || profileEditMode ? 'w-full' : 'flex-1'} py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 cursor-pointer`}
+                  className={`${editMode || communityMode || profileEditMode ? 'w-full' : 'flex-1'} py-3.5 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 cursor-pointer`}
                 >
                   {loading
                     ? (profileEditMode ? 'Saving...' : (editMode ? 'Publishing...' : 'Creating...'))

@@ -46,11 +46,11 @@ const ShareModal = ({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-sm p-6 mx-4 relative shadow-xl transform transition-all">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-md transition-all duration-300 animate-in fade-in ease-out">
+      <div className="bg-white rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] transform transition-all duration-300 animate-in zoom-in-95 slide-in-from-bottom-4 ease-out w-full max-w-sm p-6 mx-4 relative">
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors cursor-pointer"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none hover:rotate-90 hover:shadow-sm active:scale-90 transition-all duration-300 cursor-pointer inline-block"
         >
           <IoClose className="w-6 h-6" />
         </button>
@@ -108,7 +108,7 @@ const ShareModal = ({
                 onClose();
               }}
               disabled={isShared}
-              className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium transition-colors duration-200 cursor-pointer ${
+              className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer ${
                 isShared
                   ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                   : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700'

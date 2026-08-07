@@ -251,13 +251,13 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-md transition-all duration-300 animate-in fade-in ease-out p-2 sm:p-4"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
       aria-label={title}
     >
-      <div className="w-full max-w-4xl overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col">
+      <div className="w-full max-w-4xl overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] transform transition-all duration-300 animate-in zoom-in-95 slide-in-from-bottom-4 ease-out max-h-[92vh] sm:max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-start sm:items-center justify-between border-b border-gray-100 px-4 sm:px-6 py-4 sm:py-5 gap-3">
           <div>
@@ -269,7 +269,7 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-2 hover:bg-gray-100 transition-colors duration-200"
+            className="rounded-full p-2 hover:bg-gray-100 hover:rotate-90 hover:shadow-sm active:scale-90 transition-all duration-300"
             disabled={loading}
             aria-label="Close"
           >
@@ -291,7 +291,7 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
                 <textarea
                   value={form.description}
                   onChange={(e) => setField('description', e.target.value)}
-                  className="min-h-[160px] sm:min-h-[210px] w-full resize-none rounded-2xl sm:rounded-3xl border border-gray-200 bg-white px-4 py-3 text-gray-800 placeholder-gray-400 outline-none transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-[color:var(--color-primary-300)]"
+                  className="min-h-[160px] sm:min-h-[210px] w-full resize-none rounded-2xl sm:rounded-3xl border border-gray-200 px-5 py-4 text-gray-800 placeholder-gray-400 outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 bg-white/70 backdrop-blur-sm shadow-inner transition-all duration-300"
                   placeholder="Write your reflection…"
                   disabled={loading}
                   required
@@ -329,7 +329,7 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
                   <button
                     type="button"
                     onClick={() => setIsPrayerPickerOpen(true)}
-                    className="rounded-2xl bg-[color:var(--color-primary-600)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[color:var(--color-primary-700)] transition-colors cursor-pointer disabled:opacity-50"
+                    className="rounded-2xl bg-[color:var(--color-primary-600)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[color:var(--color-primary-700)] shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer disabled:opacity-50"
                     disabled={loading}
                   >
                     {form.prayer ? 'Change' : 'Link'}
@@ -368,7 +368,7 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
                     <input
                       value={form.verseBook}
                       onChange={(e) => setVerseField('verseBook', e.target.value)}
-                      className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-800 placeholder-gray-400 outline-none transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-[color:var(--color-primary-300)]"
+                      className="w-full rounded-2xl border border-gray-200 px-5 py-3.5 text-gray-800 placeholder-gray-400 outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 bg-white/70 backdrop-blur-sm shadow-inner transition-all duration-300"
                       placeholder="Book (e.g., Psalms)"
                       disabled={loading}
                       autoComplete="off"
@@ -376,7 +376,7 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
                     <input
                       value={form.verseNumber}
                       onChange={(e) => setVerseField('verseNumber', e.target.value)}
-                      className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-800 placeholder-gray-400 outline-none transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-[color:var(--color-primary-300)]"
+                      className="w-full rounded-2xl border border-gray-200 px-5 py-3.5 text-gray-800 placeholder-gray-400 outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 bg-white/70 backdrop-blur-sm shadow-inner transition-all duration-300"
                       placeholder="Chapter:Verse (e.g., 23:1)"
                       disabled={loading}
                       autoComplete="off"
@@ -394,14 +394,14 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
                   <textarea
                     value={form.verseQuote}
                     readOnly
-                    className="min-h-[80px] sm:min-h-[92px] w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 outline-none"
+                    className="min-h-[80px] sm:min-h-[92px] w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-5 py-3.5 text-gray-800 placeholder-gray-400 outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 bg-white/70 backdrop-blur-sm shadow-inner transition-all duration-300"
                     placeholder="Verse text will appear here…"
                     disabled={loading}
                   />
                   <input
                     value={form.verseReference}
                     readOnly
-                    className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 outline-none"
+                    className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-3.5 text-gray-800 placeholder-gray-400 outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 bg-white/70 backdrop-blur-sm shadow-inner transition-all duration-300"
                     placeholder="Reference"
                     disabled={loading}
                   />
@@ -417,14 +417,14 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
                     onKeyDown={onTagKeyDown}
-                    className="flex-1 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-800 placeholder-gray-400 outline-none transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-[color:var(--color-primary-300)]"
+                    className="flex-1 rounded-2xl border border-gray-200 px-5 py-3.5 text-gray-800 placeholder-gray-400 outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 bg-white/70 backdrop-blur-sm shadow-inner transition-all duration-300"
                     placeholder="e.g., faith"
                     disabled={loading || (form.tags || []).length >= MAX_TAGS}
                   />
                   <button
                     type="button"
                     onClick={addTag}
-                    className="rounded-2xl bg-[color:var(--color-primary-600)] px-4 py-3 text-sm font-semibold text-white hover:bg-[color:var(--color-primary-700)] transition-colors disabled:opacity-50 cursor-pointer"
+                    className="rounded-2xl bg-[color:var(--color-primary-600)] px-5 py-3.5 text-sm font-semibold text-white hover:bg-[color:var(--color-primary-700)] shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 cursor-pointer"
                     disabled={loading || !newTag.trim() || (form.tags || []).length >= MAX_TAGS}
                   >
                     Add
@@ -463,14 +463,14 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
             <button
               type="button"
               onClick={onClose}
-              className="rounded-2xl border border-gray-200 px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              className="rounded-2xl border border-gray-200 px-6 py-3.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 hover:shadow-sm transition-all duration-300 cursor-pointer"
               disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="btn-blue-gradient rounded-2xl px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-95 disabled:opacity-60 cursor-pointer"
+              className="btn-blue-gradient rounded-2xl px-6 py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-95 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-60 cursor-pointer"
               disabled={loading}
             >
               {loading ? loadingLabel : submitLabel}

@@ -6,14 +6,14 @@ const PrayerModal = ({ prayer, isOpen, onClose }) => {
   if (!isOpen || !prayer) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-md transition-all duration-300 animate-in fade-in ease-out flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] transform transition-all duration-300 animate-in zoom-in-95 slide-in-from-bottom-4 ease-out max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">Prayer Details</h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+            className="p-1 hover:bg-gray-100 rounded-full cursor-pointer hover:rotate-90 hover:shadow-sm active:scale-90 transition-all duration-300"
           >
             <IoClose size={20} className="text-gray-500" />
           </button>

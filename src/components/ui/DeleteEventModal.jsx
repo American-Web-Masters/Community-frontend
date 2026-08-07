@@ -15,14 +15,14 @@ const DeleteEventModal = ({
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md transition-all duration-300 animate-in fade-in ease-out">
+      <div className="bg-white rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] transform transition-all duration-300 animate-in zoom-in-95 slide-in-from-bottom-4 ease-out w-full max-w-md">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-800">Delete Event</h3>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-xl leading-none"
+              className="text-gray-500 hover:text-gray-700 text-xl leading-none inline-block hover:rotate-90 hover:shadow-sm active:scale-90 transition-all duration-300"
             >
               <span className="sr-only">Close</span>
               ×
@@ -53,13 +53,13 @@ const DeleteEventModal = ({
           <div className="flex space-x-3">
             <button
               onClick={onClose}
-              className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+              className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow-sm transition-all duration-300"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirm}
-              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
+              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
             >
               <FaTrash className="w-4 h-4" />
               Delete Event

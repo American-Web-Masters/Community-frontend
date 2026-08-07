@@ -179,7 +179,7 @@ const JournalEntryTab = ({ onClose, onSuccess, initialData }) => {
               <textarea
                 value={form.description}
                 onChange={(e) => setField('description', e.target.value)}
-                className="min-h-[160px] sm:min-h-[210px] w-full resize-none rounded-2xl sm:rounded-3xl border border-gray-200 bg-white px-4 py-3 text-gray-800 placeholder-gray-400 outline-none transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-[color:var(--color-primary-300)]"
+                className="min-h-[160px] sm:min-h-[210px] w-full resize-none rounded-2xl sm:rounded-3xl border border-gray-200/60 bg-white/70 backdrop-blur-sm px-5 py-4 text-gray-800 placeholder-gray-400 outline-none transition-all duration-300 shadow-inner focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20"
                 placeholder="Write your reflection…"
                 disabled={loading}
                 required
@@ -197,8 +197,8 @@ const JournalEntryTab = ({ onClose, onSuccess, initialData }) => {
                       type="button"
                       onClick={() => setField('mood', m)}
                       className={
-                        'px-4 py-2 rounded-full text-sm font-semibold ring-1 ring-black/5 transition cursor-pointer ' +
-                        (active ? 'btn-blue-gradient text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+                        'px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer ' +
+                        (active ? 'btn-blue-gradient text-white shadow-md ring-2 ring-blue-400 ring-offset-1' : 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-600 border border-gray-200 shadow-sm')
                       }
                     >
                       {m}
@@ -217,7 +217,7 @@ const JournalEntryTab = ({ onClose, onSuccess, initialData }) => {
                 <button
                   type="button"
                   onClick={() => setIsPrayerPickerOpen(true)}
-                  className="rounded-2xl bg-[color:var(--color-primary-600)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[color:var(--color-primary-700)] transition-colors cursor-pointer disabled:opacity-50"
+                  className="rounded-2xl btn-blue-gradient px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:hover:translate-y-0"
                   disabled={loading}
                 >
                   {form.prayer ? 'Change' : 'Link'}

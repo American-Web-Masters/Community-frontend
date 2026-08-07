@@ -17,8 +17,8 @@ const ConfirmModal = ({
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-[3px] bg-opacity-30 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md shadow-lg">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-md transition-all duration-300 animate-in fade-in ease-out flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-md shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] transform transition-all duration-300 animate-in zoom-in-95 slide-in-from-bottom-4 ease-out">
         <div className="p-6">
           <div className="flex items-start space-x-4">
             <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center">
@@ -27,20 +27,20 @@ const ConfirmModal = ({
             <div className="flex-1">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-                <button onClick={onClose} className="text-gray-500 hover:text-gray-700 cursor-pointer">×</button>
+                <button onClick={onClose} className="text-gray-500 hover:text-gray-700 cursor-pointer text-xl leading-none hover:rotate-90 hover:shadow-sm active:scale-90 transition-all duration-300">×</button>
               </div>
               {description && <p className="text-sm text-gray-600 mb-4">{description}</p>}
 
               <div className="flex space-x-3">
                 <button
                   onClick={onClose}
-                  className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                  className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow-sm transition-all duration-300 cursor-pointer"
                 >
                   {cancelLabel}
                 </button>
                 <button
                   onClick={handleConfirm}
-                  className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 cursor-pointer"
+                  className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer"
                 >
                   {confirmLabel}
                 </button>

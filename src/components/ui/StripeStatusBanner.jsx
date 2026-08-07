@@ -1,27 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { getStripeAccountStatus, connectStripe } from '../../api/communities';
+import { getUserStripeAccountStatus, connectUserStripe } from '../../api/profile';
 import { FaStripe, FaExclamationTriangle } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
-const StripeStatusBanner = ({ communityId, isOwner }) => {
+const StripeStatusBanner = ({ communityId, profileUsername, isOwner, type = 'community' }) => {
   const [stripeStatus, setStripeStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (isOwner && communityId) {
+    if (isOwner && (type === 'community' ? communityId : profileUsername)) {
       checkStripeStatus();
     } else {
       setChecking(false);
     }
-  }, [communityId, isOwner]);
+  }, [communityId, profileUsername, isOwner, type]);
 
   const checkStripeStatus = async () => {
     try {
       setChecking(true);
-      const response = await getStripeAccountStatus(communityId);
+      let response;
+      if (type === 'community') {
+        response = await getStripeAccountStatus(communityId);
+      } else {
+        response = await getUserStripeAccountStatus(profileUsername);
+      }
       setStripeStatus(response.data);
-      console.log(response.data)
     } catch (error) {
       console.error('Error checking Stripe status:', error);
       setStripeStatus({ connected: false });
@@ -33,12 +38,18 @@ const StripeStatusBanner = ({ communityId, isOwner }) => {
   const handleConnectStripe = async () => {
     try {
       setLoading(true);
-      const response = await connectStripe(communityId);
+      let response;
+      if (type === 'community') {
+        response = await connectStripe(communityId);
+      } else {
+        response = await connectUserStripe();
+      }
       
       console.log('Stripe Connect Response:', response); // Debug log
       
-      if (response.status === 'success' && response.data?.onboardingUrl) {
-        window.location.href = response.data.onboardingUrl;
+      const onboardingUrl = response?.data?.onboardingUrl || response?.onboardingUrl;
+      if ((response.status === 'success' || response.success) && onboardingUrl) {
+        window.location.href = onboardingUrl;
       } else {
         toast.error('Failed to initialize Stripe Connect');
       }

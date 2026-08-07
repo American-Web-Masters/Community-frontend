@@ -11,10 +11,10 @@ const SettingsTabs = ({ tabs, activeTab, onTabChange }) => {
               key={tab.key}
               type="button"
               onClick={() => onTabChange(tab.key)}
-              className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 whitespace-nowrap cursor-pointer ${
+              className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap cursor-pointer ${
                 isActive
-                  ? "btn-blue-gradient text-white shadow"
-                  : "text-gray-700 hover:bg-white/50"
+                  ? "btn-blue-gradient text-white shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                  : "text-gray-700 hover:bg-white/50 hover:shadow-sm"
               }`}
               aria-current={isActive ? "page" : undefined}
             >
