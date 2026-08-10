@@ -27,7 +27,7 @@ const StatCard = ({ label, value, hint, tone = 'primary' }) => {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-sm text-text-secondary">{label}</div>
-          <div className={cx('mt-2 text-2xl font-semibold truncate', toneStyles.value)}>{value}</div>
+          <div className={cx('mt-2 text-2xl font-semibold break-words whitespace-normal', toneStyles.value)}>{value}</div>
         </div>
 
         <div className={cx('h-9 w-9 rounded-xl border flex items-center justify-center shrink-0', toneStyles.badge)}>

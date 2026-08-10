@@ -329,8 +329,8 @@ const DashboardFaqs = () => {
                           ) : null}
                         </div>
 
-                        <div className="mt-2 font-semibold text-gray-900 truncate">{faq.question || "(No question)"}</div>
-                        <div className="mt-1 text-sm text-gray-600 line-clamp-2">{faq.answeres || "(No answer)"}</div>
+                        <div className="mt-2 font-semibold text-gray-900 break-words whitespace-normal">{faq.question || "(No question)"}</div>
+                        <div className="mt-1 text-sm text-gray-600 break-words whitespace-normal">{faq.answeres || "(No answer)"}</div>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">

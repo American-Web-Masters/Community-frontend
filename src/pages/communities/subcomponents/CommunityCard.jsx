@@ -63,12 +63,12 @@ const CommunityCard = ({
         </div>
         
         <div className="flex-1 min-w-0 pr-8">
-          <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-2 truncate">
+          <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-2 wrap-break-word max-w-[78%]">
             {name}
           </h3>
           {/* Category tags as gray pills */}
           <div className="flex flex-wrap gap-1 mb-1">
-            {categoryTags.slice(0, 2).map((tag, index) => (
+            {categoryTags.filter(t => t && t.trim() !== '').slice(0, 2).map((tag, index) => (
               <span 
                 key={index}
                 className="px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded-full"
@@ -77,9 +77,9 @@ const CommunityCard = ({
               </span>
             ))}
             {/* Show +N indicator if there are more than 2 tags */}
-            {categoryTags.length > 2 && (
+            {categoryTags.filter(t => t && t.trim() !== '').length > 2 && (
               <span className="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded-full">
-                +{categoryTags.length - 2}
+                +{categoryTags.filter(t => t && t.trim() !== '').length - 2}
               </span>
             )}
           </div>

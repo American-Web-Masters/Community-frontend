@@ -602,12 +602,12 @@ const PrayerCard = ({
               {!isContentExpanded && (
                 <div className="flex items-center space-x-1 overflow-hidden shrink min-w-0">
                   {communities[0] &&(
-                    <span className="bg-blue-400 text-white px-2 py-1 rounded-full text-xs truncate max-w-[150px]">
+                    <span className="bg-blue-400 text-white px-2 py-1 rounded-full text-xs break-words whitespace-normal max-w-[150px]">
                     {communities[0]?.name}
                   </span>
                   )}
                   {communities[1] && (
-                  <span className="bg-blue-400 text-white px-2 py-1 rounded-full text-xs truncate max-w-[150px]">
+                  <span className="bg-blue-400 text-white px-2 py-1 rounded-full text-xs break-words whitespace-normal max-w-[150px]">
                     {communities[1]?.name}
                   </span>
                   )}
@@ -759,7 +759,7 @@ const PrayerCard = ({
           </div>
         ) : (
           <div className="transition-all duration-300 ease-in-out transform smooth-height">
-            <p className="text-gray-800 leading-relaxed text-sm line-clamp-2 overflow-hidden transition-all duration-500 ease-in-out">
+            <p className="text-gray-800 leading-relaxed text-sm break-words whitespace-normal overflow-hidden transition-all duration-500 ease-in-out">
               {prayerText}
             </p>
           </div>

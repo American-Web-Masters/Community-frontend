@@ -57,6 +57,7 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
     verseNumber: '',
     tags: [],
     mood: 'Joyful',
+    privacyLevel: 'private',
     prayer: null,
   linkedPrayerPreview: null,
   });
@@ -96,6 +97,7 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
         verseNumber: ref.number || '',
         tags: Array.isArray(initialData.tags) ? initialData.tags : [],
         mood: initialData.mood || 'Joyful',
+        privacyLevel: initialData.privacyLevel || 'private',
         prayer: initialPrayerId ? String(initialPrayerId) : null,
         linkedPrayerPreview: linkedPrayerObj
           ? String(linkedPrayerObj?.content || linkedPrayerObj?.description || '').trim() || null
@@ -113,6 +115,7 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
       verseNumber: '',
       tags: [],
       mood: 'Joyful',
+      privacyLevel: 'private',
       prayer: null,
   linkedPrayerPreview: null,
     });
@@ -229,6 +232,7 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
         verse: payloadVerse,
         tags: normalizeTags(form.tags || []),
         mood: form.mood,
+        privacyLevel: form.privacyLevel,
       };
 
       const res = initialData?.id
@@ -320,6 +324,34 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
                 </div>
               </div>
 
+              <div className="rounded-3xl border border-gray-200 p-4 bg-white">
+                <p className="text-sm font-semibold text-gray-800 mb-3">Privacy</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setField('privacyLevel', 'public')}
+                    className={`px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 ${
+                      form.privacyLevel === 'public'
+                        ? 'bg-blue-100 text-blue-700 shadow-md ring-2 ring-blue-400 ring-offset-1'
+                        : 'bg-white text-gray-600 hover:bg-blue-50 hover:text-blue-600 border border-gray-200 shadow-sm'
+                    }`}
+                  >
+                    Public
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setField('privacyLevel', 'private')}
+                    className={`px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 ${
+                      form.privacyLevel === 'private'
+                        ? 'bg-blue-100 text-blue-700 shadow-md ring-2 ring-blue-400 ring-offset-1'
+                        : 'bg-white text-gray-600 hover:bg-blue-50 hover:text-blue-600 border border-gray-200 shadow-sm'
+                    }`}
+                  >
+                    Private
+                  </button>
+                </div>
+              </div>
+
               <div className="rounded-3xl border border-gray-200 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -341,7 +373,7 @@ const CreateJournalModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
                     <div className="text-sm text-gray-700">
                       <div className="font-semibold text-gray-800">Prayer Description</div>
                       {form.linkedPrayerPreview ? (
-                        <p className="mt-0.5 text-sm text-gray-700 line-clamp-2">{form.linkedPrayerPreview}</p>
+                        <p className="mt-0.5 text-sm text-gray-700 break-words whitespace-normal">{form.linkedPrayerPreview}</p>
                       ) : (
                         <p className="mt-0.5 text-xs text-gray-500">A prayer is linked.</p>
                       )}

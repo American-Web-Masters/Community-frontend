@@ -36,7 +36,7 @@ const NotificationCard = ({ activity, onCardClick }) => {
               <p className="text-medium text-gray-900">
                 <span className="font-medium">{userName}</span> {getTimelineActivityText(activityType, activity.activityData, prayerOwnerName, currentUser)}
               </p>
-              <p className="text-medium text-gray-500 mt-1 line-clamp-2">
+              <p className="text-medium text-gray-500 mt-1 break-words whitespace-normal">
                 "{prayer.content?.substring(0, 80)}..."
               </p>
             </div>

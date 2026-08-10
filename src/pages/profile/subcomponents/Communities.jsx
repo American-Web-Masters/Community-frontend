@@ -147,8 +147,8 @@ const Communities = forwardRef(({ userProfile }, ref) => {
               className="bg-[#f0f7ff] rounded-3xl p-4 transition-all duration-300 hover:shadow-md border border-blue-50/50 flex flex-col h-full"
             >
               {/* Card Header */}
-              <div className="flex items-start justify-between mb-1">
-                <div className="flex items-start gap-4">
+              <div className="flex items-start justify-between mb-1 gap-2">
+                <div className="flex items-start gap-4 flex-1 min-w-0">
                   {/* Avatar */}
                   <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 shadow-inner">
                     {community.coverPhoto ? (
@@ -165,8 +165,8 @@ const Communities = forwardRef(({ userProfile }, ref) => {
                   </div>
 
                   {/* Title & Organization */}
-                  <div>
-                    <h3 className="font-bold text-[#1e293b] line-clamp-1">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-[#1e293b] break-all text-sm">
                       {community.name}
                     </h3>
                     {/* Tags */}
@@ -176,7 +176,7 @@ const Communities = forwardRef(({ userProfile }, ref) => {
                         {community.privacyLevel}
                       </span>
 
-                      {community.tags?.slice(0, 2).map((tag, idx) => (
+                      {community.tags?.filter(t => t && t.trim() !== '').slice(0, 2).map((tag, idx) => (
                         <span
                           key={idx}
                           className="bg-[#e2e8f0] text-[#475569] text-xs px-3 py-1 rounded-full font-medium"
@@ -184,9 +184,9 @@ const Communities = forwardRef(({ userProfile }, ref) => {
                           {tag}
                         </span>
                       ))}
-                      {community.tags?.length > 2 && (
+                      {community.tags?.filter(t => t && t.trim() !== '').length > 2 && (
                         <span className="bg-[#e2e8f0] text-[#475569] text-xs px-2 py-1 rounded-full font-medium">
-                          +{community.tags.length - 2}
+                          +{community.tags.filter(t => t && t.trim() !== '').length - 2}
                         </span>
                       )}
                     </div>

@@ -217,7 +217,7 @@ export const createJournal = async (data)=>{
   }
 }
 
-export const updateJournal = async (journalId, { description, verse, tags, mood, prayer }) => {
+export const updateJournal = async (journalId, { description, verse, tags, mood, prayer, privacyLevel }) => {
   try {
     const response = await apiClient.patch(`/journals/${journalId}`, {
       description,
@@ -225,6 +225,7 @@ export const updateJournal = async (journalId, { description, verse, tags, mood,
       tags,
       mood,
       prayer,
+      privacyLevel,
     });
     return response.data;
   } catch (error) {

@@ -25,7 +25,7 @@ const DashboardLayout = () => {
             <div className="h-full px-3 sm:px-4 md:px-6 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="hidden sm:block text-sm text-text-secondary">Admin</div>
-                <div className="text-lg font-semibold text-text-primary truncate">{title}</div>
+                <div className="text-lg font-semibold text-text-primary break-words whitespace-normal">{title}</div>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3">
@@ -47,7 +47,7 @@ const DashboardLayout = () => {
                   className="hidden sm:block text-right rounded-xl px-2 py-1 hover:bg-primary-50 cursor-pointer"
                   aria-label="Go to profile"
                 >
-                  <div className="text-sm font-semibold text-text-primary truncate max-w-[160px]">
+                  <div className="text-sm font-semibold text-text-primary break-words whitespace-normal max-w-[160px]">
                     {user?.username || user?.fullname || 'Admin'}
                   </div>
                   <div className="text-xs text-text-secondary">{user?.role || 'admin'}</div>

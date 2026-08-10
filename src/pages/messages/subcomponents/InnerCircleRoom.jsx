@@ -355,7 +355,7 @@ const InnerCircleUI = ({
         {/* Left: Title + meta */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-base sm:text-xl font-extrabold text-slate-800 tracking-tight truncate max-w-full lg:max-w-none">
+            <h2 className="text-base sm:text-xl font-extrabold text-slate-800 tracking-tight break-words whitespace-normal max-w-full lg:max-w-none">
               {activeChat?.name}
             </h2>
             <div className="flex items-center gap-1 px-2 py-0.5 bg-red-100/80 text-red-600 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border border-red-200 shrink-0">
@@ -466,7 +466,7 @@ const InnerCircleUI = ({
                     <div key={s.userId} className="flex flex-col items-center gap-3 group relative w-24">
                       <Avatar name={speakerName} profilePicture={s.profilePicture} size="lg" isSpeaking={isParticipantSpeaking} />
                       <div className="text-center">
-                        <span className="font-semibold text-sm text-slate-800 line-clamp-1 leading-tight">
+                        <span className="font-semibold text-sm text-slate-800 break-words whitespace-normal leading-tight">
                           {speakerName}
                         </span>
                         {isMe && <span className="text-[10px] text-indigo-500 font-bold bg-indigo-50 px-1.5 py-0.5 rounded mt-0.5 inline-block">YOU</span>}
@@ -509,12 +509,12 @@ const InnerCircleUI = ({
                   const queueHandle = q.username || q.userName;
                   return (
                     <div key={q.userId} className="flex items-center justify-between bg-white p-2.5 rounded-xl shadow-sm border border-amber-100 hover:border-amber-200 transition-colors">
-                      <div className="flex items-center gap-3 truncate pr-2">
+                      <div className="flex items-center gap-3 break-words whitespace-normal pr-2">
                         <Avatar name={queueName} profilePicture={q.profilePicture} size="md" />
                         <div className="min-w-0">
-                          <div className="text-sm font-bold text-slate-800 truncate">{queueName}</div>
+                          <div className="text-sm font-bold text-slate-800 break-words whitespace-normal">{queueName}</div>
                           {queueHandle && (
-                            <div className="text-[10px] font-medium text-slate-400 truncate">@{queueHandle}</div>
+                            <div className="text-[10px] font-medium text-slate-400 break-words whitespace-normal">@{queueHandle}</div>
                           )}
                         </div>
                       </div>
@@ -559,12 +559,12 @@ const InnerCircleUI = ({
                       <div key={listener.userId} className="flex items-center gap-3 bg-white hover:bg-slate-50 rounded-xl px-3 py-2 border border-slate-100 transition-colors">
                         <Avatar name={listenerName} profilePicture={listener.profilePicture} size="sm" />
                         <div className="min-w-0">
-                          <div className="text-sm font-semibold text-slate-800 truncate flex items-center gap-2">
+                          <div className="text-sm font-semibold text-slate-800 break-words whitespace-normal flex items-center gap-2">
                             {listenerName}
                             {isMe && <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">YOU</span>}
                           </div>
                           {listenerHandle && (
-                            <div className="text-[11px] font-medium text-slate-400 truncate">
+                            <div className="text-[11px] font-medium text-slate-400 break-words whitespace-normal">
                               @{listenerHandle}
                             </div>
                           )}

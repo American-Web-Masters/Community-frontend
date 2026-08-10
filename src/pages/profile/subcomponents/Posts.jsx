@@ -467,7 +467,7 @@ const Posts = forwardRef((props, ref) => {
                     <p className="text-sm text-gray-600">This action cannot be undone.</p>
                   </div>
                 </div>
-                <p className="text-gray-700 text-sm line-clamp-3">
+                <p className="text-gray-700 text-sm break-words whitespace-normal">
                   You are about to permanently delete this prayer post:
                   <span className="font-medium block mt-1 text-gray-800">
                     "{deletingPrayer?.content?.slice(0, 80)}{deletingPrayer?.content?.length > 80 ? '…' : ''}"

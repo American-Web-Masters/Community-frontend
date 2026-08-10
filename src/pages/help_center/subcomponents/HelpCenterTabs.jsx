@@ -17,7 +17,7 @@ export const HelpCenterMainTabs = ({ tabs, activeTab, onTabChange }) => {
                 : "text-[#24467f] hover:bg-white/70 hover:shadow-sm"
             }`}
           >
-            <span className="truncate">{tab}</span>
+            <span className="break-words whitespace-normal">{tab}</span>
           </button>
         );
       })}
