@@ -2,7 +2,7 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState, u
 import { useSelector } from 'react-redux';
 import { deleteJournalByUser, getJournalById, getJournalByUser } from '../../../api';
 import { estimateReadTimeMin, formatRelativeTimeCompact, getInitials } from '../../../utils/profileUtils';
-import { FaTrash } from 'react-icons/fa';
+import { FaTrash, FaLock, FaGlobeAmericas } from 'react-icons/fa';
 import { FiLink } from 'react-icons/fi';
 import ConfirmModal from './ConfirmModal';
 import { selectUser } from '../../../store/userSlice';
@@ -304,8 +304,14 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
 
       {/* Header */}
       <div className="mt-3">
-        <h2 className="text-2xl font-semibold text-gray-900">My Faith Journal</h2>
-        <p className="text-[15px] text-gray-800 mt-1">Reflect on your spiritual journey and track your emotional wellness</p>
+        <h2 className="text-2xl font-semibold text-gray-900">
+          {isOwner ? 'My Faith Journal' : `${authorName}'s Faith Journal`}
+        </h2>
+        <p className="text-[15px] text-gray-800 mt-1">
+          {isOwner 
+            ? 'Reflect on your spiritual journey and track your emotional wellness'
+            : 'Explore spiritual reflections and emotional wellness'}
+        </p>
       </div>
 
       {/* Cards */}
@@ -326,17 +332,18 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No Journal Entries Yet</h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                You haven't created any journal entries yet. Start documenting your spiritual journey and daily reflections.
+                {isOwner 
+                  ? "You haven't created any journal entries yet. Start documenting your spiritual journey and daily reflections."
+                  : `${authorName} hasn't shared any public journal entries yet.`}
               </p>
-              <button
-                onClick={() => {
-                  if (!isOwner) return;
-                  setIsCreateOpen(true);
-                }}
-                className="btn-blue-gradient text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 transition"
-              >
-                Create Your First Entry
-              </button>
+              {isOwner && (
+                <button
+                  onClick={() => setIsCreateOpen(true)}
+                  className="btn-blue-gradient text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 transition cursor-pointer"
+                >
+                  Create Your First Entry
+                </button>
+              )}
             </div>
           ) : (
             displayedJournals.map((j) => {
@@ -390,6 +397,26 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
                             Linked prayer
                           </span>
                         ) : null}
+                        
+                        <span
+                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${
+                            j.privacyLevel === 'public'
+                              ? 'border-green-200 bg-green-50 text-green-700'
+                              : 'border-gray-200 bg-gray-50 text-gray-700'
+                          }`}
+                        >
+                          {j.privacyLevel === 'public' ? (
+                            <>
+                              <FaGlobeAmericas className="h-3.5 w-3.5" aria-hidden="true" />
+                              Public
+                            </>
+                          ) : (
+                            <>
+                              <FaLock className="h-3.5 w-3.5" aria-hidden="true" />
+                              Private
+                            </>
+                          )}
+                        </span>
                         <span
                           className={`px-4 py-2 rounded-full text-sm font-medium flex flex-col sm:flex-row justify-center items-center ${meta.pillClass}`}
                         >
@@ -495,7 +522,7 @@ const Journal = forwardRef(({ userProfile, onOpenLinkedPrayer }, ref) => {
                         </div>
 
                         {linkedPrayerPreview ? (
-                          <p className="mt-2 text-sm text-blue-900/90 line-clamp-2">{linkedPrayerPreview}</p>
+                          <p className="mt-2 text-sm text-blue-900/90 break-words whitespace-normal">{linkedPrayerPreview}</p>
                         ) : (
                           <p className="mt-2 text-xs text-blue-700/90">
                             Tap to open the attached prayer.

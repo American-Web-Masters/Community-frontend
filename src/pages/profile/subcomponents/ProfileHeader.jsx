@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { selectUser } from "../../../store/userSlice";
-import { updateUserProfile } from "../../../api/profile";
+import { updateUserProfile, getUserStripeAccountStatus } from "../../../api/profile";
 import { MdCheck, MdClose, MdCameraAlt, MdSettings, MdShare } from "react-icons/md";
 import { FaEdit } from "react-icons/fa";
 import toast from "react-hot-toast";
@@ -36,6 +36,9 @@ const ProfileHeader = ({
     profilePicture: null,
     profilePicturePreview: null,
   });
+
+  const [paymentAvailable, setPaymentAvailable] = useState(false);
+  const [checkingPayment, setCheckingPayment] = useState(true);
 
   const verseQuery = useMemo(() => {
     const book = String(verseBook || "").trim();
@@ -72,9 +75,29 @@ const ProfileHeader = ({
     streak: 21,
   };
 
+  useEffect(() => {
+    const checkPayment = async () => {
+      const usernameToCheck = location.pathname.split("/profile/")[1] || userProfile?.username;
+      if (!usernameToCheck) return;
+      
+      try {
+        setCheckingPayment(true);
+        const response = await getUserStripeAccountStatus(usernameToCheck);
+        setPaymentAvailable(response?.data?.chargesEnabled || false);
+      } catch (error) {
+        console.error('Error checking payment status:', error);
+        setPaymentAvailable(false);
+      } finally {
+        setCheckingPayment(false);
+      }
+    };
+    
+    checkPayment();
+  }, [location.pathname, userProfile?.username]);
+
   // Keep the header container visible while loading, but show skeleton content
-  // until we have a populated userProfile.
-  const showSkeleton = Boolean(isLoading && !userProfile);
+  // until we have a populated userProfile and have checked payment status.
+  const showSkeleton = Boolean(isLoading && !userProfile) || checkingPayment;
 
   const handleEditClick = () => {
     if (!isOwnProfile) return;
@@ -497,26 +520,25 @@ const ProfileHeader = ({
               )}
 
               {/* Support Button */}
-              <div>
-                <div className="flex justify-center align-center">
-                <button
-                  onClick={() =>
-                    navigate(
-                      `/profile/${
-                        userProfile?.username || location.pathname.split("/profile/")[1]
-                      }/support`
-                    )
-                  }
-                  disabled={showSkeleton}
-                  className={`btn-blue-gradient cursor-pointer text-white text-sm font-medium rounded-full transition-transform flex items-center space-x-2 py-1.5 px-4 hover:scale-105 ${
-                    showSkeleton ? "opacity-60 cursor-not-allowed hover:scale-100" : ""
-                  }`}
-                 >
-                  <span>🤍</span>
-                  <span>Support</span>
-                </button>
+              {!showSkeleton && paymentAvailable && (
+                <div>
+                  <div className="flex justify-center align-center">
+                  <button
+                    onClick={() =>
+                      navigate(
+                        `/profile/${
+                          userProfile?.username || location.pathname.split("/profile/")[1]
+                        }/support`
+                      )
+                    }
+                    className={`btn-blue-gradient cursor-pointer text-white text-sm font-medium rounded-full transition-transform flex items-center space-x-2 py-1.5 px-4 hover:scale-105`}
+                   >
+                    <span>🤍</span>
+                    <span>Support</span>
+                  </button>
+                  </div>
                 </div>
-              </div>
+              )}
               <div>
 
               {/* Share Icon */}

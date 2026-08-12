@@ -41,8 +41,8 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
           </div>
           {!(isCollapsed && !forceExpanded) && (
             <div className="min-w-0">
-              <div className="text-sm font-semibold text-gray-900 truncate">Admin</div>
-              <div className="text-xs text-gray-500 truncate">Dashboard</div>
+              <div className="text-sm font-semibold text-gray-900 break-words whitespace-normal">Admin</div>
+              <div className="text-xs text-gray-500 break-words whitespace-normal">Dashboard</div>
             </div>
           )}
         </div>
@@ -92,7 +92,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle }) => {
                   isCollapsed && !forceExpanded ? 'mx-auto' : '',
                 )}
               />
-              {!(isCollapsed && !forceExpanded) && <span className="truncate">{item.label}</span>}
+              {!(isCollapsed && !forceExpanded) && <span className="break-words whitespace-normal">{item.label}</span>}
             </NavLink>
           );
         })}

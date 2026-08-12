@@ -8,6 +8,7 @@ import Header from "../../components/ui/Header";
 import CreateCommunityModal from "../../components/ui/CreateCommunityModal";
 import { getUserProfile } from "../../api";
 import { ProfileHeader, Posts, Communities, Testimony, Journal, SubscriptionMgt } from "./subcomponents";
+import StripeStatusBanner from "../../components/ui/StripeStatusBanner";
 import { MdLock } from "react-icons/md";
 
 const PrivateProfileLockedState = ({ username }) => {
@@ -304,6 +305,13 @@ const Profile = () => {
 
         {/* Tab Content */}
         <div className="max-sm:min-w-[95%] md:w-4/6 mx-auto overflow-x-hidden">
+          {/* Stripe Status Banner for Profile Owner */}
+          <StripeStatusBanner 
+            type="user"
+            profileUsername={username}
+            isOwner={isOwnProfile}
+          />
+
           {isLockedForViewer ? (
             <PrivateProfileLockedState username={username} />
           ) : activeTab === "Posts" ? (

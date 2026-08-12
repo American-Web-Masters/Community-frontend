@@ -49,6 +49,7 @@ const CommunityDetails = () => {
   const [loading2, setLoading2] = useState(false);
   const [stripeStatus, setStripeStatus] = useState(null);
   const [paymentAvailable, setPaymentAvailable] = useState(false);
+  const [checkingPayment, setCheckingPayment] = useState(true);
   // Header editing states
   const [isEditingHeader, setIsEditingHeader] = useState(false);
   const [headerLoading, setHeaderLoading] = useState(false);
@@ -164,9 +165,13 @@ const CommunityDetails = () => {
     }
   };
 
-  // Check if user is owner or moderator
   const isOwnerOrModerator = community?.isOwner || 
-    (community?.moderators && community.moderators.some(mod => mod.id === user?.id));
+    (community?.moderators && community.moderators.some(mod => 
+      String(mod.id || mod._id || mod) === String(user?.id || user?._id)
+    )) ||
+    (community?.members && community.members.some(member => 
+      String(member.user?._id || member.user?.id || member.user || member.id || member._id) === String(user?.id || user?._id) && member.role === 'moderator'
+    ));
 
   const handleCreatePost = () => {
     setIsCreatePrayerModalOpen(true);
@@ -599,6 +604,7 @@ const CommunityDetails = () => {
 
   const checkCommunityStripeStatus = async () => {
     if (!id) return;
+    setCheckingPayment(true);
 
     try {
       if (community?.isOwner) {
@@ -616,6 +622,8 @@ const CommunityDetails = () => {
       // Default to disabled for any errors
       setStripeStatus({ hasStripeAccount: false });
       setPaymentAvailable(false);
+    } finally {
+      setCheckingPayment(false);
     }
   };
 
@@ -634,7 +642,7 @@ const CommunityDetails = () => {
     navigate(`/communities/${id}/support`);
   };
 
-  if (loading) {
+  if (loading || checkingPayment) {
     return (
       <div className="min-h-screen light-background flex items-center justify-center">
         <DivineLoader />
@@ -886,23 +894,16 @@ const CommunityDetails = () => {
                   <span><PiChatText className="w-4 h-4" /></span>
                   <span>Chat</span>
                 </button>
-                <button 
-                  onClick={handleSupportClick}
-                  disabled={!community?.isOwner && !paymentAvailable}
-                  className={`cursor-pointer px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 transition-opacity ${
-                    !community?.isOwner && !paymentAvailable
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'btn-blue-gradient hover:opacity-90'
-                  }`}
-                  title={
-                    !community?.isOwner && !paymentAvailable
-                      ? 'Payment support is currently unavailable'
-                      : 'Support this community'
-                  }
-                >
-                  <span><FaRegHeart className="w-4 h-4" /></span>
-                  <span>Support</span>
-                </button>
+                {paymentAvailable && (
+                  <button 
+                    onClick={handleSupportClick}
+                    className="cursor-pointer px-3 md:px-6 py-1.5 rounded-2xl text-xs font-medium flex items-center space-x-2 transition-opacity btn-blue-gradient hover:opacity-90"
+                    title="Support this community"
+                  >
+                    <span><FaRegHeart className="w-4 h-4" /></span>
+                    <span>Support</span>
+                  </button>
+                )}
 
                 {isOwnerOrModerator && (
                                   <button 

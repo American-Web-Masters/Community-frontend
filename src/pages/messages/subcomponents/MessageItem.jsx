@@ -141,7 +141,7 @@ const MessageItem = ({
                     }`}>
                       {message.replyTo.sender?._id === user._id ? 'You' : `${message.replyTo.sender?.firstname || 'User'} ${message.replyTo.sender?.lastname || ''}`.trim()}
                     </p>
-                    <p className={`text-[11px] line-clamp-2 ${
+                    <p className={`text-[11px] break-words whitespace-normal ${
                       isOutgoing ? 'text-white/70' : 'text-gray-500'
                     }`}>
                       {message.replyTo.isDeletedForEveryone ? '🚫 This message was deleted' : message.replyTo.content}

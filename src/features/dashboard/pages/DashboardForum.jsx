@@ -290,7 +290,7 @@ const DashboardForum = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search forum by title or question..."
-              className="w-full h-11 pl-6 pr-3 rounded-2xl border border-white/50 bg-white/50 backdrop-blur-sm outline-none focus:ring-2 focus:ring-primary-200"
+              className="w-full h-11 pl-6 pr-3 rounded-2xl border border-white/50 bg-white/50 backdrop-blur-sm outline-none focus:ring-2 focus:ring-primary-200 placeholder:pl-4"
             />
           </div>
         </div>

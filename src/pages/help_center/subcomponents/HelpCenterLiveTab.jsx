@@ -14,7 +14,7 @@ const HelpCenterLiveTab = ({ onStartChat }) => {
 
         <button
           type="button"
-          className="mt-6 py-2.5 px-8 rounded-full btn-blue-gradient text-white text-[14px] font-medium cursor-pointer"
+          className="mt-6 py-2.5 px-8 rounded-full btn-blue-gradient text-white text-[14px] font-medium cursor-pointer shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
           onClick={onStartChat}
         >
           Start Chat

@@ -199,7 +199,7 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
               placeholder="Write your prayer request here..."
               value={formData.content}
               onChange={(e) => handleInputChange('content', e.target.value)}
-              className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[140px] lg:min-h-[180px]"
+              className="w-full px-5 py-4 bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 min-h-[140px] lg:min-h-[180px] shadow-inner"
               rows={6}
               required
             />
@@ -208,14 +208,14 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
           {/* Urgency Level */}
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-4">Urgency Level</h3>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
               <button
                 type="button"
                 onClick={() => handleInputChange('urgency', 'low')}
-                className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center transform hover:-translate-y-0.5 ${
                   formData.urgency === 'low'
-                    ? 'bg-green-100 text-green-700 border-2 border-green-300'
-                    : 'bg-white text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+                    ? 'bg-green-100 text-green-700 shadow-md ring-2 ring-green-400 ring-offset-1'
+                    : 'bg-white text-gray-600 hover:bg-green-50 hover:text-green-600 border border-gray-200 shadow-sm'
                 }`}
               >
                 Low
@@ -223,10 +223,10 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
               <button
                 type="button"
                 onClick={() => handleInputChange('urgency', 'normal')}
-                className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center transform hover:-translate-y-0.5 ${
                   formData.urgency === 'normal'
-                    ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
-                    : 'bg-white text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+                    ? 'bg-blue-100 text-blue-700 shadow-md ring-2 ring-blue-400 ring-offset-1'
+                    : 'bg-white text-gray-600 hover:bg-blue-50 hover:text-blue-600 border border-gray-200 shadow-sm'
                 }`}
               >
                 Normal
@@ -234,10 +234,10 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
               <button
                 type="button"
                 onClick={() => handleInputChange('urgency', 'high')}
-                className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center transform hover:-translate-y-0.5 ${
                   formData.urgency === 'high'
-                    ? 'bg-red-100 text-red-700 border-2 border-red-300'
-                    : 'bg-white text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+                    ? 'bg-red-100 text-red-700 shadow-md ring-2 ring-red-400 ring-offset-1'
+                    : 'bg-white text-gray-600 hover:bg-red-50 hover:text-red-600 border border-gray-200 shadow-sm'
                 }`}
               >
                 High
@@ -254,10 +254,10 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
                   key={emoji}
                   type="button"
                   onClick={() => handleInputChange('moodEmoji', emoji)}
-                  className={`w-12 h-12 text-2xl rounded-full transition-all duration-200 hover:scale-110 ${
+                  className={`w-12 h-12 text-2xl rounded-full transition-all duration-300 flex items-center justify-center transform hover:-translate-y-1 hover:shadow-lg ${
                     formData.moodEmoji === emoji
-                      ? 'bg-blue-100 ring-2 ring-blue-600 scale-110'
-                      : 'bg-gray-100 hover:bg-gray-200'
+                      ? 'bg-white shadow-md ring-4 ring-blue-400 ring-offset-2 scale-110'
+                      : 'bg-white/60 hover:bg-white shadow-sm border border-gray-100'
                   }`}
                 >
                   {emoji}
@@ -274,9 +274,9 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
             <h3 className="text-sm font-medium text-gray-700 mb-4">Visibility</h3>
             
             {/* Public Option */}
-            <div className="flex items-center justify-between p-4 bg-white rounded-xl mb-3">
+            <div className="group flex items-center justify-between p-4 bg-white/70 hover:bg-white rounded-2xl mb-3 shadow-sm border border-gray-100 transition-all duration-300 cursor-pointer" onClick={() => handleInputChange('anonymous', false)}>
               <div>
-                <div className="font-medium text-gray-800">Public</div>
+                <div className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">Public</div>
                 <div className="text-sm text-gray-500">Everyone can see and pray</div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -298,9 +298,9 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
             </div>
 
             {/* Anonymous Option */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+            <div className="group flex items-center justify-between p-4 bg-white/70 hover:bg-white rounded-2xl shadow-sm border border-gray-100 transition-all duration-300 cursor-pointer" onClick={() => handleInputChange('anonymous', true)}>
               <div>
-                <div className="font-medium text-gray-800">Anonymous</div>
+                <div className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">Anonymous</div>
                 <div className="text-sm text-gray-500">Hide your identity</div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -341,10 +341,10 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
                       }));
                     }
                   }}
-                  className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 ${
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md ${
                     formData.tags.includes(tag)
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'btn-blue-gradient text-white shadow-sm ring-2 ring-blue-400 ring-offset-1'
+                      : 'bg-white text-gray-600 border border-gray-200 shadow-sm'
                   }`}
                 >
                   {tag}
@@ -355,13 +355,13 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
               {formData.tags.filter(tag => !['healing', 'family', 'work'].includes(tag)).map((tag, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-full"
+                  className="inline-flex items-center gap-1 px-4 py-1.5 btn-blue-gradient text-white text-sm font-medium rounded-full shadow-sm"
                 >
                   {tag}
                   <button
                     type="button"
-                    onClick={() => handleRemoveTag(tag)}
-                    className="ml-1 hover:text-blue-200 transition-colors"
+                    onClick={(e) => { e.stopPropagation(); handleRemoveTag(tag); }}
+                    className="ml-1 hover:text-red-200 transition-colors transform hover:scale-110 cursor-pointer"
                   >
                     <FaTimes className="w-3 h-3" />
                   </button>
@@ -376,7 +376,7 @@ const PrayerRequestTab = ({ onClose, onSuccess }) => {
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="flex-1 px-3 py-2 border bg-white border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 shadow-inner"
               />
               <button
                 type="button"

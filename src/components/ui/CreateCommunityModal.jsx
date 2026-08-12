@@ -146,7 +146,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full  transition-colors duration-200 cursor-pointer"
+            className="p-2.5 hover:bg-gray-100 rounded-full transition-all duration-300 cursor-pointer hover:rotate-90 hover:shadow-sm"
             disabled={loading}
           >
             <FaTimes className="w-5 h-5 text-gray-600" />
@@ -166,7 +166,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-3xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-5 py-3.5 bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 shadow-inner"
                   placeholder="Enter community name"
                   required
                 />
@@ -181,7 +181,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   placeholder="Describe your community..."
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-3xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-5 py-3.5 bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 shadow-inner min-h-[140px]"
                   rows={4}
                   required
                 />
@@ -196,10 +196,10 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   <button
                     type="button"
                     onClick={() => handleInputChange('privacyLevel', 'public')}
-                    className={`px-3 py-2 rounded-xl text-sm  cursor-pointer font-medium transition-all duration-200 ${
+                    className={`px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 ${
                       formData.privacyLevel === 'public'
-                        ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+                        ? 'bg-blue-100 text-blue-700 shadow-md ring-2 ring-blue-400 ring-offset-1'
+                        : 'bg-white text-gray-600 hover:bg-blue-50 hover:text-blue-600 border border-gray-200 shadow-sm'
                     }`}
                   >
                     Public
@@ -207,10 +207,10 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   <button
                     type="button"
                     onClick={() => handleInputChange('privacyLevel', 'private')}
-                    className={`px-3 py-2 rounded-xl text-sm font-medium cursor-pointer transition-all duration-200 ${
+                    className={`px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 ${
                       formData.privacyLevel === 'private'
-                        ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+                        ? 'bg-blue-100 text-blue-700 shadow-md ring-2 ring-blue-400 ring-offset-1'
+                        : 'bg-white text-gray-600 hover:bg-blue-50 hover:text-blue-600 border border-gray-200 shadow-sm'
                     }`}
                   >
                     Private
@@ -227,7 +227,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   placeholder="Welcome new members..."
                   value={formData.welcomeMessage}
                   onChange={(e) => handleInputChange('welcomeMessage', e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-3xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-5 py-3.5 bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 shadow-inner"
                   rows={3}
                 />
               </div>
@@ -240,8 +240,8 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Cover Photo
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-blue-400 transition-colors">
-                  <FaUpload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <div className="group border-2 border-dashed border-gray-300 bg-white/50 rounded-2xl p-6 text-center hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-300 cursor-pointer min-h-[140px] flex flex-col items-center justify-center">
+                  <FaUpload className="mx-auto h-10 w-10 text-gray-400 mb-3 group-hover:text-blue-500 transition-colors duration-300 group-hover:-translate-y-1 transform" />
                   <input
                     type="file"
                     accept="image/*"
@@ -251,11 +251,11 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   />
                   <label
                     htmlFor="coverPhoto"
-                    className="cursor-pointer bg-blue-50 text-blue-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+                    className="cursor-pointer btn-blue-gradient text-white px-5 py-2 rounded-full text-sm font-medium hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-300"
                   >
                     {coverPhoto ? coverPhoto.name : 'Choose Photo'}
                   </label>
-                  <p className="text-gray-500 text-xs mt-2">PNG, JPG up to 10MB</p>
+                  <p className="text-gray-500 text-xs mt-3 font-medium">PNG, JPG up to 10MB</p>
                 </div>
               </div>
 
@@ -269,7 +269,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   placeholder="Organization name"
                   value={formData.affiliatedOrganization}
                   onChange={(e) => handleInputChange('affiliatedOrganization', e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-3xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-5 py-3.5 bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 shadow-inner"
                 />
               </div>
 
@@ -282,7 +282,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   placeholder="Community guidelines..."
                   value={formData.communityRules}
                   onChange={(e) => handleInputChange('communityRules', e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-3xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-5 py-3.5 bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 shadow-inner"
                   rows={3}
                 />
               </div>
@@ -297,7 +297,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   placeholder="Wall association"
                   value={formData.wallAssociation}
                   onChange={(e) => handleInputChange('wallAssociation', e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-3xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-5 py-3.5 bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 shadow-inner"
                 />
               </div>
 
@@ -313,13 +313,13 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                       {formData.tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                          className="inline-flex items-center btn-blue-gradient text-white px-3 py-1.5 rounded-full text-sm font-medium shadow-sm"
                         >
                           #{tag}
                           <button
                             type="button"
                             onClick={() => handleRemoveTag(tag)}
-                            className="ml-2 text-blue-600  cursor-pointer hover:text-blue-800"
+                            className="ml-2 text-white hover:text-red-200 cursor-pointer transform hover:scale-110 transition-all"
                           >
                             ×
                           </button>
@@ -336,13 +336,13 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                       onChange={(e) => setNewTag(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Add a tag..."
-                      className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="flex-1 px-4 py-2 bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 shadow-inner"
                     />
                     <button
                       type="button"
                       onClick={handleAddTag}
                       disabled={!newTag.trim()}
-                      className="px-4 py-2 bg-gray-100  cursor-pointertext-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-5 py-2 btn-blue-gradient text-white rounded-xl text-sm font-semibold hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 cursor-pointer disabled:cursor-not-allowed"
                     >
                       Add
                     </button>
@@ -365,14 +365,14 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }) => {
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 py-3 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 cursor-pointer transition-colors duration-200 disabled:opacity-50"
+              className="flex-1 py-3.5 px-6 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:hover:translate-y-0"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !formData.name.trim() || !formData.description.trim()}
-              className="flex-1 py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 cursor-pointer transition-colors duration-200 disabled:opacity-50"
+              className="flex-1 py-3.5 px-6 btn-blue-gradient text-white rounded-xl font-semibold shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer disabled:opacity-70 disabled:hover:translate-y-0"
             >
               {loading ? 'Creating...' : 'Create Community'}
             </button>

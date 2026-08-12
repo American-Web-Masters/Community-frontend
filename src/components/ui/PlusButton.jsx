@@ -82,15 +82,15 @@ const PlusButton = ({ isOpen, onClose, initialTab = 'prayer-request', initialDat
 
   return createPortal(
     <div 
-      className="plus-button-modal fixed inset-0 z-50 flex items-center justify-center p-4 light-background backdrop-blur-sm"
+      className="plus-button-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md transition-all duration-300 animate-in fade-in ease-out"
       onClick={handleBackdropClick}
     >
-      <div className="relative bg-[#EBF5FF] rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="relative bg-[#EBF5FF] rounded-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all duration-300 animate-in zoom-in-95 slide-in-from-bottom-4 ease-out">
         {/* Close (Cross) Button */}
         <button
           onClick={onClose}
           aria-label="Close modal"
-          className="absolute top-4 right-4 z-10 p-2 rounded-full cursor-pointer text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-all duration-200"
+          className="absolute top-4 right-4 z-10 p-2.5 rounded-full cursor-pointer text-gray-400 hover:text-gray-800 hover:bg-white hover:shadow-md transition-all duration-300 hover:rotate-90 active:scale-90"
         >
           <FaTimes className="w-5 h-5" />
         </button>
@@ -111,10 +111,10 @@ const PlusButton = ({ isOpen, onClose, initialTab = 'prayer-request', initialDat
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 md:px-8 cursor-pointer lf:px-12 py-2 text-sm font-medium transition-all duration-200 rounded-full  ${
+                className={`px-4 md:px-8 cursor-pointer lf:px-12 py-2 text-sm font-medium transition-all duration-300 rounded-full flex-1 md:flex-none ${
                   activeTab === tab.id
-                    ? 'btn-blue-gradient shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                    ? 'btn-blue-gradient shadow-md scale-105 text-white'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/80 hover:shadow-sm'
                 }`}
               >
                 {tab.label}

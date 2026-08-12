@@ -104,7 +104,7 @@ const CommunityTab = ({ onClose, onSuccess }) => {
               type="text"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-3xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="w-full px-5 py-3.5 bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 shadow-inner"
               placeholder="Enter community name"
               required
             />
@@ -119,7 +119,7 @@ const CommunityTab = ({ onClose, onSuccess }) => {
               placeholder="Describe your community purpose"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              className="w-full px-4 py-4 bg-white border border-gray-200 rounded-3xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[200px]"
+              className="w-full px-5 py-4 bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 min-h-[200px] shadow-inner"
               rows={4}
               required
             />
@@ -129,31 +129,31 @@ const CommunityTab = ({ onClose, onSuccess }) => {
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-4">Privacy Level</h3>
             <div className="space-y-3">
-              <label className="flex items-center p-3 bg-white rounded-4xl cursor-pointer">
+              <label className="group flex items-center p-4 bg-white/70 hover:bg-white rounded-2xl shadow-sm border border-gray-100 transition-all duration-300 cursor-pointer">
                 <input
                   type="radio"
                   name="communityPrivacy"
                   value="public"
                   checked={formData.privacy === 'public'}
                   onChange={(e) => handleInputChange('privacy', e.target.value)}
-                  className="appearance-none h-4 w-4 rounded-full border border-gray-400 checked:bg-blue-500 checked:border-gray-700 focus:outline-none focus:ring-0"
+                  className="appearance-none h-5 w-5 rounded-full border border-gray-300 checked:bg-blue-600 checked:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-2 transition-all cursor-pointer"
                 />
                 <div className="ml-3">
-                  <div className="font-medium text-gray-800">Public</div>
+                  <div className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">Public</div>
                   <div className="text-sm text-gray-500">Anyone can join</div>
                 </div>
               </label>
-              <label className="flex items-center p-3 bg-white rounded-4xl cursor-pointer">
+              <label className="group flex items-center p-4 bg-white/70 hover:bg-white rounded-2xl shadow-sm border border-gray-100 transition-all duration-300 cursor-pointer">
                 <input
                   type="radio"
                   name="communityPrivacy"
                   value="private"
                   checked={formData.privacy === 'private'}
                   onChange={(e) => handleInputChange('privacy', e.target.value)}
-                  className="appearance-none h-4 w-4 rounded-full border border-gray-400 checked:bg-blue-500 checked:border-gray-700 focus:outline-none focus:ring-0"
+                  className="appearance-none h-5 w-5 rounded-full border border-gray-300 checked:bg-blue-600 checked:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-2 transition-all cursor-pointer"
                 />
                 <div className="ml-3">
-                  <div className="font-medium text-gray-800">Private</div>
+                  <div className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">Private</div>
                   <div className="text-sm text-gray-500">Invite only</div>
                 </div>
               </label>
@@ -166,11 +166,11 @@ const CommunityTab = ({ onClose, onSuccess }) => {
           {/* Cover Photo */}
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-3">Cover Photo</h3>
-            <div className="border-2 border-dashed bg-white border-gray-300 rounded-xl p-8 text-center hover:border-gray-400 transition-colors">
-              <FaUpload className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500 mb-2">Upload a community cover</p>
+            <div className="group border-2 border-dashed bg-white/50 border-gray-300 rounded-2xl p-8 text-center hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center min-h-[140px]">
+              <FaUpload className="w-8 h-8 text-gray-400 mb-3 group-hover:text-blue-500 transition-colors duration-300 group-hover:-translate-y-1 transform" />
+              <p className="text-gray-500 mb-2 font-medium">Upload a community cover</p>
               {communityPhoto && (
-                <p className="text-sm text-green-600 mb-2">File selected: {communityPhoto.name}</p>
+                <p className="text-sm text-green-600 mb-3 font-semibold bg-green-50 px-3 py-1 rounded-full">File: {communityPhoto.name}</p>
               )}
               <input
                 type="file"
@@ -181,7 +181,7 @@ const CommunityTab = ({ onClose, onSuccess }) => {
               />
               <label
                 htmlFor="community-photo"
-                className="text-sm inline-block px-2 py-1 bg-gray-400 text-white rounded-3xl cursor-pointer hover:bg-blue-700 transition-colors"
+                className="text-sm inline-block px-5 py-2 btn-blue-gradient text-white font-medium rounded-full cursor-pointer hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-300"
               >
                 Choose File
               </label>
@@ -197,7 +197,7 @@ const CommunityTab = ({ onClose, onSuccess }) => {
               placeholder="Welcome new members..."
               value={formData.welcomeMessage}
               onChange={(e) => handleInputChange('welcomeMessage', e.target.value)}
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-3xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="w-full px-5 py-3.5 bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 shadow-inner"
               rows={3}
             />
           </div>
@@ -212,7 +212,7 @@ const CommunityTab = ({ onClose, onSuccess }) => {
               placeholder="Enter organization name"
               value={formData.affiliatedOrganization}
               onChange={(e) => handleInputChange('affiliatedOrganization', e.target.value)}
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-3xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="w-full px-5 py-3.5 bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 shadow-inner"
             />
           </div>
 
@@ -225,7 +225,7 @@ const CommunityTab = ({ onClose, onSuccess }) => {
               placeholder="Community guidelines..."
               value={formData.rules}
               onChange={(e) => handleInputChange('rules', e.target.value)}
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-3xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="w-full px-5 py-3.5 bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 shadow-inner"
               rows={3}
             />
           </div>
@@ -245,14 +245,15 @@ const CommunityTab = ({ onClose, onSuccess }) => {
           type="button"
           onClick={handleSaveAsDraft}
           disabled={loading || !formData.name.trim()}
-          className="flex-1 py-3 px-6 bg-white text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors duration-200 disabled:opacity-70"
+          className="flex-1 py-3.5 px-6 bg-white/70 backdrop-blur-sm border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-white shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
         >
           {loading ? 'Saving...' : 'Save as Draft'}
         </button>
         <button
-          type="submit"
-          disabled={loading || !formData.name.trim() || !formData.description.trim()}
-          className="flex-1 py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 cursor-pointer"
+          type="button"
+          onClick={submitCommunity}
+          disabled={loading || !formData.name.trim()}
+          className="flex-1 py-3.5 px-6 btn-blue-gradient text-white rounded-xl font-semibold shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
         >
           {loading ? 'Creating...' : 'Create Community'}
         </button>

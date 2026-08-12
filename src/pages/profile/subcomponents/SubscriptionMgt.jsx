@@ -446,10 +446,10 @@ const SubscriptionMgt = () => {
                   </span>
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-gray-900 truncate">
+                  <p className="font-medium text-gray-900 break-words whitespace-normal">
                     {sub.subscriberName}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="text-xs text-gray-500 break-words whitespace-normal">
                     {sub.subscriberEmail}
                   </p>
                   {sub.communityName && (

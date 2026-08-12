@@ -188,7 +188,7 @@ const Notifications = () => {
                         {buildNotificationText(item)}
                       </p>
                       {item.metadata?.textPreview && (
-                        <p className={`text-sm mt-1 line-clamp-1 ${isUnread ? "text-gray-700" : "text-gray-500"}`}>
+                        <p className={`text-sm mt-1 break-words whitespace-normal ${isUnread ? "text-gray-700" : "text-gray-500"}`}>
                           "{item.metadata.textPreview}"
                         </p>
                       )}

@@ -26,7 +26,7 @@ const MessageInput = ({
                 Replying to {replyingTo.sender._id === user._id ? 'yourself' : `${replyingTo.sender.firstname} ${replyingTo.sender.lastname}`}
               </p>
             </div>
-            <p className="text-[12px] text-gray-600 line-clamp-1 ml-5">{replyingTo.content}</p>
+            <p className="text-[12px] text-gray-600 break-words whitespace-normal ml-5">{replyingTo.content}</p>
           </div>
           <button
             onClick={() => setReplyingTo(null)}

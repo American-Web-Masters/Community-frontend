@@ -67,20 +67,7 @@ export const updateUserProfile = async (updateData) => {
   }
 };
 
-/**
- * Get payment availability for a specific user profile
- * @param {string} username - The username to check payment status for
- * @returns {Promise<Object>} Response with payment availability
- */
-export const getUserPaymentStatus = async (username) => {
-  try {
-    const response = await apiClient.get(`/payments/user-payment-status/${username}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error getting user payment status:', error);
-    throw error;
-  }
-};
+
 
 /**
  * Get Stripe account status for the current authenticated user
@@ -230,7 +217,7 @@ export const createJournal = async (data)=>{
   }
 }
 
-export const updateJournal = async (journalId, { description, verse, tags, mood, prayer }) => {
+export const updateJournal = async (journalId, { description, verse, tags, mood, prayer, privacyLevel }) => {
   try {
     const response = await apiClient.patch(`/journals/${journalId}`, {
       description,
@@ -238,6 +225,7 @@ export const updateJournal = async (journalId, { description, verse, tags, mood,
       tags,
       mood,
       prayer,
+      privacyLevel,
     });
     return response.data;
   } catch (error) {
@@ -249,7 +237,6 @@ export const updateJournal = async (journalId, { description, verse, tags, mood,
 export default {
   getUserProfile,
   updateUserProfile,
-  getUserPaymentStatus,
   getUserStripeAccountStatus,
   connectUserStripe,
   createUserPaymentIntent,

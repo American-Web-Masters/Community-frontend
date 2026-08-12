@@ -23,7 +23,12 @@ const ModeratorQueue = ({ community, currentUser, feedPrayers = [], onPrayerDele
 
   // Check if user is owner or moderator
   const isOwnerOrModerator = community?.isOwner || 
-    (community?.moderators && community.moderators.some(mod => mod.id === currentUser?.id));
+    (community?.moderators && community.moderators.some(mod => 
+      String(mod.id || mod._id || mod) === String(currentUser?.id || currentUser?._id)
+    )) ||
+    (community?.members && community.members.some(member => 
+      String(member.user?._id || member.user?.id || member.user || member.id || member._id) === String(currentUser?.id || currentUser?._id) && member.role === 'moderator'
+    ));
 
   useEffect(() => {
     setVisibleFeedPrayers(feedPrayers);
@@ -271,11 +276,11 @@ const ModeratorQueue = ({ community, currentUser, feedPrayers = [], onPrayerDele
             </div>
             <div className="px-6 py-5 space-y-4">
               <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-gray-900 break-words whitespace-normal">
                   {prayerToDelete.title || "Prayer post"}
                 </p>
                 {prayerToDelete.content && (
-                  <p className="mt-1 text-sm text-gray-600 line-clamp-3">
+                  <p className="mt-1 text-sm text-gray-600 break-words whitespace-normal">
                     {prayerToDelete.content}
                   </p>
                 )}
@@ -426,7 +431,7 @@ const ModeratorQueue = ({ community, currentUser, feedPrayers = [], onPrayerDele
                       </div>
                     )}
                     <div className="flex-1 min-w-0 ml-1">
-                      <p className="font-semibold text-gray-900 text-base truncate">
+                      <p className="font-semibold text-gray-900 text-base break-words whitespace-normal">
                         {item.user.name}
                       </p>
                       <p className="text-sm text-gray-500 font-medium">{item.requestType} • {item.user.role}</p>

@@ -229,7 +229,7 @@ const MessagesSidebar = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-0.5">
                             <div className="flex items-center gap-1.5">
-                              <h4 className="text-sm font-semibold text-gray-900 truncate">
+                              <h4 className="text-sm font-semibold text-gray-900 break-words whitespace-normal">
                                 {chat.firstname} {chat.lastname}
                               </h4>
                               {isPinned && (
@@ -241,7 +241,7 @@ const MessagesSidebar = ({
                             </span>
                           </div>
                           <div className="flex items-center justify-between mt-1 gap-2">
-                            <p className="text-xs text-gray-500 truncate leading-tight">
+                            <p className="text-xs text-gray-500 break-words whitespace-normal leading-tight">
                               {chat.email}
                             </p>
                             {(chat.unreadCount || 0) > 0 && (
@@ -306,7 +306,7 @@ const MessagesSidebar = ({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-0.5 gap-2">
-                            <h4 className="text-sm font-semibold text-gray-900 truncate">
+                            <h4 className="text-sm font-semibold text-gray-900 break-words whitespace-normal">
                               {community.name}
                             </h4>
                             {unreadCount > 0 && (
@@ -315,7 +315,7 @@ const MessagesSidebar = ({
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500 truncate leading-tight">
+                          <p className="text-xs text-gray-500 break-words whitespace-normal leading-tight">
                             {community.lastMessage?.content || 'Start the conversation'}
                           </p>
                         </div>
@@ -349,13 +349,13 @@ const MessagesSidebar = ({
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center mb-0.5">
-                              <h4 className="text-sm font-semibold text-gray-900 truncate">
+                              <h4 className="text-sm font-semibold text-gray-900 break-words whitespace-normal">
                                 {community.name}
                               </h4>
                             </div>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0 animate-pulse"></span>
-                              <p className="text-xs text-red-500 font-medium truncate leading-tight">
+                              <p className="text-xs text-red-500 font-medium break-words whitespace-normal leading-tight">
                                 {eventName}
                               </p>
                             </div>

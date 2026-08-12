@@ -220,10 +220,10 @@ const CreateEventModal = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm cursor-pointer"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md transition-all duration-300 animate-in fade-in ease-out cursor-pointer"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto cursor-default">
+      <div className="bg-white rounded-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] transform transition-all duration-300 animate-in zoom-in-95 slide-in-from-bottom-4 ease-out w-full max-w-2xl max-h-[90vh] overflow-y-auto cursor-default">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800">
@@ -231,7 +231,7 @@ const CreateEventModal = ({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 cursor-pointer"
+            className="p-2 hover:bg-gray-100 rounded-full hover:rotate-90 hover:shadow-sm active:scale-90 transition-all duration-300 cursor-pointer"
             disabled={loading}
           >
             <FaTimes className="w-5 h-5 text-gray-600" />
@@ -258,7 +258,7 @@ const CreateEventModal = ({
               </div>
               <button 
                 type="button"
-                className={`py-2 px-4 btn-blue-gradient text-sm rounded-lg text-white transition-all cursor-pointer ${
+                className={`py-2 px-4 btn-blue-gradient text-sm rounded-lg text-white shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer ${
                   connectingCalendar ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
                 }`}
                 onClick={handleConnectCalendar}
@@ -294,7 +294,7 @@ const CreateEventModal = ({
                 placeholder="Enter event name..."
                 value={formData.eventName}
                 onChange={(e) => handleInputChange('eventName', e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 cursor-text"
+                className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none bg-white/70 backdrop-blur-sm shadow-inner focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 cursor-text"
                 required
               />
             </div>
@@ -312,7 +312,7 @@ const CreateEventModal = ({
                   value={formData.eventDate}
                   onChange={(e) => handleInputChange('eventDate', e.target.value)}
                   min={getMinDateForInput()}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 cursor-pointer"
+                  className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 focus:outline-none bg-white/70 backdrop-blur-sm shadow-inner focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 cursor-pointer"
                   required
                 />
               </div>
@@ -327,7 +327,7 @@ const CreateEventModal = ({
                   type="time"
                   value={formData.eventTime}
                   onChange={(e) => handleInputChange('eventTime', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 cursor-pointer"
+                  className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 focus:outline-none bg-white/70 backdrop-blur-sm shadow-inner focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 cursor-pointer"
                   required
                 />
               </div>
@@ -342,7 +342,7 @@ const CreateEventModal = ({
                 placeholder="Describe your event..."
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
-                className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[120px] cursor-text"
+                className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none bg-white/70 backdrop-blur-sm shadow-inner focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 min-h-[120px] cursor-text"
                 rows={4}
                 required
               />
@@ -361,14 +361,14 @@ const CreateEventModal = ({
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="flex-1 py-3 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50 cursor-pointer"
+                className="flex-1 py-3 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 hover:shadow-sm transition-all duration-300 disabled:opacity-50 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading || !isCalendarConnected || !formData.eventName.trim() || !formData.eventDate || !formData.eventTime || !formData.description.trim()}
-                className={`flex-1 py-3 px-6 rounded-xl font-medium transition-colors duration-200 ${
+                className={`flex-1 py-3 px-6 rounded-xl font-medium shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 ${
                   !isCalendarConnected 
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                     : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'

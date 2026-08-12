@@ -239,7 +239,7 @@ const InnerCircleTab = ({ onClose, onSuccess }) => {
             </div>
             <button 
               type="button"
-              className={`py-2 px-4 btn-blue-gradient text-sm rounded-lg text-white transition-all cursor-pointer ${
+              className={`py-2 px-4 btn-blue-gradient text-sm rounded-lg text-white shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer ${
                 connectingCalendar ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
               }`}
               onClick={handleConnectCalendar}
@@ -272,7 +272,7 @@ const InnerCircleTab = ({ onClose, onSuccess }) => {
             <select
               value={formData.communityId}
               onChange={(e) => handleInputChange('communityId', e.target.value)}
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-2xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-500)] focus:border-transparent transition-all duration-200 cursor-pointer"
+              className="w-full px-5 py-3.5 bg-white/70 backdrop-blur-sm shadow-inner border border-gray-200 rounded-2xl text-gray-800 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 cursor-pointer"
               required
             >
               <option value="" disabled>Select a community to host the event</option>
@@ -294,7 +294,7 @@ const InnerCircleTab = ({ onClose, onSuccess }) => {
               placeholder="Enter event name..."
               value={formData.eventName}
               onChange={(e) => handleInputChange('eventName', e.target.value)}
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-500)] focus:border-transparent transition-all duration-200 cursor-text"
+              className="w-full px-5 py-3.5 bg-white/70 backdrop-blur-sm shadow-inner border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 cursor-text"
               required
             />
           </div>
@@ -312,7 +312,7 @@ const InnerCircleTab = ({ onClose, onSuccess }) => {
                 value={formData.eventDate}
                 onChange={(e) => handleInputChange('eventDate', e.target.value)}
                 min={getMinDateForInput()}
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-2xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-500)] focus:border-transparent transition-all duration-200 cursor-pointer"
+                className="w-full px-5 py-3.5 bg-white/70 backdrop-blur-sm shadow-inner border border-gray-200 rounded-2xl text-gray-800 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 cursor-pointer"
                 required
               />
             </div>
@@ -327,7 +327,7 @@ const InnerCircleTab = ({ onClose, onSuccess }) => {
                 type="time"
                 value={formData.eventTime}
                 onChange={(e) => handleInputChange('eventTime', e.target.value)}
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-2xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-500)] focus:border-transparent transition-all duration-200 cursor-pointer"
+                className="w-full px-5 py-3.5 bg-white/70 backdrop-blur-sm shadow-inner border border-gray-200 rounded-2xl text-gray-800 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 cursor-pointer"
                 required
               />
             </div>
@@ -342,7 +342,7 @@ const InnerCircleTab = ({ onClose, onSuccess }) => {
               placeholder="Describe your event..."
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-500)] focus:border-transparent transition-all duration-200 min-h-[120px]"
+              className="w-full px-5 py-4 bg-white/70 backdrop-blur-sm shadow-inner border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 min-h-[120px]"
               rows={4}
               required
             />
@@ -361,14 +361,14 @@ const InnerCircleTab = ({ onClose, onSuccess }) => {
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 py-3 px-6 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 cursor-pointer"
+              className="flex-1 py-3 px-6 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-100 hover:shadow-sm transition-all duration-300 disabled:opacity-50 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !isCalendarConnected || !formData.communityId || !formData.eventName.trim() || !formData.eventDate || !formData.eventTime || !formData.description.trim()}
-              className={`flex-1 py-3 px-6 rounded-xl font-medium transition-all duration-200 ${
+              className={`flex-1 py-3 px-6 rounded-xl font-medium transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 ${
                 !isCalendarConnected 
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                   : 'btn-blue-gradient text-white hover:opacity-95 cursor-pointer'

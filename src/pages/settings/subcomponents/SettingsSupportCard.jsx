@@ -122,7 +122,7 @@ const SettingsSupportCard = ({
               </h1>
               <div className="flex items-center gap-3">
                 <div className="btn-blue-gradient text-white px-3 py-1 rounded-md">
-                  <p className="text-xs sm:text-sm font-medium italic truncate">Support the app and keep it running</p>
+                  <p className="text-xs sm:text-sm font-medium italic break-words whitespace-normal">Support the app and keep it running</p>
                 </div>
               </div>
             </div>

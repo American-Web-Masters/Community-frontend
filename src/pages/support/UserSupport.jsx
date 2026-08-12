@@ -257,7 +257,7 @@ const UserSupport = () => {
               {/* Verse */}
               {userInfo?.verse && (
                 <div className="btn-blue-gradient text-white px-3 py-1.5 rounded-md max-w-xs">
-                  <p className="text-sm font-medium italic truncate">{userInfo.verse}</p>
+                  <p className="text-sm font-medium italic break-words whitespace-normal">{userInfo.verse}</p>
                 </div>
               )}
             </div>
