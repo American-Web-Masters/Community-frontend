@@ -165,9 +165,13 @@ const CommunityDetails = () => {
     }
   };
 
-  // Check if user is owner or moderator
   const isOwnerOrModerator = community?.isOwner || 
-    (community?.moderators && community.moderators.some(mod => mod.id === user?.id));
+    (community?.moderators && community.moderators.some(mod => 
+      String(mod.id || mod._id || mod) === String(user?.id || user?._id)
+    )) ||
+    (community?.members && community.members.some(member => 
+      String(member.user?._id || member.user?.id || member.user || member.id || member._id) === String(user?.id || user?._id) && member.role === 'moderator'
+    ));
 
   const handleCreatePost = () => {
     setIsCreatePrayerModalOpen(true);

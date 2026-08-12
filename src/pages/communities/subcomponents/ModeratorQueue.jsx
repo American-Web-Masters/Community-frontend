@@ -23,7 +23,12 @@ const ModeratorQueue = ({ community, currentUser, feedPrayers = [], onPrayerDele
 
   // Check if user is owner or moderator
   const isOwnerOrModerator = community?.isOwner || 
-    (community?.moderators && community.moderators.some(mod => mod.id === currentUser?.id));
+    (community?.moderators && community.moderators.some(mod => 
+      String(mod.id || mod._id || mod) === String(currentUser?.id || currentUser?._id)
+    )) ||
+    (community?.members && community.members.some(member => 
+      String(member.user?._id || member.user?.id || member.user || member.id || member._id) === String(currentUser?.id || currentUser?._id) && member.role === 'moderator'
+    ));
 
   useEffect(() => {
     setVisibleFeedPrayers(feedPrayers);

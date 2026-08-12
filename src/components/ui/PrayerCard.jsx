@@ -738,7 +738,7 @@ const PrayerCard = ({
       <div className="mb-4 smooth-height">
         
         {/* Text Container */}
-        <div className="overflow-hidden mb-3">
+        <div className={`mb-3 ${isContentExpanded ? '' : 'overflow-hidden'}`}>
           {isContentExpanded ? (
             <div className="expand-animation transform transition-all duration-500 ease-out">
             {/* Community Pills - Show all in expanded view */}
@@ -753,13 +753,13 @@ const PrayerCard = ({
               ))}
             </div>
             
-            <p className="text-gray-800 leading-relaxed text-sm mb-4">
+            <p className="text-gray-800 leading-relaxed text-sm mb-4 break-words whitespace-pre-wrap">
               {prayerText}
             </p>
           </div>
         ) : (
           <div className="transition-all duration-300 ease-in-out transform smooth-height">
-            <p className="text-gray-800 leading-relaxed text-sm break-words whitespace-normal overflow-hidden transition-all duration-500 ease-in-out">
+            <p className="text-gray-800 leading-relaxed text-sm break-words whitespace-pre-wrap overflow-hidden transition-all duration-500 ease-in-out">
               {prayerText}
             </p>
           </div>
@@ -773,8 +773,8 @@ const PrayerCard = ({
             <span className="text-lg">{mood}</span>
           </div>
           
-          <div className="flex items-center space-x-3">
-            <span className="text-sm text-gray-600 font-medium">{urgency}</span>
+          <div className="flex items-center space-x-3 group relative cursor-help">
+            <span className="text-sm text-gray-600 font-medium capitalize">{urgency}</span>
             <div className="flex items-end space-x-0.5 h-8">
               {urgencyMeter.bars.map((bar, index) => (
                 <div
@@ -782,6 +782,12 @@ const PrayerCard = ({
                   className={`w-2 ${bar.height} ${bar.color} rounded-sm`}
                 ></div>
               ))}
+            </div>
+
+            {/* Custom Tooltip */}
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-10 pointer-events-none shadow-xl">
+              Prayer urgency
+              <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-gray-900"></div>
             </div>
           </div>
         </div>
@@ -801,25 +807,23 @@ const PrayerCard = ({
           <div className="expand-animation transform transition-all duration-500 ease-out">
             {/* Tags Section */}
             {tags && tags.length > 0 && (
-              <div className="mb-4">
-                <span className="text-sm text-gray-600 font-medium mb-2 block">Tags:</span>
-                <div className="flex flex-wrap gap-2">
-                  {tags.map((tag, index) => (
-                    <span 
-                      key={index}
-                      className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
+              <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
+                <span className="text-xs text-gray-600 font-medium mr-1">Tags:</span>
+                {tags.map((tag, index) => (
+                  <span 
+                    key={index}
+                    className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-[11px] font-medium"
+                  >
+                    #{tag}
+                  </span>
+                ))}
               </div>
             )}
             
             {/* Timeline Section */}
-            <div className="bg-blue-50 rounded-lg p-3 mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-medium text-gray-800">Recent Updates</h4>
+            <div className="bg-blue-50 rounded-md p-2.5 mb-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <h4 className="text-xs font-semibold text-gray-800">Recent Updates</h4>
                 {timelineData.length > 2 && (
                   <button 
                     onClick={() => setShowTimelineModal(true)}
@@ -851,7 +855,7 @@ const PrayerCard = ({
                 {timelineData.length > 2 && (
                   <button 
                     onClick={() => setShowTimelineModal(true)}
-                    className="text-xs cursor-pointer text-blue-600 hover:underline mt-1"
+                    className="text-[11px] cursor-pointer text-blue-600 hover:underline mt-1"
                   >
                     View {timelineData.length - 2} more activities
                   </button>

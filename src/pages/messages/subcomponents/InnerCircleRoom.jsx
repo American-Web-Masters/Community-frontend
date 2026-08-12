@@ -685,7 +685,16 @@ export const InnerCircleRoom = ({ activeChat, roomId, initialToken, onClose, all
     const lastName = createdBy.lastName || createdBy.lastname;
     return [firstName, lastName].filter(Boolean).join(" ") || "Host";
   }, [activeChat]);
-  const isHost = Boolean(hostId && user?._id && String(hostId) === String(user._id));
+  const isCreator = Boolean(hostId && user?._id && String(hostId) === String(user._id));
+  const isCommunityModerator = activeChat?.community?.isOwner || (activeChat?.community?.moderators || []).some(mod => 
+    String(mod.id || mod._id || mod) === String(user?._id || user?.id)
+  ) || (activeChat?.community?.members || []).some(member => 
+    String(member.user?._id || member.user?.id || member.user || member.id || member._id) === String(user?.id || user?._id) && member.role === 'moderator'
+  ) || activeChat?.isOwner || (activeChat?.moderators || []).some(mod => 
+    String(mod.id || mod._id || mod) === String(user?._id || user?.id)
+  );
+  
+  const isHost = isCreator || isCommunityModerator;
   const canManageSpeakers = isHost;
   const hasFetchedRoleState = roomState.speakers.length > 0 || roomState.listeners.length > 0;
   const isSpeaker = hasFetchedRoleState
